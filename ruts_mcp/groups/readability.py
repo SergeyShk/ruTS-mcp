@@ -11,21 +11,22 @@ READABILITY_STATS = {
     "прочтение по шкале Флеша",
     "coleman_liau_index": "Индекс Колман-Лиау: число лет обучения по буквам и предложениям "
     "на 100 слов",
-    "smog_index": "Индекс SMOG: число лет обучения по словам от 5 слогов на предложение",
+    "smog_index": "Индекс SMOG: число лет обучения по словам от {smog_syllables} слогов "
+    "на предложение",
     "automated_readability_index": "Автоматический индекс удобочитаемости (ARI): число лет "
     "обучения по длине слов в буквах и предложений в словах",
-    "lix": "Индекс LIX: средняя длина предложения плюс процент слов от 7 букв; "
+    "lix": "Индекс LIX: средняя длина предложения плюс процент слов от {lix_letters} букв; "
     "прочтение по шкале Бьёрнссона",
-    "rix": "Индекс RIX: слова от 7 букв на предложение; класс по таблице Андерсона",
+    "rix": "Индекс RIX: слова от {lix_letters} букв на предложение; класс по таблице Андерсона",
     "sis_grade": "Формула Соловьёва, Иванова, Солнышкиной (2023): класс школы по средней "
     "длине слова в буквах и предложения в словах",
     "matskovsky_index": "Формула Мацковского (1976), первая для русского языка: чем выше, "
     "тем сложнее текст; шкалы у нее нет",
     "dale_chall_index": "Индекс Дейла-Чейла в адаптации plainrussian: число лет обучения "
-    "по доле слов от 5 слогов и длине предложений",
+    "по доле слов от {smog_syllables} слогов и длине предложений",
     "gunning_fog_index": "Индекс Ганнинга в адаптации plainrussian: число лет обучения "
-    "по длине предложений и доле слов от 5 слогов",
-    "reading_time": "Время чтения в минутах при скорости 180 слов в минуту",
+    "по длине предложений и доле слов от {smog_syllables} слогов",
+    "reading_time": "Время чтения в минутах при скорости {speed} слов в минуту",
 }
 # Шкалы Флеша (1948), LIX (Björnsson, 1968) и RIX (Anderson, 1983) из документации ruTS
 FLESCH_LEVELS = (
@@ -102,8 +103,15 @@ def readability_group(analysis: Analysis) -> GroupResult:
     interpretations["rix"] = grade_to_age(
         _rix_grade(values["rix"]), rs.grade_age_levels, rs.postgraduate_level
     )
+    params = {
+        "smog_syllables": rs.smog_complex_syl_factor,
+        "lix_letters": rs.lix_long_word_letter_factor,
+        "speed": rs.reading_speed,
+    }
     stats = {
-        name: stat(values[name], description, interpretation=interpretations.get(name))
+        name: stat(
+            values[name], description.format(**params), interpretation=interpretations.get(name)
+        )
         for name, description in READABILITY_STATS.items()
     }
     warnings = []

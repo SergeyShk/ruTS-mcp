@@ -26,7 +26,13 @@ def test_readability_group():
     assert {name: item["value"] for name, item in stats.items()} == {
         name: clean(value) for name, value in rs.get_stats().items()
     }
-    assert all(item["description"] == READABILITY_STATS[name] for name, item in stats.items())
+    assert stats["smog_index"]["description"] == (
+        f"Индекс SMOG: число лет обучения по словам от {rs.smog_complex_syl_factor} слогов "
+        "на предложение"
+    )
+    assert f"от {rs.lix_long_word_letter_factor} букв" in stats["rix"]["description"]
+    assert f"скорости {rs.reading_speed} слов" in stats["reading_time"]["description"]
+    assert all("{" not in item["description"] for item in stats.values())
     for name in ("consensus_grade", *rs.grade_stats):
         assert stats[name]["interpretation"] == rs.describe_grade(name)
     assert stats["consensus_grade"]["interpretation"] == "1-3-й класс (6-8 лет)"

@@ -1,14 +1,13 @@
 from ..analysis import Analysis, GroupResult, stat
 
-# Пороги ruts.constants записаны текстом, чтобы не импортировать ruTS до вызова
 BASIC_STATS = {
     "n_sents": "Предложения, в которых есть слова",
     "n_words": "Слова, включая числа; у чисел и слов без гласных (в, км) 0 слогов, поэтому "
     "они не входят ни в простые и сложные, ни в одно- и многосложные слова",
     "n_unique_words": "Уникальные слова без учета регистра; доля от всех слов",
-    "n_long_words": "Длинные слова, от 6 букв; доля от всех слов",
-    "n_complex_words": "Сложные слова, от 4 слогов; доля от всех слов",
-    "n_simple_words": "Простые слова, от 1 до 3 слогов; доля от всех слов",
+    "n_long_words": "Длинные слова, от {long_letters} букв; доля от всех слов",
+    "n_complex_words": "Сложные слова, от {complex_syllables} слогов; доля от всех слов",
+    "n_simple_words": "Простые слова, от 1 до {simple_syllables} слогов; доля от всех слов",
     "n_monosyllable_words": "Односложные слова; доля от всех слов",
     "n_polysyllable_words": "Многосложные слова, от 2 слогов; доля от всех слов",
     "n_chars": "Символы без переводов строки",
@@ -32,7 +31,8 @@ def basic_group(analysis: Analysis) -> GroupResult:
 
     Описание:
         Счетчики BasicStats из ruTS; счетчик слов или символов идет с долей
-        от всех слов или всех символов. Распределения добавляются настройкой
+        от всех слов или всех символов. Пороги длинных и сложных слов в описаниях -
+        пороги ruTS, с которыми посчитаны значения. Распределения добавляются настройкой
         distributions, их ключи - строки, как в JSON; типы знаков препинания,
         которых нет в тексте, опускаются
 
@@ -53,9 +53,16 @@ def basic_group(analysis: Analysis) -> GroupResult:
         >>> stats["n_long_words"]["share"]
         0.0
     """
+    from ruts.constants import COMPLEX_SYL_FACTOR, LONG_WORD_LETTER_FACTOR
+
     stats = analysis.basic.get_stats()
+    params = {
+        "long_letters": LONG_WORD_LETTER_FACTOR,
+        "complex_syllables": COMPLEX_SYL_FACTOR,
+        "simple_syllables": COMPLEX_SYL_FACTOR - 1,
+    }
     result = {
-        name: stat(stats[name], description, share=stats.get("p" + name[1:]))
+        name: stat(stats[name], description.format(**params), share=stats.get("p" + name[1:]))
         for name, description in BASIC_STATS.items()
     }
     if analysis.options.distributions:

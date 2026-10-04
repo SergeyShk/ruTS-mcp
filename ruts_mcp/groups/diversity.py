@@ -15,15 +15,15 @@ DIVERSITY_STATS = {
     "зависит от длины текста",
     "mttr": "Мера Мааса; чем ниже, тем богаче словарь; неустойчива на коротких текстах",
     "dttr": "Мера Дюга U, обратная мере Мааса; чем выше, тем богаче словарь",
-    "mattr": "Средний TTR в скользящем окне из 50 слов (MATTR); устойчива на текстах "
+    "mattr": "Средний TTR в скользящем окне из {window} слов (MATTR); устойчива на текстах "
     "от 50-200 слов",
-    "msttr": "Средний TTR по отрезкам из 50 слов (MSTTR); не зависит от длины текста, "
+    "msttr": "Средний TTR по отрезкам из {window} слов (MSTTR); не зависит от длины текста, "
     "неполный последний отрезок отбрасывается",
-    "mtld": "Средняя длина отрезка, на котором TTR падает до 0,72 (MTLD), в словах; "
+    "mtld": "Средняя длина отрезка, на котором TTR падает до {threshold} (MTLD), в словах; "
     "чем выше, тем богаче словарь; устойчива на текстах от 50-200 слов",
     "mamtld": "MTLD в скользящем окне (MA-MTLD), в словах; неустойчива на коротких текстах",
     "mtldw": "MTLD с заворотом текста (MTLD-W), в словах; неустойчива на текстах короче 100 слов",
-    "hdd": "Ожидаемый TTR случайной выборки из 42 слов (HD-D), от 0 до 1; устойчива "
+    "hdd": "Ожидаемый TTR случайной выборки из {sample} слов (HD-D), от 0 до 1; устойчива "
     "на текстах от 50-200 слов, на текстах короче 50 слов не определена",
     "simpson_index": "Индекс Симпсона: вероятность, что два случайных слова текста совпадут; "
     "чем ниже, тем богаче словарь",
@@ -92,8 +92,14 @@ def diversity_group(analysis: Analysis) -> GroupResult:
 
     ds = DiversityStats(analysis.text)
     values = ds.get_stats()
+    params = {
+        "window": ds.window_len,
+        "threshold": str(ds.mtld_threshold).replace(".", ","),
+        "sample": ds.hdd_sample_size,
+    }
     stats = {
-        name: stat(values[name], description) for name, description in DIVERSITY_STATS.items()
+        name: stat(values[name], description.format(**params))
+        for name, description in DIVERSITY_STATS.items()
     }
     n_words = len(ds.words)
     warnings = []

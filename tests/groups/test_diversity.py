@@ -10,11 +10,22 @@ def test_diversity_group(chekhov):
     expected = DiversityStats(chekhov).get_stats()
     assert list(stats) == list(DIVERSITY_STATS)
     assert set(DIVERSITY_STATS) == set(DIVERSITY_STATS_DESC)
-    assert stats == {
-        name: {"value": clean(expected[name]), "description": description}
-        for name, description in DIVERSITY_STATS.items()
+    assert {name: item["value"] for name, item in stats.items()} == {
+        name: clean(value) for name, value in expected.items()
     }
+    assert list(stats["mattr"]) == ["value", "description"]
     assert warnings == []
+
+
+def test_diversity_parameters(chekhov):
+    """Описания называют параметры мер, с которыми посчитаны значения"""
+    stats, _ = diversity_group(Analysis(chekhov))
+    ds = DiversityStats(chekhov)
+    assert f"окне из {ds.window_len} слов" in stats["mattr"]["description"]
+    assert f"отрезкам из {ds.window_len} слов" in stats["msttr"]["description"]
+    assert "падает до 0,72 (MTLD)" in stats["mtld"]["description"]
+    assert f"выборки из {ds.hdd_sample_size} слов" in stats["hdd"]["description"]
+    assert all("{" not in item["description"] for item in stats.values())
 
 
 def test_diversity_short_text():
