@@ -4,7 +4,14 @@ import pytest
 from ruts import BasicStats
 from ruts.constants import COMPLEX_SYL_FACTOR, LONG_WORD_LETTER_FACTOR
 
-from ruts_mcp.stats import BASIC_STATS, GROUPS, Group, basic_stats, language_warnings
+from ruts_mcp.stats import (
+    BASIC_DISTRIBUTIONS,
+    BASIC_STATS,
+    GROUPS,
+    Group,
+    basic_stats,
+    language_warnings,
+)
 
 TEXT = "Не имей сто рублей, а имей сто друзей. Мама мыла раму — и т. д.!"
 
@@ -46,22 +53,42 @@ def test_basic_distributions():
         "exclamation": 1,
         "dash": 1,
     }
-    assert all("c_" + name[2:] not in basic_stats(TEXT) for name in BASIC_STATS)
+    assert not BASIC_DISTRIBUTIONS.keys() & basic_stats(TEXT).keys()
+
+
+UKRAINIAN = "Він прийшов додому пізно ввечері, і мати вже спала. Київ засинав."
 
 
 @pytest.mark.parametrize(
-    ("text", "share"),
-    [("Hello world", "0%"), ("Это API для LLM-агента, а не SDK", None), ("12345 !!!", None)],
+    ("text", "start"),
+    [
+        ("Hello world", "Букв русского алфавита - только 0%: "),
+        ("ab" * 501 + "аб" * 499, "Букв русского алфавита - только 49%: "),
+        ("аб abc", "Букв русского алфавита - только 40%: "),
+        (UKRAINIAN, "Букв кириллицы не из русского алфавита - 9% (і, ї): "),
+        ("Србија и Југославија", "Букв кириллицы не из русского алфавита - 16% (ј): "),
+    ],
+    ids=["latin", "floor", "mixed", "ukrainian", "serbian"],
 )
-def test_language_warnings(text, share):
-    warnings = language_warnings(text)
-    if share is None:
-        assert warnings == []
-    else:
-        assert len(warnings) == 1
-        assert warnings[0].startswith(f"Кириллица - только {share} букв")
+def test_language_warnings(text, start):
+    (warning,) = language_warnings(text)
+    assert warning.startswith(start)
 
 
-def test_language_warnings_threshold():
-    assert language_warnings("абв abc") == []
-    assert language_warnings("аб abc") != []
+@pytest.mark.parametrize(
+    "text",
+    [
+        TEXT,
+        "абв abc",
+        "Это API для LLM-агента, а не SDK",
+        "Он вернулся из Киева поздно вечером и вспоминал Київ.",
+        "12345 !!!",
+    ],
+    ids=["russian", "half", "terms", "name", "digits"],
+)
+def test_no_language_warnings(text):
+    assert language_warnings(text) == []
+
+
+def test_both_language_warnings():
+    assert len(language_warnings("Він hello world")) == 2

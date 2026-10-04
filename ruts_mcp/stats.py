@@ -1,3 +1,4 @@
+import math
 import re
 from collections.abc import Callable
 from typing import Any, Literal
@@ -5,13 +6,16 @@ from typing import Any, Literal
 Group = Literal["basic"]
 
 PRECISION = 3
-MIN_CYRILLIC_SHARE = 0.5
-CYRILLIC = re.compile(r"[а-яё]", re.IGNORECASE)
+MIN_RUSSIAN_SHARE = 0.5
+MAX_FOREIGN_CYRILLIC_SHARE = 0.03
+RUSSIAN = re.compile(r"[а-яё]", re.IGNORECASE)
+FOREIGN_CYRILLIC = re.compile(r"(?![а-яё])[\u0400-\u052f]", re.IGNORECASE)
 
 # Пороги ruts.constants записаны текстом, чтобы не импортировать ruTS до вызова
 BASIC_STATS = {
     "n_sents": "Предложения, в которых есть слова",
-    "n_words": "Слова",
+    "n_words": "Слова, включая числа; у чисел и слов без гласных (в, км) 0 слогов, поэтому "
+    "они не входят ни в простые и сложные, ни в одно- и многосложные слова",
     "n_unique_words": "Уникальные слова без учета регистра; доля от всех слов",
     "n_long_words": "Длинные слова, от 6 букв; доля от всех слов",
     "n_complex_words": "Сложные слова, от 4 слогов; доля от всех слов",
@@ -22,12 +26,14 @@ BASIC_STATS = {
     "n_letters": "Буквы; доля от всех символов",
     "n_spaces": "Пробелы и табуляции; доля от всех символов",
     "n_syllables": "Слоги",
-    "n_punctuations": "Знаки препинания; доля от всех символов",
+    "n_punctuations": "Знаки препинания и прочие знаки и символы (%, $, №, эмодзи); "
+    "доля от всех символов",
 }
 BASIC_DISTRIBUTIONS = {
     "c_letters": "Число слов по числу букв",
     "c_syllables": "Число слов по числу слогов",
-    "c_punctuations": "Число знаков препинания по типам",
+    "c_punctuations": "Число знаков препинания по типам; other - прочие знаки и символы, "
+    "в том числе эмодзи",
 }
 
 
@@ -53,8 +59,8 @@ def basic_stats(text: str, distributions: bool = False) -> dict[str, Any]:
 
     Пример использования:
         >>> stats = basic_stats("Мама мыла раму.")
-        >>> stats["n_words"]
-        {'value': 3, 'description': 'Слова'}
+        >>> stats["n_sents"]
+        {'value': 1, 'description': 'Предложения, в которых есть слова'}
         >>> stats["n_long_words"]["share"]
         0.0
     """
@@ -85,7 +91,10 @@ def language_warnings(text: str) -> list[str]:
     Описание:
         ruTS считает слоги и слова по правилам русского языка, поэтому для
         текста на другом языке ее значения не имеют смысла. Текст без букв
-        предупреждения не получает
+        предупреждений не получает. Предупреждение дают меньше половины букв
+        русского алфавита и от 3 % букв кириллицы не из него (і, ї, ў, ј, қ),
+        как в украинском, белорусском, сербском или казахском тексте; доля
+        в сообщении округляется вниз
 
     Аргументы:
         text (str): Текст, переданный инструменту
@@ -97,15 +106,31 @@ def language_warnings(text: str) -> list[str]:
         >>> language_warnings("Мама мыла раму")
         []
         >>> language_warnings("Mama washed the frame")
-        ['Кириллица - только 0% букв: ruTS считает статистики по правилам русского языка, для текста на другом языке значения не имеют смысла']
+        ['Букв русского алфавита - только 0%: ruTS считает статистики по правилам русского языка, для текста на другом языке значения не имеют смысла']
+        >>> language_warnings("Він прийшов додому")
+        ['Букв кириллицы не из русского алфавита - 6% (і): текст, похоже, не на русском языке, а ruTS считает слоги и слова по правилам русского, так что значения могут быть неверны']
     """
     letters = sum(char.isalpha() for char in text)
     if not letters:
         return []
-    share = len(CYRILLIC.findall(text)) / letters
-    if share >= MIN_CYRILLIC_SHARE:
-        return []
-    return [
-        f"Кириллица - только {share:.0%} букв: ruTS считает статистики по правилам русского "
-        "языка, для текста на другом языке значения не имеют смысла"
-    ]
+    warnings = []
+    russian = len(RUSSIAN.findall(text)) / letters
+    if russian < MIN_RUSSIAN_SHARE:
+        warnings.append(
+            f"Букв русского алфавита - только {_percent(russian)}: ruTS считает статистики "
+            "по правилам русского языка, для текста на другом языке значения не имеют смысла"
+        )
+    foreign = FOREIGN_CYRILLIC.findall(text)
+    if len(foreign) / letters >= MAX_FOREIGN_CYRILLIC_SHARE:
+        examples = ", ".join(sorted({char.lower() for char in foreign}))
+        warnings.append(
+            f"Букв кириллицы не из русского алфавита - {_percent(len(foreign) / letters)} "
+            f"({examples}): текст, похоже, не на русском языке, а ruTS считает слоги "
+            "и слова по правилам русского, так что значения могут быть неверны"
+        )
+    return warnings
+
+
+def _percent(share: float) -> str:
+    """Доля в процентах с округлением вниз, чтобы 49,9 % не выглядели как пороговые 50 %"""
+    return f"{math.floor(share * 100)}%"
