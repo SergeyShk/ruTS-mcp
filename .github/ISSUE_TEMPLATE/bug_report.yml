@@ -19,9 +19,9 @@ body:
   - type: input
     id: version
     attributes:
-      label: Версия ruTS-mcp
-      description: "`pip show ruts-mcp`"
-      placeholder: "0.1.0"
+      label: Версии ruTS-mcp и ruTS
+      description: Версии пакетов `ruts-mcp` и `ruts` в окружении, где запущен сервер
+      placeholder: "ruts-mcp 0.1.0, ruts 0.15.0"
     validations:
       required: true
   - type: input
