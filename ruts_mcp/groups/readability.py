@@ -7,7 +7,8 @@ READABILITY_STATS = {
     "в класс; число лет обучения, нужное для понимания текста",
     "flesch_kincaid_grade": "Тест Флеша-Кинкайда: число лет обучения по длине предложений "
     "в словах и слов в слогах",
-    "flesch_reading_easy": "Индекс Флеша: номинально от 0 до 100, чем выше, тем легче текст",
+    "flesch_reading_easy": "Индекс Флеша: номинально от 0 до 100, чем выше, тем легче текст; "
+    "прочтение по шкале Флеша",
     "coleman_liau_index": "Индекс Колман-Лиау: число лет обучения по буквам и предложениям "
     "на 100 слов",
     "smog_index": "Индекс SMOG: число лет обучения по словам от 5 слогов на предложение",
@@ -16,7 +17,8 @@ READABILITY_STATS = {
     "lix": "Индекс LIX: средняя длина предложения плюс процент слов от 7 букв; "
     "прочтение по шкале Бьёрнссона",
     "rix": "Индекс RIX: слова от 7 букв на предложение; класс по таблице Андерсона",
-    "sis_grade": "Формула Соловьёва, Иванова, Солнышкиной (2023): число лет обучения",
+    "sis_grade": "Формула Соловьёва, Иванова, Солнышкиной (2023): класс школы по средней "
+    "длине слова в буквах и предложения в словах",
     "matskovsky_index": "Формула Мацковского (1976), первая для русского языка: чем выше, "
     "тем сложнее текст; шкалы у нее нет",
     "dale_chall_index": "Индекс Дейла-Чейла в адаптации plainrussian: число лет обучения "
@@ -25,7 +27,17 @@ READABILITY_STATS = {
     "по длине предложений и доле слов от 5 слогов",
     "reading_time": "Время чтения в минутах при скорости 180 слов в минуту",
 }
-# Шкалы LIX (Björnsson, 1968) и RIX (Anderson, 1983) из документации ruTS, нижние границы включительно
+# Шкалы индекса Флеша (Flesch, 1948), LIX (Björnsson, 1968) и RIX (Anderson, 1983)
+# из документации ruTS, нижние границы включительно
+FLESCH_LEVELS = (
+    (90, "5-й класс"),
+    (80, "6-й класс"),
+    (70, "7-й класс"),
+    (60, "8-9-й класс"),
+    (50, "10-11-й класс"),
+    (30, "университет"),
+)
+FLESCH_BELOW = "выпускник университета"
 LIX_LEVELS = (
     (60, "очень сложный текст: законы и канцелярский язык"),
     (50, "сложный текст: научно-популярная литература, официальные тексты"),
@@ -55,10 +67,11 @@ def readability_group(analysis: Analysis) -> GroupResult:
 
     Описание:
         Метрики ReadabilityStats из ruTS с пресетом коэффициентов из настроек;
-        сводный класс идет первым. Формулы класса и индекс Флеша переводятся
-        в ступень обучения и возраст по таблице ruTS, LIX и RIX - по шкалам
-        Бьёрнссона и Андерсона, у формулы Мацковского шкалы нет. Текст короче
-        30 предложений получает предупреждение: формулы на нем неустойчивы
+        сводный класс идет первым. Формулы класса переводятся в ступень обучения
+        и возраст по таблице ruTS, индекс Флеша, LIX и RIX - по шкалам Флеша,
+        Бьёрнссона и Андерсона из документации ruTS, у формулы Мацковского шкалы
+        нет. Текст короче 30 предложений получает предупреждение: формулы на нем
+        неустойчивы
 
     Аргументы:
         analysis (Analysis): Текст и настройки
@@ -76,21 +89,20 @@ def readability_group(analysis: Analysis) -> GroupResult:
         '1-3-й класс (6-8 лет)'
     """
     from ruts import ReadabilityStats
-    from ruts.readability_stats import flesch_reading_easy_to_grade, grade_to_age
+    from ruts.readability_stats import grade_to_age
 
     rs = ReadabilityStats(analysis.basic, preset=analysis.options.preset)
     values = rs.get_stats()
     grade_stats = {"consensus_grade", *rs.grade_stats}
 
-    def age(grade: float) -> str:
-        return grade_to_age(grade, rs.grade_age_levels, rs.postgraduate_level)
-
     interpretations = {name: rs.describe_grade(name) for name in grade_stats}
-    interpretations["flesch_reading_easy"] = age(
-        flesch_reading_easy_to_grade(values["flesch_reading_easy"])
+    interpretations["flesch_reading_easy"] = _level(
+        values["flesch_reading_easy"], FLESCH_LEVELS, FLESCH_BELOW
     )
-    interpretations["lix"] = _lix_level(values["lix"])
-    interpretations["rix"] = age(_rix_grade(values["rix"]))
+    interpretations["lix"] = _level(values["lix"], LIX_LEVELS, LIX_BELOW)
+    interpretations["rix"] = grade_to_age(
+        _rix_grade(values["rix"]), rs.grade_age_levels, rs.postgraduate_level
+    )
     stats = {
         name: stat(values[name], description, interpretation=interpretations.get(name))
         for name, description in READABILITY_STATS.items()
@@ -98,16 +110,17 @@ def readability_group(analysis: Analysis) -> GroupResult:
     warnings = []
     if analysis.basic.n_sents < MIN_SENTS:
         warnings.append(
-            f"Предложений в тексте: {analysis.basic.n_sents}. Формулы удобочитаемости "
-            f"рассчитаны на тексты в десятки предложений (SMOG - на выборку из {MIN_SENTS}), "
-            "на коротком тексте отдельные формулы неустойчивы: опирайтесь на сводный класс"
+            f"Предложений в тексте: {analysis.basic.n_sents}, меньше {MIN_SENTS}. Формулы "
+            "удобочитаемости опираются на среднюю длину предложения, исходный SMOG - "
+            "на выборку из 30 предложений: на коротком тексте значения неустойчивы, "
+            "включая сводный класс, это грубая оценка"
         )
     return stats, warnings
 
 
-def _lix_level(lix: float) -> str:
-    """Уровень текста по шкале LIX"""
-    return next((level for bound, level in LIX_LEVELS if lix >= bound), LIX_BELOW)
+def _level(value: float, levels: tuple[tuple[float, str], ...], below: str) -> str:
+    """Уровень по шкале из нижних границ в порядке убывания"""
+    return next((level for bound, level in levels if value >= bound), below)
 
 
 def _rix_grade(rix: float) -> int:
