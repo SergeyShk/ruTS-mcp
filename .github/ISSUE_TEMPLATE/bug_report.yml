@@ -1,0 +1,41 @@
+name: Ошибка
+description: Неверный ответ инструмента, исключение или падение сервера
+labels: ["bug"]
+body:
+  - type: textarea
+    id: description
+    attributes:
+      label: Что происходит
+      description: Что вы ожидали и что получили
+    validations:
+      required: true
+  - type: textarea
+    id: reproduce
+    attributes:
+      label: Как воспроизвести
+      description: Инструмент, его аргументы (с текстом, на котором проявляется ошибка) и ответ сервера или полный traceback
+    validations:
+      required: true
+  - type: input
+    id: version
+    attributes:
+      label: Версия ruTS-mcp
+      description: "`pip show ruts-mcp`"
+      placeholder: "0.1.0"
+    validations:
+      required: true
+  - type: input
+    id: client
+    attributes:
+      label: Клиент MCP
+      description: Название и версия клиента, к которому подключён сервер
+      placeholder: "Claude Desktop, Claude Code, Cursor"
+    validations:
+      required: true
+  - type: input
+    id: environment
+    attributes:
+      label: Python и ОС
+      placeholder: "Python 3.12, macOS 15"
+    validations:
+      required: true

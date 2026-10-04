@@ -1,0 +1,45 @@
+site_name: ruTS-mcp
+site_url: https://sergeyshk.github.io/ruTS-mcp/
+site_description: "MCP server for ruTS: statistics of Russian texts as tools for LLM agents"
+repo_url: https://github.com/SergeyShk/ruTS-mcp
+
+nav:
+    - Home:
+      - About: index.md
+      - Authors: authors.md
+
+theme:
+  name: material
+  language: en
+  palette:
+    primary: blue
+    accent: blue
+  font:
+    text: Source Sans Pro
+  features:
+    - navigation.tabs
+
+plugins:
+  - search
+
+extra:
+  social:
+    - icon: fontawesome/brands/github
+      link: https://github.com/SergeyShk
+    - icon: fontawesome/brands/linkedin
+      link: https://www.linkedin.com/in/kouki91/
+
+extra_css:
+  - css/extra.css
+
+markdown_extensions:
+  - toc:
+      permalink: True
+  - attr_list
+  - admonition
+  - pymdownx.highlight
+  - pymdownx.details
+  - pymdownx.superfences
+  - pymdownx.emoji:
+      emoji_index: !!python/name:material.extensions.emoji.twemoji
+      emoji_generator: !!python/name:material.extensions.emoji.to_svg
