@@ -1,0 +1,8 @@
+blank_issues_enabled: true
+contact_links:
+  - name: Документация
+    url: https://sergeyshk.github.io/ruTS-mcp/
+    about: Инструменты сервера, их параметры и подключение к клиентам MCP
+  - name: Статистики ruTS
+    url: https://github.com/SergeyShk/ruTS/issues/new/choose
+    about: Ошибки в значениях статистик и новые метрики - в репозитории библиотеки, сервер считает их ею

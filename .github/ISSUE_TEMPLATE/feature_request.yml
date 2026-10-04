@@ -1,0 +1,22 @@
+name: Предложение
+description: Новый инструмент, параметр, ресурс или промпт
+labels: ["enhancement"]
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: Какую задачу это решает
+      description: Что агент должен посчитать или узнать о тексте и почему текущих инструментов не хватает
+    validations:
+      required: true
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Предлагаемое решение
+      description: Как это могло бы выглядеть - инструмент, параметр, ресурс или промпт и пример ответа
+  - type: checkboxes
+    id: contribution
+    attributes:
+      label: Участие
+      options:
+        - label: Готов(а) сделать пул-реквест
