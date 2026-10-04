@@ -1,4 +1,3 @@
-import math
 import re
 from collections.abc import Callable
 from typing import Any, Literal
@@ -114,23 +113,23 @@ def language_warnings(text: str) -> list[str]:
     if not letters:
         return []
     warnings = []
-    russian = len(RUSSIAN.findall(text)) / letters
-    if russian < MIN_RUSSIAN_SHARE:
+    russian = len(RUSSIAN.findall(text))
+    if russian / letters < MIN_RUSSIAN_SHARE:
         warnings.append(
-            f"Букв русского алфавита - только {_percent(russian)}: ruTS считает статистики "
+            f"Букв русского алфавита - только {_percent(russian, letters)}: ruTS считает статистики "
             "по правилам русского языка, для текста на другом языке значения не имеют смысла"
         )
     foreign = FOREIGN_CYRILLIC.findall(text)
     if len(foreign) / letters >= MAX_FOREIGN_CYRILLIC_SHARE:
         examples = ", ".join(sorted({char.lower() for char in foreign}))
         warnings.append(
-            f"Букв кириллицы не из русского алфавита - {_percent(len(foreign) / letters)} "
+            f"Букв кириллицы не из русского алфавита - {_percent(len(foreign), letters)} "
             f"({examples}): текст, похоже, не на русском языке, а ruTS считает слоги "
             "и слова по правилам русского, так что значения могут быть неверны"
         )
     return warnings
 
 
-def _percent(share: float) -> str:
-    """Доля в процентах с округлением вниз, чтобы 49,9 % не выглядели как пороговые 50 %"""
-    return f"{math.floor(share * 100)}%"
+def _percent(count: int, total: int) -> str:
+    """Доля в процентах с округлением вниз, чтобы 49,9 % не выглядели как пороговые 50 %; в целых числах, без погрешности float"""
+    return f"{100 * count // total}%"
