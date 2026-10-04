@@ -1,16 +1,16 @@
 site_name: ruTS-mcp
 site_url: https://sergeyshk.github.io/ruTS-mcp/
-site_description: "MCP server for ruTS: statistics of Russian texts as tools for LLM agents"
+site_description: "MCP-сервер для ruTS: статистики русского текста как инструменты для LLM-агентов"
 repo_url: https://github.com/SergeyShk/ruTS-mcp
 
 nav:
-    - Home:
-      - About: index.md
-      - Authors: authors.md
+    - Главная:
+      - О проекте: index.md
+      - Авторы: authors.md
 
 theme:
   name: material
-  language: en
+  language: ru
   palette:
     primary: blue
     accent: blue
@@ -20,7 +20,28 @@ theme:
     - navigation.tabs
 
 plugins:
-  - search
+  - search:
+      lang:
+        - ru
+        - en
+  - i18n:
+      docs_structure: suffix
+      fallback_to_default: true
+      reconfigure_material: true
+      reconfigure_search: true
+      languages:
+        - locale: ru
+          name: Русский
+          default: true
+          build: true
+        - locale: en
+          name: English
+          build: true
+          site_description: "MCP server for ruTS: statistics of Russian texts as tools for LLM agents"
+          nav_translations:
+            Главная: Home
+            О проекте: About
+            Авторы: Authors
 
 extra:
   social:

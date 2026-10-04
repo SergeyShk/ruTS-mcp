@@ -4,4 +4,4 @@
 
 ## Проверка
 
-<!-- Чем проверено: тесты (что именно они проверяют), `make lint`, `make test-cov`, `make docs-build`, если менялась документация. Напоминание: README двуязычный - `README.md` + `README.en.md` -->
+<!-- Чем проверено: тесты (что именно они проверяют), `make lint`, `make test-cov`, `make docs-build`, если менялась документация. Напоминание: документация и README двуязычные - `docs/*.md` + `docs/*.en.md`, `README.md` + `README.en.md` -->

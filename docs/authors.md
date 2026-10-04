@@ -1,11 +1,11 @@
-# Authors
+# Авторы
 
-**Sergey Shkarin** - Data Scientist
+**Шкарин Сергей Сергеевич** - Data Scientist
 
 [:fontawesome-brands-github:{ .contact }](https://github.com/SergeyShk)
 [:fontawesome-solid-envelope:{ .contact }](mailto:kouki.sergey@gmail.com)
 [:fontawesome-brands-linkedin:{ .contact }](https://www.linkedin.com/in/kouki91/)
 
-## Contributing
+## Участие в проекте
 
-Bug reports, ideas and pull requests are welcome, in Russian or English. The workflow and the checks to run before submitting a pull request are described in [CONTRIBUTING.md](https://github.com/SergeyShk/ruTS-mcp/blob/master/CONTRIBUTING.md); the rules of conduct are in the [code of conduct](https://github.com/SergeyShk/ruTS-mcp/blob/master/CODE_OF_CONDUCT.md).
+Баг-репорты, идеи и пул-реквесты приветствуются, по-русски и по-английски. Порядок работы и проверки перед отправкой пул-реквеста описаны в [CONTRIBUTING.md](https://github.com/SergeyShk/ruTS-mcp/blob/master/CONTRIBUTING.md), правила поведения - в [кодексе поведения](https://github.com/SergeyShk/ruTS-mcp/blob/master/CODE_OF_CONDUCT.md).

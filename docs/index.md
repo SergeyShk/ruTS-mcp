@@ -1,7 +1,7 @@
 # ruTS-mcp
 
-**ruTS-mcp** is an [MCP](https://modelcontextprotocol.io) server for [ruTS](https://sergeyshk.github.io/ruTS/), a library of statistics of Russian texts. It gives an LLM agent tools to measure a text instead of judging it by eye: readability, lexical diversity, morphology, comparison of corpora - each value with the scale to read it by and the limits of its applicability.
+**ruTS-mcp** - [MCP](https://modelcontextprotocol.io)-сервер для [ruTS](https://sergeyshk.github.io/ruTS/), библиотеки статистик русского текста. Он даёт LLM-агенту инструменты, чтобы измерить текст, а не оценивать его на глаз: удобочитаемость, лексическое разнообразие, морфологию, сравнение корпусов - каждое значение вместе со шкалой, по которой его читать, и границами применимости.
 
 !!! note
 
-    The server is in development: the tools and the installation instructions will appear with the first release.
+    Сервер в разработке: инструменты и инструкция по установке появятся с первым релизом.
