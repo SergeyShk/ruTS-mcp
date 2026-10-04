@@ -1,6 +1,6 @@
 [project]
 name = "ruts-mcp"
-version = "0.1.0.dev1"
+version = "0.1.0.dev2"
 description = "MCP server for ruTS: statistics of Russian texts as tools for LLM agents"
 readme = "README.md"
 requires-python = ">=3.11"
@@ -38,7 +38,13 @@ classifiers = [
     "Typing :: Typed",
     "Natural Language :: Russian",
 ]
-dependencies = []
+dependencies = [
+    "fastmcp>=4,<5",
+    "ruts>=0.15,<0.16",
+]
+
+[project.scripts]
+ruts-mcp = "ruts_mcp.cli:main"
 
 [project.urls]
 Homepage = "https://github.com/SergeyShk/ruTS-mcp"

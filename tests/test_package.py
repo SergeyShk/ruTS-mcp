@@ -37,6 +37,11 @@ def test_version_fallback(monkeypatch):
     assert ruts_mcp.__version__ != "0.0.0"
 
 
+def test_entry_point():
+    (point,) = importlib.metadata.entry_points(group="console_scripts", name="ruts-mcp")
+    assert point.value == "ruts_mcp.cli:main"
+
+
 def test_package_data():
     assert (Path(ruts_mcp.__file__).parent / "py.typed").is_file()
 
