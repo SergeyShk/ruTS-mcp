@@ -15,5 +15,7 @@ def test_from_os_environ(monkeypatch):
 
 @pytest.mark.parametrize("value", ["", "abc", "1.5", "0", "-3"])
 def test_invalid(value):
-    with pytest.raises(ValueError, match=r"^RUTS_MCP_MAX_TEXT_LENGTH must be a positive integer"):
+    with pytest.raises(
+        ValueError, match=r"^RUTS_MCP_MAX_TEXT_LENGTH должна быть целым положительным числом"
+    ):
         Settings.from_env({"RUTS_MCP_MAX_TEXT_LENGTH": value})

@@ -1,4 +1,4 @@
-"""Every Russian page of the documentation has an English one with the same headings, anchors and links"""
+"""У каждой русской страницы документации есть английская с теми же заголовками, якорями и ссылками"""
 
 import re
 from pathlib import Path
@@ -20,7 +20,7 @@ def links(text: str) -> set[str]:
 @pytest.mark.parametrize("page", PAGES, ids=[str(page.relative_to(DOCS)) for page in PAGES])
 def test_english_page(page):
     english = page.with_name(page.name[:-3] + ".en.md")
-    assert english.is_file(), f"no English version {english.relative_to(DOCS)}"
+    assert english.is_file(), f"нет английской версии {english.relative_to(DOCS)}"
     russian_text = page.read_text(encoding="utf-8")
     english_text = english.read_text(encoding="utf-8")
     assert anchors(english_text) == anchors(russian_text)

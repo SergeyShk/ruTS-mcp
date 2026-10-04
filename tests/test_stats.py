@@ -25,15 +25,15 @@ def test_basic_stats():
     assert stats["n_unique_words"] == {
         "value": 12,
         "share": 0.857,
-        "description": "Unique words, case ignored; share of all words",
+        "description": "Уникальные слова без учета регистра; доля от всех слов",
     }
 
 
 def test_basic_thresholds():
-    """The descriptions name the thresholds of ruTS"""
-    assert f"of {LONG_WORD_LETTER_FACTOR} or more letters" in BASIC_STATS["n_long_words"]
-    assert f"of {COMPLEX_SYL_FACTOR} or more syllables" in BASIC_STATS["n_complex_words"]
-    assert f"of 1 to {COMPLEX_SYL_FACTOR - 1} syllables" in BASIC_STATS["n_simple_words"]
+    """Описания называют пороги ruTS"""
+    assert f"от {LONG_WORD_LETTER_FACTOR} букв" in BASIC_STATS["n_long_words"]
+    assert f"от {COMPLEX_SYL_FACTOR} слогов" in BASIC_STATS["n_complex_words"]
+    assert f"от 1 до {COMPLEX_SYL_FACTOR - 1} слогов" in BASIC_STATS["n_simple_words"]
 
 
 def test_basic_distributions():
@@ -59,7 +59,7 @@ def test_language_warnings(text, share):
         assert warnings == []
     else:
         assert len(warnings) == 1
-        assert warnings[0].startswith(f"Only {share} of the letters are Cyrillic")
+        assert warnings[0].startswith(f"Кириллица - только {share} букв")
 
 
 def test_language_warnings_threshold():

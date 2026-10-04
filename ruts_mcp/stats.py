@@ -8,54 +8,53 @@ PRECISION = 3
 MIN_CYRILLIC_SHARE = 0.5
 CYRILLIC = re.compile(r"[а-яё]", re.IGNORECASE)
 
-# The thresholds of ruts.constants are written out to leave ruTS unimported until a call
+# Пороги ruts.constants записаны текстом, чтобы не импортировать ruTS до вызова
 BASIC_STATS = {
-    "n_sents": "Sentences that contain words",
-    "n_words": "Words",
-    "n_unique_words": "Unique words, case ignored; share of all words",
-    "n_long_words": "Long words, of 6 or more letters; share of all words",
-    "n_complex_words": "Complex words, of 4 or more syllables; share of all words",
-    "n_simple_words": "Simple words, of 1 to 3 syllables; share of all words",
-    "n_monosyllable_words": "Words of one syllable; share of all words",
-    "n_polysyllable_words": "Words of two or more syllables; share of all words",
-    "n_chars": "Characters, line breaks excluded",
-    "n_letters": "Letters; share of all characters",
-    "n_spaces": "Spaces and tabs; share of all characters",
-    "n_syllables": "Syllables",
-    "n_punctuations": "Punctuation marks; share of all characters",
+    "n_sents": "Предложения, в которых есть слова",
+    "n_words": "Слова",
+    "n_unique_words": "Уникальные слова без учета регистра; доля от всех слов",
+    "n_long_words": "Длинные слова, от 6 букв; доля от всех слов",
+    "n_complex_words": "Сложные слова, от 4 слогов; доля от всех слов",
+    "n_simple_words": "Простые слова, от 1 до 3 слогов; доля от всех слов",
+    "n_monosyllable_words": "Односложные слова; доля от всех слов",
+    "n_polysyllable_words": "Многосложные слова, от 2 слогов; доля от всех слов",
+    "n_chars": "Символы без переводов строки",
+    "n_letters": "Буквы; доля от всех символов",
+    "n_spaces": "Пробелы и табуляции; доля от всех символов",
+    "n_syllables": "Слоги",
+    "n_punctuations": "Знаки препинания; доля от всех символов",
 }
 BASIC_DISTRIBUTIONS = {
-    "c_letters": "Number of words by their number of letters",
-    "c_syllables": "Number of words by their number of syllables",
-    "c_punctuations": "Number of punctuation marks by type",
+    "c_letters": "Число слов по числу букв",
+    "c_syllables": "Число слов по числу слогов",
+    "c_punctuations": "Число знаков препинания по типам",
 }
 
 
 def basic_stats(text: str, distributions: bool = False) -> dict[str, Any]:
     """
-    Basic statistics of a text with their descriptions
+    Основные статистики текста с их описаниями
 
-    Description:
-        The counts of BasicStats of ruTS; a count of words or of characters
-        comes with its share of all words or of all characters. The keys
-        of the distributions are strings, as in JSON, and the types of
-        punctuation marks absent from the text are left out
+    Описание:
+        Счетчики BasicStats из ruTS; счетчик слов или символов идет с долей
+        от всех слов или всех символов. Ключи распределений - строки, как
+        в JSON; типы знаков препинания, которых нет в тексте, опускаются
 
-    Arguments:
-        text (str): Text in Russian
-        distributions (bool): Add the distributions of words by letters and
-            by syllables and of punctuation marks by type
+    Аргументы:
+        text (str): Текст на русском языке
+        distributions (bool): Добавить распределения слов по числу букв
+            и слогов и знаков препинания по типам
 
-    Returns:
-        dict[str, Any]: Name of a statistic of ruTS - its value, share and description
+    Вывод:
+        dict[str, Any]: Имя статистики ruTS - ее значение, доля и описание
 
-    Raises:
-        SourceError: If the text has no words
+    Исключения:
+        SourceError: Если в тексте нет слов
 
-    Example:
+    Пример использования:
         >>> stats = basic_stats("Мама мыла раму.")
         >>> stats["n_words"]
-        {'value': 3, 'description': 'Words'}
+        {'value': 3, 'description': 'Слова'}
         >>> stats["n_long_words"]["share"]
         0.0
     """
@@ -81,24 +80,24 @@ GROUPS: dict[Group, Callable[[str, bool], dict[str, Any]]] = {"basic": basic_sta
 
 def language_warnings(text: str) -> list[str]:
     """
-    Warnings about a text that is not in Russian
+    Предупреждения о тексте не на русском языке
 
-    Description:
-        ruTS counts syllables and reads words by the rules of Russian, so its
-        values for a text in another language are not meaningful. A text
-        without letters gets no warning
+    Описание:
+        ruTS считает слоги и слова по правилам русского языка, поэтому для
+        текста на другом языке ее значения не имеют смысла. Текст без букв
+        предупреждения не получает
 
-    Arguments:
-        text (str): Text passed to a tool
+    Аргументы:
+        text (str): Текст, переданный инструменту
 
-    Returns:
-        list[str]: Warnings for the model; empty for a Russian text
+    Вывод:
+        list[str]: Предупреждения для модели; для русского текста - пустой список
 
-    Example:
+    Пример использования:
         >>> language_warnings("Мама мыла раму")
         []
         >>> language_warnings("Mama washed the frame")
-        ['Only 0% of the letters are Cyrillic: ruTS measures Russian texts, its values for a text in another language are not meaningful']
+        ['Кириллица - только 0% букв: ruTS считает статистики по правилам русского языка, для текста на другом языке значения не имеют смысла']
     """
     letters = sum(char.isalpha() for char in text)
     if not letters:
@@ -107,6 +106,6 @@ def language_warnings(text: str) -> list[str]:
     if share >= MIN_CYRILLIC_SHARE:
         return []
     return [
-        f"Only {share:.0%} of the letters are Cyrillic: ruTS measures Russian texts, "
-        "its values for a text in another language are not meaningful"
+        f"Кириллица - только {share:.0%} букв: ruTS считает статистики по правилам русского "
+        "языка, для текста на другом языке значения не имеют смысла"
     ]

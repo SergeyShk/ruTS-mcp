@@ -8,34 +8,34 @@ from .settings import Settings
 
 def check_text(text: str) -> None:
     """
-    Checking that a text fits the limit of the server
+    Проверка, что текст не длиннее лимита сервера
 
-    Arguments:
-        text (str): Text passed to a tool
+    Аргументы:
+        text (str): Текст, переданный инструменту
 
-    Raises:
-        ToolError: If the text is longer than Settings.max_text_length
+    Исключения:
+        ToolError: Если текст длиннее Settings.max_text_length
     """
     limit = Settings.from_env().max_text_length
     if len(text) > limit:
         raise ToolError(
-            f"The text has {len(text):,} characters, more than the limit of {limit:,}: "
-            "pass a shorter text or a part of it (the limit is set by RUTS_MCP_MAX_TEXT_LENGTH)"
+            f"Текст длиннее лимита сервера (символов: {len(text)}, лимит: {limit}): "
+            "передайте текст короче или его часть; лимит задает переменная RUTS_MCP_MAX_TEXT_LENGTH"
         )
 
 
 @contextmanager
 def ruts_errors() -> Iterator[None]:
     """
-    Turning the exceptions of ruTS into errors of a tool
+    Перевод исключений ruTS в ошибки инструмента
 
-    Description:
-        The message of RutsError and its subclasses says what is wrong with
-        the input, so the model gets it as the error of the tool, not as
-        a failure of the server. ruTS is imported on entry
+    Описание:
+        Сообщение RutsError и ее подклассов говорит, что не так с входными
+        данными, поэтому модель получает его как ошибку инструмента, а не
+        как сбой сервера. ruTS импортируется при входе
 
-    Raises:
-        ToolError: If ruTS raises RutsError
+    Исключения:
+        ToolError: Если ruTS поднимает RutsError
     """
     from ruts import RutsError
 

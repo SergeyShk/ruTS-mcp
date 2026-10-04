@@ -25,8 +25,8 @@ async def test_tools():
     async with Client(mcp) as client:
         (tool,) = await client.list_tools()
     assert tool.name == "analyze_text"
-    assert tool.title == "Analyze a Russian text"
-    assert tool.description.startswith("Measure a Russian text")
+    assert tool.title == "Анализ русского текста"
+    assert tool.description.startswith("Измерить русский текст")
     assert tool.annotations.read_only_hint
     assert tool.annotations.idempotent_hint
     assert not tool.annotations.open_world_hint
@@ -59,7 +59,7 @@ async def test_call_errors(arguments, message):
 
 
 def test_lazy_ruts():
-    """The server starts and lists its tools without importing ruTS"""
+    """Сервер запускается и отдает список инструментов, не импортируя ruTS"""
     code = (
         "import asyncio, sys\n"
         "from fastmcp import Client\n"
@@ -75,7 +75,7 @@ def test_lazy_ruts():
 
 
 async def test_stdio():
-    """A client of the older protocol, as most of them are, runs the server by its command"""
+    """Клиент старого протокола, как большинство клиентов, запускает сервер его командой"""
     transport = StdioTransport(sys.executable, ["-m", "ruts_mcp"])
     async with Client(transport, mode="legacy") as client:
         assert client.initialize_result.server_info.name == "ruTS-mcp"

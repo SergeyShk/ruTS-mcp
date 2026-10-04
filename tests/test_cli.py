@@ -35,7 +35,7 @@ def test_invalid_settings(monkeypatch, runs, capsys):
         main([])
     assert info.value.code == 2
     assert (
-        "RUTS_MCP_MAX_TEXT_LENGTH must be a positive integer, got 'many'"
+        "RUTS_MCP_MAX_TEXT_LENGTH должна быть целым положительным числом, получено 'many'"
         in capsys.readouterr().err
     )
     assert runs == []

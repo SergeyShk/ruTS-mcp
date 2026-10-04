@@ -9,22 +9,27 @@ from .settings import Settings
 
 def main(argv: Sequence[str] | None = None) -> None:
     """
-    Running the server over stdio
+    Запуск сервера по stdio
 
-    Description:
-        The settings are checked before the start, so a wrong environment
-        variable stops the command with its message
+    Описание:
+        Настройки проверяются до запуска: неверная переменная окружения
+        останавливает команду с ее сообщением
 
-    Arguments:
-        argv (list[str]): Arguments of the command line; None - sys.argv
+    Аргументы:
+        argv (list[str]): Аргументы командной строки; None - sys.argv
     """
     parser = argparse.ArgumentParser(
         prog="ruts-mcp",
-        description="MCP server for ruTS: statistics of Russian texts as tools for LLM agents. "
-        "Runs over stdio; the settings are the environment variables RUTS_MCP_*",
+        description="MCP-сервер для ruTS: статистики русского текста как инструменты "
+        "для LLM-агентов. Работает по stdio; настройки задаются переменными окружения RUTS_MCP_*",
+        add_help=False,
     )
+    parser.add_argument("-h", "--help", action="help", help="показать эту справку и выйти")
     parser.add_argument(
-        "--version", action="version", version=f"ruts-mcp {__version__}, ruts {version('ruts')}"
+        "--version",
+        action="version",
+        version=f"ruts-mcp {__version__}, ruts {version('ruts')}",
+        help="показать версии ruts-mcp и ruts и выйти",
     )
     parser.parse_args(argv)
     try:

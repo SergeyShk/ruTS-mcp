@@ -19,7 +19,7 @@ def test_version():
 
 
 def test_metadata():
-    assert "Russian" in ruts_mcp.__description__
+    assert "русского текста" in ruts_mcp.__description__
     assert "__version__" in ruts_mcp.__all__
     assert ruts_mcp.__all__ == sorted(ruts_mcp.__all__)
 
@@ -46,7 +46,7 @@ def test_package_data():
     assert (Path(ruts_mcp.__file__).parent / "py.typed").is_file()
 
 
-@pytest.mark.skipif(shutil.which("uv") is None, reason="the wheel is built by uv")
+@pytest.mark.skipif(shutil.which("uv") is None, reason="колесо собирает uv")
 def test_wheel_contents(tmp_path):
     subprocess.run(
         ["uv", "build", "--wheel", "--out-dir", str(tmp_path), str(ROOT)],

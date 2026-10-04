@@ -9,15 +9,15 @@ ENV_PREFIX = "RUTS_MCP_"
 @dataclass(frozen=True)
 class Settings:
     """
-    Settings of the server
+    Настройки сервера
 
-    Description:
-        A setting is read from the environment variable of its name in upper
-        case with the prefix RUTS_MCP_ (RUTS_MCP_MAX_TEXT_LENGTH); a variable
-        that is not set keeps the default
+    Описание:
+        Настройка читается из переменной окружения с ее именем в верхнем
+        регистре и префиксом RUTS_MCP_ (RUTS_MCP_MAX_TEXT_LENGTH); если
+        переменная не задана, остается значение по умолчанию
 
-    Attributes:
-        max_text_length (int): Maximum number of characters of a text a tool takes
+    Атрибуты:
+        max_text_length (int): Наибольшее число символов текста, который принимает инструмент
     """
 
     max_text_length: int = 500_000
@@ -25,18 +25,18 @@ class Settings:
     @classmethod
     def from_env(cls, environ: Mapping[str, str] | None = None) -> Self:
         """
-        Reading the settings from the environment
+        Чтение настроек из окружения
 
-        Arguments:
-            environ (Mapping[str, str]): Environment variables; None - os.environ
+        Аргументы:
+            environ (Mapping[str, str]): Переменные окружения; None - os.environ
 
-        Returns:
-            Settings: Settings of the server
+        Вывод:
+            Settings: Настройки сервера
 
-        Raises:
-            ValueError: If a variable is not a positive integer
+        Исключения:
+            ValueError: Если значение переменной не целое положительное число
 
-        Example:
+        Пример использования:
             >>> Settings.from_env({"RUTS_MCP_MAX_TEXT_LENGTH": "1000"})
             Settings(max_text_length=1000)
         """
@@ -47,7 +47,7 @@ class Settings:
 
 
 def _positive_int(environ: Mapping[str, str], name: str, default: int) -> int:
-    """The positive integer of a variable or the default when it is not set"""
+    """Целое положительное значение переменной или значение по умолчанию, если она не задана"""
     variable = ENV_PREFIX + name
     if variable not in environ:
         return default
@@ -57,5 +57,5 @@ def _positive_int(environ: Mapping[str, str], name: str, default: int) -> int:
     except ValueError:
         value = 0
     if value < 1:
-        raise ValueError(f"{variable} must be a positive integer, got {raw!r}")
+        raise ValueError(f"{variable} должна быть целым положительным числом, получено {raw!r}")
     return value

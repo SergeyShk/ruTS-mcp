@@ -7,29 +7,27 @@ from .stats import GROUPS, Group, language_warnings
 
 
 def analyze_text(
-    text: Annotated[str, Field(description="Text in Russian")],
+    text: Annotated[str, Field(description="Текст на русском языке")],
     groups: Annotated[
         tuple[Group, ...],
-        Field(
-            description="Groups of statistics to compute, each a key of the result", min_length=1
-        ),
+        Field(description="Группы статистик; каждая - ключ результата", min_length=1),
     ] = ("basic",),
     distributions: Annotated[
         bool,
         Field(
-            description="Add the distributions of words by number of letters and of syllables "
-            "and of punctuation marks by type (group basic)"
+            description="Добавить распределения слов по числу букв и слогов "
+            "и знаков препинания по типам (группа basic)"
         ),
     ] = False,
 ) -> dict[str, Any]:
-    """Measure a Russian text with the statistics of the ruTS library.
+    """Измерить русский текст статистиками библиотеки ruTS.
 
-    Use it to get exact numbers about a text instead of estimating them by eye.
+    Используйте, чтобы получить точные числа о тексте, а не оценивать его на глаз.
 
-    Groups of statistics:
-    - basic: sentences, words, syllables, characters, letters, spaces and punctuation marks; unique, long (6+ letters), complex (4+ syllables), simple, monosyllabic and polysyllabic words with their share of all words.
+    Группы статистик:
+    - basic: предложения, слова, слоги, символы, буквы, пробелы и знаки препинания; уникальные, длинные (от 6 букв), сложные (от 4 слогов), простые, односложные и многосложные слова с долей от всех слов.
 
-    The result has a key per requested group that maps a statistic to its "value", its "share" where it has one and a "description" of what it counts, and "warnings": the reasons the values may not be meaningful for this text, such as a text that is not in Russian. Read the warnings before drawing conclusions.
+    В результате по ключу на каждую запрошенную группу: статистика с ее значением "value", долей "share", если она есть, и описанием "description" - что она считает. Ключ "warnings" - причины, по которым значения могут не иметь смысла для этого текста, например текст не на русском языке. Прочитайте предупреждения, прежде чем делать выводы.
     """
     check_text(text)
     with ruts_errors():

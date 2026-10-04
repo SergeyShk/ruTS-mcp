@@ -20,6 +20,6 @@ def test_check_text(monkeypatch):
     monkeypatch.setenv("RUTS_MCP_MAX_TEXT_LENGTH", "1000")
     check_text("а" * 1000)
     with pytest.raises(
-        ToolError, match=r"^The text has 1,001 characters, more than the limit of 1,000"
+        ToolError, match=r"^Текст длиннее лимита сервера \(символов: 1001, лимит: 1000\)"
     ):
         check_text("а" * 1001)
