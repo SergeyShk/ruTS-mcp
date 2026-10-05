@@ -33,8 +33,12 @@ def test_phon_undefined():
 
 
 def test_phon_no_repeated_sound():
-    """Индекс не определен, если ни один звук не повторился в двух словах окна"""
+    """Индекс не определен, если ни один звук не встречается в двух словах текста"""
     stats, warnings = phon_group(Analysis("Сад, лес, дом, мир."))
     assert stats["assonance"]["value"] is None
     (warning,) = warnings
-    assert "ни один звук не повторился в двух словах окна" in warning
+    assert "ни один звук не встречается в двух словах текста" in warning
+    # гласная «а» повторяется в словах вне одного окна: индекс 0, а не None
+    stats, warnings = phon_group(Analysis("Сад, лес, дом, мир, ад."))
+    assert stats["assonance"]["value"] == 0.0
+    assert warnings == []
