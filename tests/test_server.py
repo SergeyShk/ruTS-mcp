@@ -39,6 +39,7 @@ async def test_tools():
         "morph",
         "phon",
         "cohesion",
+        "style",
     ]
     assert groups["default"] == ["basic", "readability"]
     preset = tool.input_schema["properties"]["readability_preset"]
@@ -57,8 +58,9 @@ async def test_call():
         ({"text": ""}, "The data source has no words"),
         ({"text": TEXT, "groups": []}, "at least 1 item"),
         (
-            {"text": TEXT, "groups": ["style"]},
-            "Input should be 'basic', 'readability', 'diversity', 'morph', 'phon' or 'cohesion'",
+            {"text": TEXT, "groups": ["lexical"]},
+            "Input should be 'basic', 'readability', 'diversity', 'morph', 'phon', "
+            "'cohesion' or 'style'",
         ),
     ],
 )
