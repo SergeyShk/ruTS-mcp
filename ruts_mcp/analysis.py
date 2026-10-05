@@ -10,6 +10,8 @@ Preset = Literal["plainrussian", "fiction", "academic"]
 GroupResult = tuple[dict[str, Any], list[str]]
 
 SIGNIFICANT_DIGITS = 4
+# Группы lexical и verse не считают числа словами, остальные считают
+NO_WORDS_WARNING = "Группа {group} не посчитана: в тексте нет слов, а числа словами не считаются"
 
 
 @dataclass(frozen=True)

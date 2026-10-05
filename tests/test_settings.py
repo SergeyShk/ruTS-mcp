@@ -1,11 +1,24 @@
-import pytest
+from pathlib import Path
 
-from ruts_mcp.settings import Settings
+import pytest
+from platformdirs import user_data_dir
+
+from ruts_mcp.settings import DEFAULT_DATA_DIR, Settings
 
 
 def test_defaults():
     assert Settings.from_env({}) == Settings()
     assert Settings().max_text_length == 500_000
+    assert Settings().data_dir == Path(user_data_dir("ruts-mcp", appauthor=False))
+
+
+@pytest.mark.parametrize(
+    ("value", "expected"),
+    [("~/ruts_data", Path.home().resolve() / "ruts_data"), ("", DEFAULT_DATA_DIR)],
+)
+def test_data_dir(value, expected):
+    """Каталог данных задает переменная ruTS RUTS_DATA_DIR, пустая - не задает"""
+    assert Settings.from_env({"RUTS_DATA_DIR": value}).data_dir == expected
 
 
 def test_from_os_environ(monkeypatch):
