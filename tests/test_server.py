@@ -32,7 +32,14 @@ async def test_tools():
     assert not tool.annotations.open_world_hint
     assert tool.input_schema["required"] == ["text"]
     groups = tool.input_schema["properties"]["groups"]
-    assert groups["items"]["enum"] == ["basic", "readability", "diversity"]
+    assert groups["items"]["enum"] == [
+        "basic",
+        "readability",
+        "diversity",
+        "morph",
+        "phon",
+        "cohesion",
+    ]
     assert groups["default"] == ["basic", "readability"]
     preset = tool.input_schema["properties"]["readability_preset"]
     assert preset["enum"] == ["plainrussian", "fiction", "academic"]
@@ -51,7 +58,7 @@ async def test_call():
         ({"text": TEXT, "groups": []}, "at least 1 item"),
         (
             {"text": TEXT, "groups": ["style"]},
-            "Input should be 'basic', 'readability' or 'diversity'",
+            "Input should be 'basic', 'readability', 'diversity', 'morph', 'phon' or 'cohesion'",
         ),
     ],
 )

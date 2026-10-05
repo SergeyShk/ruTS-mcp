@@ -1,6 +1,6 @@
 [project]
 name = "ruts-mcp"
-version = "0.1.0.dev4"
+version = "0.1.0.dev5"
 description = "MCP server for ruTS: statistics of Russian texts as tools for LLM agents"
 readme = "README.md"
 requires-python = ">=3.11"
