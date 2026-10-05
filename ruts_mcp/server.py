@@ -1,6 +1,7 @@
 from fastmcp import FastMCP
 
 from . import __version__
+from .corpus import collocations, dispersion, kwic
 from .tools import analyze_text
 
 INSTRUCTIONS = (
@@ -12,3 +13,6 @@ READ_ONLY = {"readOnlyHint": True, "idempotentHint": True, "openWorldHint": Fals
 
 mcp = FastMCP("ruTS-mcp", instructions=INSTRUCTIONS, version=__version__)
 mcp.tool(analyze_text, title="Анализ русского текста", annotations=READ_ONLY)
+mcp.tool(kwic, title="Конкорданс", annotations=READ_ONLY)
+mcp.tool(collocations, title="Коллокации", annotations=READ_ONLY)
+mcp.tool(dispersion, title="Дисперсия слов", annotations=READ_ONLY)

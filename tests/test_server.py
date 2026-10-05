@@ -6,6 +6,7 @@ from fastmcp import Client
 from fastmcp.client.transports import StdioTransport
 
 import ruts_mcp
+from ruts_mcp.corpus import kwic
 from ruts_mcp.server import INSTRUCTIONS, mcp
 from ruts_mcp.tools import analyze_text
 
@@ -23,13 +24,22 @@ async def test_server_info():
 
 async def test_tools():
     async with Client(mcp) as client:
-        (tool,) = await client.list_tools()
-    assert tool.name == "analyze_text"
-    assert tool.title == "Анализ русского текста"
+        tools = {tool.name: tool for tool in await client.list_tools()}
+    assert {name: tool.title for name, tool in tools.items()} == {
+        "analyze_text": "Анализ русского текста",
+        "kwic": "Конкорданс",
+        "collocations": "Коллокации",
+        "dispersion": "Дисперсия слов",
+    }
+    for tool in tools.values():
+        assert tool.annotations.read_only_hint
+        assert tool.annotations.idempotent_hint
+        assert not tool.annotations.open_world_hint
+    assert tools["kwic"].input_schema["required"] == ["text", "keyword"]
+    measure = tools["collocations"].input_schema["properties"]["measure"]
+    assert measure["enum"][0] == measure["default"] == "logdice"
+    tool = tools["analyze_text"]
     assert tool.description.startswith("Измерить русский текст")
-    assert tool.annotations.read_only_hint
-    assert tool.annotations.idempotent_hint
-    assert not tool.annotations.open_world_hint
     assert tool.input_schema["required"] == ["text"]
     groups = tool.input_schema["properties"]["groups"]
     assert groups["items"]["enum"] == [
@@ -52,6 +62,12 @@ async def test_call():
     async with Client(mcp) as client:
         result = await client.call_tool("analyze_text", {"text": TEXT, "distributions": True})
     assert result.structured_content == analyze_text(TEXT, distributions=True)
+
+
+async def test_call_kwic():
+    async with Client(mcp) as client:
+        result = await client.call_tool("kwic", {"text": TEXT, "keyword": "раму", "window": 1})
+    assert result.structured_content == kwic(TEXT, "раму", window=1)
 
 
 @pytest.mark.parametrize(
