@@ -133,6 +133,11 @@ def test_dispersion(chekhov):
     ]
 
 
+def test_dispersion_frequent(chekhov):
+    """Слово с частотой не меньше числа частей предупреждений не получает"""
+    assert dispersion(chekhov, words=["тонкий"], parts=5)["warnings"] == []
+
+
 def test_dispersion_top(chekhov):
     result = dispersion(chekhov, top_n=3)
     assert [item["word"] for item in result["words"]] == ["и", "он", "ты"]
