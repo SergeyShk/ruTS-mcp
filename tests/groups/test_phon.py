@@ -16,6 +16,9 @@ def test_phon_group(chekhov):
         assert item["description"].startswith(PHON_STATS_DESC[name])
     assert stats["p_open_syllables"]["description"] == PHON_STATS_DESC["p_open_syllables"]
     assert f"окна из {ps.window_len} слов" in stats["alliteration"]["description"]
+    assert stats["p_heavy_clusters"]["description"].endswith("включая одиночные согласные")
+    assert stats["hardness"]["description"].endswith("чем выше, тем жестче звучание")
+    assert stats["cv_entropy"]["description"].endswith("разнообразнее фонетическая форма слов")
     assert warnings == []
 
 
@@ -27,3 +30,11 @@ def test_phon_undefined():
     (warning,) = warnings
     assert warning.startswith("Не определены на этом тексте: ")
     assert "alliteration, assonance" in warning
+
+
+def test_phon_no_repeated_sound():
+    """Индекс не определен, если ни один звук не повторился в двух словах окна"""
+    stats, warnings = phon_group(Analysis("Сад, лес, дом, мир."))
+    assert stats["assonance"]["value"] is None
+    (warning,) = warnings
+    assert "ни один звук не повторился в двух словах окна" in warning
