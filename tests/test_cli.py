@@ -4,6 +4,8 @@ import sys
 from importlib.metadata import version
 
 import pytest
+from ruts.datasets import FreqDict, StressDict
+from ruts.exceptions import DownloadError
 
 import ruts_mcp
 from ruts_mcp.cli import main
@@ -51,3 +53,62 @@ def test_module(monkeypatch, runs):
 def test_module_import(runs):
     importlib.import_module("ruts_mcp.__main__")
     assert runs == []
+
+
+@pytest.fixture
+def downloads(monkeypatch):
+    """Загрузка словарей без сети: записывает пустой файл словаря и запоминает force"""
+    calls = []
+
+    def download(self, force=False):
+        calls.append((type(self).__name__, force))
+        self.data_dir.mkdir(parents=True, exist_ok=True)
+        self._filepath.touch()
+
+    monkeypatch.setattr(FreqDict, "download", download)
+    monkeypatch.setattr(StressDict, "download", download)
+    return calls
+
+
+def test_download(downloads, runs, capsys, data_dir):
+    main(["download"])
+    assert capsys.readouterr().out.splitlines() == [
+        f"Каталог словарей: {data_dir / 'dicts'}",
+        "Частотный словарь Ляшевской и Шарова: скачивается...",
+        "Частотный словарь Ляшевской и Шарова: скачан",
+        "Словарь ударений Козиева: скачивается...",
+        "Словарь ударений Козиева: скачан",
+    ]
+    main(["download"])
+    assert capsys.readouterr().out.splitlines()[1:] == [
+        "Частотный словарь Ляшевской и Шарова: уже скачан",
+        "Словарь ударений Козиева: уже скачан",
+    ]
+    main(["download", "--force"])
+    assert downloads == [
+        ("FreqDict", False),
+        ("StressDict", False),
+        ("FreqDict", True),
+        ("StressDict", True),
+    ]
+    assert runs == []
+
+
+def test_download_error(monkeypatch, capsys):
+    def fail(self, force=False):
+        raise DownloadError("Cannot download the file http://dict.ruslang.ru/Freq2011.zip")
+
+    monkeypatch.setattr(FreqDict, "download", fail)
+    with pytest.raises(SystemExit) as info:
+        main(["download"])
+    assert info.value.code == (
+        "Частотный словарь Ляшевской и Шарова: не удалось скачать - "
+        "Cannot download the file http://dict.ruslang.ru/Freq2011.zip"
+    )
+    assert capsys.readouterr().out.splitlines()[-1].endswith("скачивается...")
+
+
+def test_download_help(capsys):
+    with pytest.raises(SystemExit):
+        main(["download", "--help"])
+    assert "словарь ударений Козиева" in capsys.readouterr().out

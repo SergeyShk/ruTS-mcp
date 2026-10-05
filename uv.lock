@@ -3412,10 +3412,11 @@ wheels = [
 
 [[package]]
 name = "ruts-mcp"
-version = "0.1.0.dev6"
+version = "0.1.0.dev7"
 source = { editable = "." }
 dependencies = [
     { name = "fastmcp" },
+    { name = "platformdirs" },
     { name = "ruts" },
 ]
 
@@ -3450,6 +3451,7 @@ test = [
 [package.metadata]
 requires-dist = [
     { name = "fastmcp", specifier = ">=4,<5" },
+    { name = "platformdirs", specifier = ">=4" },
     { name = "ruts", specifier = ">=0.15.2,<0.16" },
 ]
 

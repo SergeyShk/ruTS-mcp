@@ -1,0 +1,87 @@
+from collections import defaultdict
+from typing import Any
+
+from ..analysis import Analysis, GroupResult, stat, undefined_warnings
+from ..data import STRESS_DICT_TITLE, missing_warning, stress_dict
+
+# Пояснения к описаниям ruTS: что считает статистика
+VERSE_NOTES = {
+    "n_lines": "строки с русскими словами",
+    "n_stanzas": "строфы разделяются пустыми строками",
+    "meter": "силлабо-тонический метр по ударениям: ямб, хорей, дактиль, амфибрахий или анапест",
+    "n_feet": "преобладающее число стоп в строке",
+    "p_deviations": "доля ударений многосложных слов на слабых позициях метра, от 0 до 1",
+    "p_pyrrhics": "доля сильных позиций метра без ударения, от 0 до 1",
+    "p_rhymed": "доля строк, рифмующихся с другой строкой той же строфы не дальше "
+    "{window} строк, от 0 до 1",
+    "p_masculine": "ударение на последнем слоге строки, от 0 до 1",
+    "p_feminine": "один заударный слог в конце строки, от 0 до 1",
+    "p_dactylic": "два заударных слога в конце строки, от 0 до 1",
+}
+RHYME_SCHEMES = (
+    "Схемы рифмовки строф: рифмующиеся строки обозначены одной буквой по порядку появления, "
+    "нерифмованные - дефисом (ABAB, -A-A)"
+)
+METER_REASON = (
+    "метр не определен: текст не силлабо-тонический (дольник, акцентный стих, верлибр, проза) "
+    "или в нем меньше {min_stresses} словарных ударений многосложных слов"
+)
+CLAUSULA_REASON = "ни в одной строке не найдено ударение последнего слова"
+VERSE_REASONS = {
+    "meter": METER_REASON,
+    "n_feet": METER_REASON,
+    "p_deviations": METER_REASON,
+    "p_pyrrhics": METER_REASON,
+    "p_masculine": CLAUSULA_REASON,
+    "p_feminine": CLAUSULA_REASON,
+    "p_dactylic": CLAUSULA_REASON,
+}
+NO_LINES_REASON = "в тексте нет строк с русскими словами"
+OTHER_REASON = "значение не определено на таком тексте"
+
+
+def verse_group(analysis: Analysis) -> GroupResult:
+    """
+    Стиховедческие статистики текста: метр, рифма и окончания строк
+
+    Описание:
+        Статистики VerseStats из ruTS: ударения по словарю ударений Козиева
+        и правилам, метр по алгоритму Барахнина, Кожемякиной и Кузнецовой,
+        рифма по фонетическому ключу окончания внутри строфы; к ним добавлены
+        схемы рифмовки строф. Без скачанного словаря группа пуста,
+        а предупреждение говорит, как его скачать. Статистики, не определенные
+        на тексте (метр не подобран, ударения последних слов строк не найдены,
+        нет строк с русскими словами), отдаются как None с причиной
+
+    Аргументы:
+        analysis (Analysis): Текст и настройки
+
+    Вывод:
+        tuple[dict[str, Any], list[str]]: Имя статистики ruTS - ее значение и описание;
+            предупреждения
+
+    Исключения:
+        SourceError: Если в тексте нет слов
+    """
+    from ruts import VerseStats
+    from ruts.constants import RHYME_WINDOW, VERSE_MIN_STRESSES, VERSE_STATS_DESC
+    from ruts.exceptions import DatasetNotFoundError
+
+    try:
+        vs = VerseStats(analysis.text, stress_dict=stress_dict())
+    except DatasetNotFoundError:
+        return {}, [missing_warning(STRESS_DICT_TITLE, "группа verse не посчитана")]
+    stats: dict[str, Any] = {}
+    for name, value in vs.get_stats().items():
+        note = VERSE_NOTES.get(name, "").format(window=RHYME_WINDOW)
+        stats[name] = stat(value, ": ".join(filter(None, (VERSE_STATS_DESC[name], note))))
+    stats["rhyme_schemes"] = stat(list(vs.rhyme_schemes), RHYME_SCHEMES)
+    if not vs.n_lines:
+        return stats, undefined_warnings(stats, NO_LINES_REASON)
+    by_reason: dict[str, dict[str, Any]] = defaultdict(dict)
+    for name, item in stats.items():
+        by_reason[VERSE_REASONS.get(name, OTHER_REASON)][name] = item
+    warnings = []
+    for reason, items in by_reason.items():
+        warnings += undefined_warnings(items, reason.format(min_stresses=VERSE_MIN_STRESSES))
+    return stats, warnings

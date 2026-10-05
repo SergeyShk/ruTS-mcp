@@ -1,9 +1,13 @@
 from collections.abc import Mapping
 from dataclasses import dataclass
 from os import environ as os_environ
+from pathlib import Path
 from typing import Self
 
+from platformdirs import user_data_dir
+
 ENV_PREFIX = "RUTS_MCP_"
+DEFAULT_DATA_DIR = Path(user_data_dir("ruts-mcp", appauthor=False))
 
 
 @dataclass(frozen=True)
@@ -14,13 +18,18 @@ class Settings:
     Описание:
         Настройка читается из переменной окружения с ее именем в верхнем
         регистре и префиксом RUTS_MCP_ (RUTS_MCP_MAX_TEXT_LENGTH); если
-        переменная не задана, остается значение по умолчанию
+        переменная не задана, остается значение по умолчанию. Каталог данных
+        задает переменная ruTS RUTS_DATA_DIR, без нее это каталог данных
+        пользователя: ~/Library/Application Support/ruts-mcp на macOS,
+        ~/.local/share/ruts-mcp на Linux, %LOCALAPPDATA%\\ruts-mcp на Windows
 
     Атрибуты:
         max_text_length (int): Наибольшее число символов текста, который принимает инструмент
+        data_dir (Path): Каталог данных; словари лежат в его подкаталоге dicts, как в ruTS
     """
 
     max_text_length: int = 500_000
+    data_dir: Path = DEFAULT_DATA_DIR
 
     @classmethod
     def from_env(cls, environ: Mapping[str, str] | None = None) -> Self:
@@ -37,12 +46,15 @@ class Settings:
             ValueError: Если значение переменной не целое положительное число
 
         Пример использования:
-            >>> Settings.from_env({"RUTS_MCP_MAX_TEXT_LENGTH": "1000"})
-            Settings(max_text_length=1000)
+            >>> settings = Settings.from_env({"RUTS_MCP_MAX_TEXT_LENGTH": "1000"})
+            >>> settings.max_text_length, settings.data_dir.name
+            (1000, 'ruts-mcp')
         """
         environ = os_environ if environ is None else environ
+        data_dir = environ.get("RUTS_DATA_DIR")
         return cls(
             max_text_length=_positive_int(environ, "MAX_TEXT_LENGTH", cls.max_text_length),
+            data_dir=Path(data_dir).expanduser().resolve() if data_dir else DEFAULT_DATA_DIR,
         )
 
 
