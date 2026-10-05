@@ -18,11 +18,15 @@ COLLOCATION_MEASURES = {
     "mi": "взаимная информация MI (Church и Hanks 1990): завышает редкие пары",
     "mi3": "MI³ (Oakes 1998): отдает предпочтение частым парам",
     "t_score": "t-критерий (Church и др. 1991): отдает предпочтение частым парам",
-    "dice": "коэффициент Дайса: от 0 до 1, не зависит от размера текста",
+    "dice": "коэффициент Дайса: от 0 до 1, не зависит от размера текста; пара, которая всегда "
+    "стоит рядом, получает {adjacent}, 1 - пара, которая встречается на каждом расстоянии в окне",
     "log_likelihood": "логарифм правдоподобия G² (Dunning 1993)",
-    "npmi": "нормированная взаимная информация NPMI (Bouma 2009): от -1 до 1, "
-    "1 - слова встречаются только вместе",
-    "min_sensitivity": "минимальная чувствительность (Pedersen 1998): от 0 до 1",
+    "npmi": "нормированная взаимная информация NPMI (Bouma 2009): от -1 до 1; 1 - слова "
+    "встречаются только вместе и на каждом расстоянии в окне, при window больше 1 пара, "
+    "которая всегда стоит рядом, получает меньше 1",
+    "min_sensitivity": "минимальная чувствительность (Pedersen 1998): от 0 до 1; пара, которая "
+    "всегда стоит рядом, получает {adjacent}, 1 - пара, которая встречается на каждом "
+    "расстоянии в окне",
 }
 DISPERSION_FIELDS = (
     "dp",
@@ -36,7 +40,7 @@ DISPERSION_FIELDS = (
 
 def text_words(text: str, lemmatize: bool) -> tuple[str, ...]:
     """
-    Слова текста в нижнем регистре, без знаков препинания
+    Слова текста в нижнем регистре, без знаков препинания и с е вместо ё
 
     Аргументы:
         text (str): Текст
@@ -46,12 +50,14 @@ def text_words(text: str, lemmatize: bool) -> tuple[str, ...]:
         tuple[str]: Слова по порядку
 
     Пример использования:
-        >>> text_words("Коты спят на окне", lemmatize=True)
-        ('кот', 'спать', 'на', 'окно')
+        >>> text_words("Коты ещё спят на окне", lemmatize=True)
+        ('кот', 'еще', 'спать', 'на', 'окно')
     """
     from ruts import WordsExtractor
+    from ruts.utils import normalize_yo
 
-    return WordsExtractor(use_lexemes=lemmatize, lowercase=True).extract(text)
+    words = WordsExtractor(use_lexemes=lemmatize, lowercase=True).extract(text)
+    return tuple(normalize_yo(word) for word in words)
 
 
 def one_word(word: str, lemmatize: bool) -> str:
@@ -128,7 +134,9 @@ def collocations(
             "текста; mi завышает редкие пары; mi3 и t_score отдают предпочтение частым"
         ),
     ] = "logdice",
-    min_freq: Annotated[int, Field(description="Наименьшая частота пары", ge=1)] = 2,
+    min_freq: Annotated[
+        int, Field(description="Наименьшее значение freq_pair - числа пар позиций в окне", ge=1)
+    ] = 2,
     node: Annotated[
         str | None,
         Field(description="Слово, сочетаемость которого нужна; не задано - все пары"),
@@ -143,7 +151,7 @@ def collocations(
 
     Используйте для устойчивых сочетаний, терминологии и сочетаемости слова (параметр node). Пара упорядочена: правое слово стоит не дальше window слов после левого. Леммы pymorphy3 берутся без снятия омонимии.
 
-    В результате "n_words" - число слов текста, "measure" - мера и как ее читать, "collocations" - пары по убыванию меры: левое слово "left", правое "right", их частоты "freq_left" и "freq_right", частота пары "freq_pair" и значение меры "score". Ключ "warnings" - предупреждения: текст не на русском языке, пар с такой частотой нет.
+    В результате "n_words" - число слов текста, "measure" - мера и как ее читать, "collocations" - пары по убыванию меры: левое слово "left", правое "right", их частоты "freq_left" и "freq_right", частота пары "freq_pair" и значение меры "score". freq_pair - число пар позиций, где правое слово стоит в окне после левого: слово, повторенное в окне, дает несколько пар, поэтому freq_pair бывает больше частоты слова, и такая пара - повтор, а не устойчивое сочетание. Ключ "warnings" - предупреждения: текст не на русском языке, слова node нет в тексте, пар с такой частотой нет.
     """
     from ruts.corpus import collocations as ruts_collocations
 
@@ -153,12 +161,16 @@ def collocations(
         words = text_words(text, lemmatize)
         node_word = None if node is None else one_word(node, lemmatize)
         found = ruts_collocations(words, window, measure, min_freq, node_word, top_n)
-    if not found:
+    if node_word is not None and node_word not in words:
+        warnings.append(f"Слова нет в тексте: {node_word}")
+    elif not found:
         warnings.append(
             f"Пар, которые встречаются вместе от {min_freq} раз на расстоянии до {window} слов, "
             "нет: уменьшите min_freq или увеличьте window"
         )
-    description = COLLOCATION_MEASURES[measure].format(logdice_max=f"{14 - log2(window):.1f}")
+    description = COLLOCATION_MEASURES[measure].format(
+        logdice_max=f"{14 - log2(window):.1f}", adjacent=f"{1 / window:.2g}"
+    )
     return {
         "n_words": len(words),
         "measure": f"{measure}: {description}",
@@ -181,7 +193,10 @@ def dispersion(
     text: Annotated[str, Field(description="Текст на русском языке")],
     words: Annotated[
         list[str] | None,
-        Field(description="Слова, дисперсия которых нужна; не задано - самые частые слова"),
+        Field(
+            description="Слова, дисперсия которых нужна; не задано - самые частые слова",
+            max_length=200,
+        ),
     ] = None,
     parts: Annotated[
         int, Field(description="Число частей текста примерно равного размера", ge=2, le=100)
@@ -198,13 +213,13 @@ def dispersion(
     Используйте, чтобы отличить слово, которое проходит через весь текст, от слова, сосредоточенного в одном месте: частота их не различает. Текст делится на parts частей примерно равного размера.
 
     В результате "n_words" - число слов текста, "words" - слова в порядке запроса или по убыванию частоты, с частотой "freq" и мерами дисперсии:
-    - dp: отклонение пропорций DP Гриса, основная мера; 0 - слово распределено пропорционально размерам частей, ближе к 1 - сосредоточено в одной части.
+    - dp: отклонение пропорций DP Гриса, основная мера; 0 - слово распределено пропорционально размерам частей, наибольшее значение около 1 - 1/parts - все вхождения в одной части.
     - dp_norm: DP, деленное на наибольшее возможное значение; 1 - все вхождения в самой малой части.
     - juilland_d: D Жюйана; 1 - равномерно, 0 - в одной части.
     - carroll_d2: D2 Кэрролла по энтропии распределения; 1 - равномерно, 0 - в одной части.
     - rosengren_s: S Розенгрена; 1 - пропорционально, около 1/parts - в одной части.
     - kl_divergence: дивергенция Кульбака-Лейблера в битах; 0 - пропорционально, растет при сосредоточении.
-    У слова, которого нет в тексте, частота 0 и меры null. Ключ "warnings" - предупреждения: текст не на русском языке, слов нет в тексте.
+    У слова, которого нет в тексте, частота 0 и меры null. Слово с частотой меньше parts не может попасть во все части, и его меры показывают сосредоточенность даже при самом ровном распределении. Ключ "warnings" - предупреждения: текст не на русском языке, слов нет в тексте, частота слов меньше числа частей.
     """
     from ruts.corpus import dispersion as ruts_dispersion
 
@@ -212,14 +227,26 @@ def dispersion(
     warnings = language_warnings(text)
     with ruts_errors():
         sequence = text_words(text, lemmatize)
+        table = ruts_dispersion(sequence, parts)
         if words:
+            by_word = {item.word: item for item in table}
             targets = dict.fromkeys(one_word(word, lemmatize) for word in words)
-            found = [ruts_dispersion(sequence, parts, word=target)[0] for target in targets]
+            found = [
+                by_word.get(target) or ruts_dispersion(sequence, parts, word=target)[0]
+                for target in targets
+            ]
         else:
-            found = ruts_dispersion(sequence, parts)[:top_n]
+            found = table[:top_n]
     absent = [item.word for item in found if not item.freq]
     if absent:
         warnings.append(f"Слов нет в тексте: {', '.join(absent)}")
+    rare = [item.word for item in found if 0 < item.freq < parts]
+    if rare:
+        warnings.append(
+            f"Частота слов меньше числа частей ({parts}): {', '.join(rare)}. Такое слово не может "
+            "попасть во все части, и меры дисперсии показывают сосредоточенность даже при самом "
+            "ровном распределении; для них уменьшите parts"
+        )
     return {
         "n_words": len(sequence),
         "words": [

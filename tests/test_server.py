@@ -64,6 +64,15 @@ async def test_call():
     assert result.structured_content == analyze_text(TEXT, distributions=True)
 
 
+async def test_dispersion_words_limit():
+    async with Client(mcp) as client:
+        result = await client.call_tool(
+            "dispersion", {"text": TEXT, "words": ["мама"] * 201}, raise_on_error=False
+        )
+    assert result.is_error
+    assert "at most 200 items" in result.content[0].text
+
+
 async def test_call_kwic():
     async with Client(mcp) as client:
         result = await client.call_tool("kwic", {"text": TEXT, "keyword": "раму", "window": 1})

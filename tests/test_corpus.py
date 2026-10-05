@@ -86,6 +86,25 @@ def test_collocations_measures():
     assert result["measure"].startswith("mi: взаимная информация MI")
 
 
+def test_collocations_window_scales():
+    """Шкалы Дайс-мер зависят от окна: частота пары в мере делится на window"""
+    assert "всегда стоит рядом, получает 0.2," in collocations(TEXT, measure="dice")["measure"]
+    assert "получает 1," in collocations(TEXT, window=1, measure="min_sensitivity")["measure"]
+
+
+def test_collocations_yo():
+    """Буква ё сводится к е, как в kwic: «ещё» и «еще» - одно слово"""
+    result = collocations("Ещё раз, и еще раз.", window=1, lemmatize=False)
+    assert result["collocations"][0]["left"] == "еще"
+    assert result["collocations"][0]["freq_pair"] == 2
+
+
+def test_collocations_absent_node():
+    assert collocations(TEXT, node="собака", min_freq=1)["warnings"] == [
+        "Слова нет в тексте: собака"
+    ]
+
+
 def test_collocations_not_found():
     result = collocations(TEXT, min_freq=5)
     assert result["collocations"] == []
@@ -106,7 +125,12 @@ def test_dispersion(chekhov):
     }
     assert result["words"][2]["freq"] == 0
     assert result["words"][2]["dp"] is None
-    assert result["warnings"] == ["Слов нет в тексте: слон"]
+    assert result["warnings"] == [
+        "Слов нет в тексте: слон",
+        "Частота слов меньше числа частей (5): жена. Такое слово не может попасть во все части, "
+        "и меры дисперсии показывают сосредоточенность даже при самом ровном распределении; "
+        "для них уменьшите parts",
+    ]
 
 
 def test_dispersion_top(chekhov):
