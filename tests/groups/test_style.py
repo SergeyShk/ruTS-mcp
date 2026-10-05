@@ -3,7 +3,13 @@ from ruts import StyleStats
 from ruts.constants import STYLE_NORMS, STYLE_STATS_DESC
 
 from ruts_mcp.analysis import Analysis, clean
-from ruts_mcp.groups.style import MIN_WORDS, STYLE_NOTES, STYLE_REASONS, style_group
+from ruts_mcp.groups.style import (
+    MAX_WORDS,
+    MIN_WORDS,
+    STYLE_NOTES,
+    STYLE_REASONS,
+    style_group,
+)
 
 
 def test_style_group(chekhov):
@@ -42,8 +48,24 @@ def test_style_undefined(text, undefined):
     ]
 
 
-@pytest.mark.parametrize(("n_words", "short"), [(MIN_WORDS - 1, True), (MIN_WORDS, False)])
-def test_style_short_text(n_words, short):
-    """Оговорка о нормах сервисов - у текста короче 200 слов"""
+@pytest.mark.parametrize(
+    ("n_words", "expected"),
+    [
+        (MIN_WORDS - 1, [f"Слов в тексте: {MIN_WORDS - 1}, меньше {MIN_WORDS}."]),
+        (MIN_WORDS, []),
+        (MAX_WORDS, []),
+        (MAX_WORDS + 1, [f"Слов в тексте: {MAX_WORDS + 1}, больше {MAX_WORDS}."]),
+    ],
+)
+def test_style_length(n_words, expected):
+    """Оговорка о нормах сервисов - у текста короче 200 и длиннее 1000 слов"""
     _, warnings = style_group(Analysis("кот пес " * (n_words // 2) + "кот" * (n_words % 2)))
-    assert any(w.startswith("Слов в тексте: ") for w in warnings) is short
+    assert [w[: len(start)] for w, start in zip(warnings, expected, strict=True)] == expected
+
+
+def test_style_new_metric(monkeypatch):
+    """Метрика новой версии ruTS без пояснения сервера отдается с описанием ruTS"""
+    monkeypatch.setitem(STYLE_STATS_DESC, "keyword_stuffing", "Перебор ключевых слов (%)")
+    monkeypatch.setattr(StyleStats, "keyword_stuffing", 1.0, raising=False)
+    stats, _ = style_group(Analysis("Мама мыла раму."))
+    assert stats["keyword_stuffing"] == {"value": 1.0, "description": "Перебор ключевых слов (%)"}
