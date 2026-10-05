@@ -8,6 +8,7 @@ from ruts_mcp.groups.verse import (
     CLAUSULA_REASON,
     NO_LINES_REASON,
     RHYME_SCHEMES,
+    TOP_SCHEMES,
     VERSE_NOTES,
     verse_group,
 )
@@ -22,10 +23,12 @@ def test_verse_group(dicts):
     assert set(VERSE_NOTES) == set(VERSE_STATS_DESC)
     assert {name: item["value"] for name, item in stats.items()} == {
         name: clean(value) for name, value in vs.get_stats().items()
-    } | {"rhyme_schemes": ["ABAB"]}
+    } | {"rhyme_schemes": {"ABAB": 1}}
     assert (stats["meter"]["value"], stats["n_feet"]["value"]) == ("ямб", 4)
     for name, item in stats.items():
-        assert item["description"].startswith(VERSE_STATS_DESC.get(name, RHYME_SCHEMES))
+        assert item["description"].startswith(
+            VERSE_STATS_DESC.get(name, RHYME_SCHEMES.format(top=TOP_SCHEMES))
+        )
     assert f"не дальше {RHYME_WINDOW} строк" in stats["p_rhymed"]["description"]
     assert warnings == []
 
@@ -71,6 +74,14 @@ def test_verse_prose(dicts, chekhov):
     assert stats["p_rhymed"]["value"] == 0.0
     (warning,) = warnings
     assert "меньше 6 словарных ударений многосложных слов" in warning
+
+
+def test_verse_rhyme_schemes(dicts):
+    """Схемы рифмовки - самые частые, не больше TOP_SCHEMES, с числом строф"""
+    text = "\n\n".join("\n".join(["Абырвалг кукарямба"] * size) for size in range(1, 13))
+    stats, _ = verse_group(Analysis(text))
+    assert stats["n_stanzas"]["value"] == 12
+    assert stats["rhyme_schemes"]["value"] == {"-" * size: 1 for size in range(1, 11)}
 
 
 def test_verse_new_metric(dicts, monkeypatch):

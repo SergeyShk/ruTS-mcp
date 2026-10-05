@@ -1,8 +1,10 @@
-from collections import defaultdict
+from collections import Counter, defaultdict
 from typing import Any
 
-from ..analysis import Analysis, GroupResult, stat, undefined_warnings
+from ..analysis import NO_WORDS_WARNING, Analysis, GroupResult, stat, undefined_warnings
 from ..data import STRESS_DICT_TITLE, missing_warning, stress_dict
+
+TOP_SCHEMES = 10
 
 # Пояснения к описаниям ruTS: что считает статистика
 VERSE_NOTES = {
@@ -19,8 +21,8 @@ VERSE_NOTES = {
     "p_dactylic": "два заударных слога в конце строки, от 0 до 1",
 }
 RHYME_SCHEMES = (
-    "Схемы рифмовки строф: рифмующиеся строки обозначены одной буквой по порядку появления, "
-    "нерифмованные - дефисом (ABAB, -A-A)"
+    "Самые частые схемы рифмовки строф, до {top}, и число строф с каждой: рифмующиеся строки "
+    "обозначены одной буквой по порядку появления, нерифмованные - дефисом (ABAB, -A-A)"
 )
 METER_REASON = (
     "метр не определен: текст не силлабо-тонический (дольник, акцентный стих, верлибр, проза) "
@@ -48,10 +50,11 @@ def verse_group(analysis: Analysis) -> GroupResult:
         Статистики VerseStats из ruTS: ударения по словарю ударений Козиева
         и правилам, метр по алгоритму Барахнина, Кожемякиной и Кузнецовой,
         рифма по фонетическому ключу окончания внутри строфы; к ним добавлены
-        схемы рифмовки строф. Без скачанного словаря группа пуста,
-        а предупреждение говорит, как его скачать. Статистики, не определенные
-        на тексте (метр не подобран, ударения последних слов строк не найдены,
-        нет строк с русскими словами), отдаются как None с причиной
+        самые частые схемы рифмовки строф. Без скачанного словаря и у текста
+        без слов, кроме чисел, группа пуста, а предупреждение называет причину.
+        Статистики, не определенные на тексте (метр не подобран, ударения
+        последних слов строк не найдены, нет строк с русскими словами),
+        отдаются как None с причиной
 
     Аргументы:
         analysis (Analysis): Текст и настройки
@@ -59,23 +62,25 @@ def verse_group(analysis: Analysis) -> GroupResult:
     Вывод:
         tuple[dict[str, Any], list[str]]: Имя статистики ruTS - ее значение и описание;
             предупреждения
-
-    Исключения:
-        SourceError: Если в тексте нет слов
     """
     from ruts import VerseStats
     from ruts.constants import RHYME_WINDOW, VERSE_MIN_STRESSES, VERSE_STATS_DESC
-    from ruts.exceptions import DatasetNotFoundError
+    from ruts.exceptions import DatasetNotFoundError, SourceError
 
     try:
         vs = VerseStats(analysis.text, stress_dict=stress_dict())
     except DatasetNotFoundError:
         return {}, [missing_warning(STRESS_DICT_TITLE, "группа verse не посчитана")]
+    except SourceError:
+        return {}, [NO_WORDS_WARNING.format(group="verse")]
     stats: dict[str, Any] = {}
     for name, value in vs.get_stats().items():
         note = VERSE_NOTES.get(name, "").format(window=RHYME_WINDOW)
         stats[name] = stat(value, ": ".join(filter(None, (VERSE_STATS_DESC[name], note))))
-    stats["rhyme_schemes"] = stat(list(vs.rhyme_schemes), RHYME_SCHEMES)
+    stats["rhyme_schemes"] = stat(
+        dict(Counter(vs.rhyme_schemes).most_common(TOP_SCHEMES)),
+        RHYME_SCHEMES.format(top=TOP_SCHEMES),
+    )
     if not vs.n_lines:
         return stats, undefined_warnings(stats, NO_LINES_REASON)
     by_reason: dict[str, dict[str, Any]] = defaultdict(dict)

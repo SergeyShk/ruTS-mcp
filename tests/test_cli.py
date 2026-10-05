@@ -94,21 +94,29 @@ def test_download(downloads, runs, capsys, data_dir):
     assert runs == []
 
 
-def test_download_error(monkeypatch, capsys):
+def test_download_error(downloads, monkeypatch, capsys):
+    """Сбой одного словаря не отменяет другой, причина печатается, код выхода 1"""
+
     def fail(self, force=False):
-        raise DownloadError("Cannot download the file http://dict.ruslang.ru/Freq2011.zip")
+        url = "http://dict.ruslang.ru/Freq2011.zip"
+        raise DownloadError(f"Cannot download the file {url}") from OSError("connection refused")
 
     monkeypatch.setattr(FreqDict, "download", fail)
     with pytest.raises(SystemExit) as info:
         main(["download"])
-    assert info.value.code == (
-        "Частотный словарь Ляшевской и Шарова: не удалось скачать - "
-        "Cannot download the file http://dict.ruslang.ru/Freq2011.zip"
+    assert info.value.code == 1
+    output = capsys.readouterr()
+    assert output.err == (
+        "Частотный словарь Ляшевской и Шарова: не удалось скачать - Cannot download the file "
+        "http://dict.ruslang.ru/Freq2011.zip (connection refused)\n"
     )
-    assert capsys.readouterr().out.splitlines()[-1].endswith("скачивается...")
+    assert output.out.splitlines()[-1] == "Словарь ударений Козиева: скачан"
+    assert downloads == [("StressDict", False)]
 
 
 def test_download_help(capsys):
     with pytest.raises(SystemExit):
         main(["download", "--help"])
-    assert "словарь ударений Козиева" in capsys.readouterr().out
+    output = capsys.readouterr().out
+    assert output.startswith("usage: ruts-mcp download [-h] [--force]")
+    assert "словарь ударений Козиева" in output

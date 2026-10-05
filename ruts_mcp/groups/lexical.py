@@ -1,7 +1,7 @@
 from collections import defaultdict
 from typing import Any
 
-from ..analysis import Analysis, GroupResult, stat, undefined_warnings
+from ..analysis import NO_WORDS_WARNING, Analysis, GroupResult, stat, undefined_warnings
 from ..data import FREQ_DICT_TITLE, freq_dict, missing_warning
 
 CONTENT_WORDS = (
@@ -11,7 +11,7 @@ BAND_NOTE = "самых частых лемм по списку Шарова, о
 # Пояснения к описаниям ruTS: по чему считается метрика и как ее читать
 LEXICAL_NOTES = {
     "coverage": "по словарю Ляшевской и Шарова (НКРЯ, 52 138 лемм), от 0 до 1; средние "
-    "по словарю считаются только по найденным словам",
+    "частотность, диапазон и дисперсия считаются только по найденным словам",
     "mean_ipm": "употреблений леммы на миллион слов корпуса, среднее по найденным словам; "
     "чем ниже, тем реже слова",
     "mean_ipm_content": f"то же среди {CONTENT_WORDS}; признак FREQ2 формулы Соловьева, "
@@ -23,8 +23,8 @@ LEXICAL_NOTES = {
     "словам; чем ниже, тем специальнее лексика",
     "mean_dispersion": "равномерность употребления леммы по корпусу (коэффициент Жуйана, "
     "от 0 до 100), среднее по найденным словам",
-    "surprisal": "средняя неожиданность слова по частотам словаря (униграммная модель); "
-    "чем выше, тем реже слова",
+    "surprisal": "средняя неожиданность слова по частотам словаря (униграммная модель), "
+    "слова вне словаря получают наименьшую частоту словаря; чем выше, тем реже слова",
     "perplexity": "2 в степени сюрпризала",
     "p_top1000": BAND_NOTE,
     "p_top2000": BAND_NOTE,
@@ -57,7 +57,8 @@ def lexical_group(analysis: Analysis) -> GroupResult:
         и Шарова, доли частотных полос и лексическая плотность - по вшитому
         списку и разбору pymorphy3. Без скачанного словаря метрики по словарю
         отдаются как None, а предупреждение говорит, как его скачать. Числа
-        словами не считаются
+        словами не считаются: у текста без других слов группа пуста,
+        с предупреждением, а остальные группы вызова считаются
 
     Аргументы:
         analysis (Analysis): Текст и настройки
@@ -66,9 +67,6 @@ def lexical_group(analysis: Analysis) -> GroupResult:
         tuple[dict[str, Any], list[str]]: Имя метрики ruTS - ее значение и описание;
             предупреждения
 
-    Исключения:
-        SourceError: Если в тексте нет слов
-
     Пример использования:
         >>> stats, warnings = lexical_group(Analysis("Кот сидел на окне и смотрел на птиц"))
         >>> stats["p_top1000"]["value"], stats["lexical_density"]["value"]
@@ -76,9 +74,12 @@ def lexical_group(analysis: Analysis) -> GroupResult:
     """
     from ruts import LexicalStats
     from ruts.constants import LEXICAL_STATS_DESC
-    from ruts.exceptions import DatasetNotFoundError
+    from ruts.exceptions import DatasetNotFoundError, SourceError
 
-    ls = LexicalStats(analysis.text, freq_dict=freq_dict())
+    try:
+        ls = LexicalStats(analysis.text, freq_dict=freq_dict())
+    except SourceError:
+        return {}, [NO_WORDS_WARNING.format(group="lexical")]
     stats: dict[str, Any] = {}
     missing = []
     for name, title in LEXICAL_STATS_DESC.items():

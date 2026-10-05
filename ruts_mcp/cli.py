@@ -39,9 +39,11 @@ def main(argv: Sequence[str] | None = None) -> None:
     download_parser = commands.add_parser(
         "download",
         help="скачать словари для групп lexical и verse",
+        prog="ruts-mcp download",
         description="Скачивает частотный словарь Ляшевской и Шарова (0,5 МБ) для группы lexical "
-        "и словарь ударений Козиева (11 МБ, 73 МБ на диске) для группы verse в каталог данных: "
-        "RUTS_DATA_DIR, если она задана, иначе каталог данных пользователя",
+        "и словарь ударений Козиева (11 МБ) для группы verse в каталог данных: RUTS_DATA_DIR, "
+        "если она задана, иначе каталог данных пользователя. Вместе с архивами словари "
+        "занимают на диске около 90 МБ",
         add_help=False,
     )
     download_parser.add_argument(
@@ -66,8 +68,9 @@ def download(force: bool = False) -> None:
     Скачивание словарей для групп lexical и verse
 
     Описание:
-        Уже скачанный словарь пропускается, если не задан force. Ошибка
-        загрузки останавливает команду с кодом 1 и сообщением ruTS
+        Уже скачанный словарь пропускается, если не задан force. Словари
+        скачиваются независимо: ошибка одного печатается с причиной, и команда
+        завершается с кодом 1 после попытки скачать оба
 
     Аргументы:
         force (bool): Скачать заново, даже если словари уже скачаны
@@ -75,6 +78,7 @@ def download(force: bool = False) -> None:
     from ruts import RutsError
 
     print(f"Каталог словарей: {dicts_dir()}")
+    failed = False
     for title, dataset in ((FREQ_DICT_TITLE, freq_dict()), (STRESS_DICT_TITLE, stress_dict())):
         if dataset.filepath and not force:
             print(f"{title}: уже скачан")
@@ -83,5 +87,10 @@ def download(force: bool = False) -> None:
         try:
             dataset.download(force=force)
         except RutsError as error:
-            sys.exit(f"{title}: не удалось скачать - {error}")
-        print(f"{title}: скачан")
+            cause = f" ({error.__cause__})" if error.__cause__ else ""
+            print(f"{title}: не удалось скачать - {error}{cause}", file=sys.stderr)
+            failed = True
+        else:
+            print(f"{title}: скачан")
+    if failed:
+        sys.exit(1)

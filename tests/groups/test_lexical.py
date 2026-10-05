@@ -3,13 +3,14 @@ from ruts import LexicalStats
 from ruts.constants import LEXICAL_STATS_DESC
 from ruts.datasets import FreqDict
 
-from ruts_mcp.analysis import Analysis, clean
+from ruts_mcp.analysis import NO_WORDS_WARNING, Analysis, clean
 from ruts_mcp.groups.lexical import (
     CONTENT_NOT_FOUND_REASON,
     LEXICAL_NOTES,
     NOT_FOUND_REASON,
     lexical_group,
 )
+from ruts_mcp.groups.verse import verse_group
 from tests.conftest import CAT
 
 DICT_STATS = [
@@ -71,6 +72,13 @@ def test_lexical_undefined(dicts, text, expected):
     stats, warnings = lexical_group(Analysis(text))
     assert warnings == expected
     assert stats["coverage"]["value"] == (0.0 if len(expected) == 2 else 1.0)
+
+
+@pytest.mark.parametrize("group", [lexical_group, verse_group])
+def test_numbers_only(dicts, group):
+    """Числа - не слова для lexical и verse: группа пуста, вызов не падает"""
+    name = group.__name__.removesuffix("_group")
+    assert group(Analysis("2020 5.5")) == ({}, [NO_WORDS_WARNING.format(group=name)])
 
 
 def test_lexical_new_metric(dicts, monkeypatch):
