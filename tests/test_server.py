@@ -30,6 +30,8 @@ async def test_tools():
         "kwic": "Конкорданс",
         "collocations": "Коллокации",
         "dispersion": "Дисперсия слов",
+        "keyness": "Ключевые слова",
+        "compare_texts": "Сравнение корпусов",
     }
     for tool in tools.values():
         assert tool.annotations.read_only_hint
