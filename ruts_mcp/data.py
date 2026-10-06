@@ -1,6 +1,6 @@
 import json
 import shutil
-import zipfile
+import tempfile
 from functools import lru_cache
 from pathlib import Path
 from typing import TYPE_CHECKING
@@ -70,8 +70,9 @@ class SpacyModel:
     Описание:
         Модели нет на PyPI, поэтому она не может быть зависимостью пакета.
         download скачивает wheel версии, совместимой с установленным spaCy
-        (compatibility.json spaCy), и распаковывает модель в каталог data_dir;
-        установленный пакет ru_core_news_sm важнее скачанной модели
+        (compatibility.json spaCy), распаковывает модель в каталог data_dir
+        и удаляет модели других версий; установленный пакет ru_core_news_sm
+        важнее скачанной модели, каталог с нечитаемым meta.json пропускается
 
     Аргументы:
         data_dir (Path): Каталог скачанных моделей
@@ -103,10 +104,11 @@ class SpacyModel:
         if self.installed:
             return SPACY_MODEL
         for path in sorted(self.data_dir.glob(f"{SPACY_MODEL}-*"), reverse=True):
-            meta = path / "meta.json"
-            if meta.is_file() and spacy.util.is_compatible_version(
-                spacy.about.__version__, json.loads(meta.read_text("utf-8"))["spacy_version"]
-            ):
+            try:
+                required = json.loads((path / "meta.json").read_text("utf-8"))["spacy_version"]
+            except (OSError, ValueError, KeyError, TypeError):
+                continue
+            if spacy.util.is_compatible_version(spacy.about.__version__, required):
                 return str(path)
         return None
 
@@ -118,12 +120,12 @@ class SpacyModel:
             force (bool): Загрузить модель, даже если она уже загружена
 
         Исключения:
-            DownloadError: Если не удалось загрузить файл или в нем нет модели
+            DownloadError: Если не удалось загрузить или распаковать файл или в нем нет модели
         """
         import spacy
-        from anyts.datasets import download_file
+        from anyts.datasets import download_file, extract_archive
         from ruts.constants import USER_AGENT
-        from ruts.exceptions import DownloadError
+        from ruts.exceptions import DataFileError, DownloadError
 
         self.data_dir.mkdir(parents=True, exist_ok=True)
         compatibility = download_file(
@@ -148,26 +150,23 @@ class SpacyModel:
                 user_agent=USER_AGENT,
             )
         )
-        partial = target.with_name(f"{target.name}.partial")
-        shutil.rmtree(partial, ignore_errors=True)
-        prefix = f"{SPACY_MODEL}/{SPACY_MODEL}-{version}/"
+        # Скрытый каталог не похож на модель: оборванная распаковка не находится в filepath
+        staging = Path(tempfile.mkdtemp(prefix=f".{SPACY_MODEL}-", dir=self.data_dir))
         try:
-            with zipfile.ZipFile(wheel) as archive:
-                members = [name for name in archive.namelist() if name.startswith(prefix)]
-                if not members:
-                    raise DownloadError(f"В архиве {wheel.name} нет модели {SPACY_MODEL}")
-                for name in members:
-                    relative = name.removeprefix(prefix)
-                    if ".." in Path(relative).parts:
-                        raise DownloadError(f"Файл архива {name} ведет за каталог модели")
-                    if relative and not name.endswith("/"):
-                        destination = partial / relative
-                        destination.parent.mkdir(parents=True, exist_ok=True)
-                        destination.write_bytes(archive.read(name))
+            extract_archive(wheel, staging)
+            source = staging / SPACY_MODEL / target.name
+            if not (source / "meta.json").is_file():
+                raise DownloadError(f"В архиве {wheel.name} нет модели {SPACY_MODEL}")
+            shutil.rmtree(target, ignore_errors=True)
+            source.rename(target)
+        except (OSError, DataFileError) as error:
+            raise DownloadError(f"Не удалось распаковать модель из {wheel.name}") from error
         finally:
-            wheel.unlink()
-        shutil.rmtree(target, ignore_errors=True)
-        partial.rename(target)
+            shutil.rmtree(staging, ignore_errors=True)
+            wheel.unlink(missing_ok=True)
+        for path in self.data_dir.glob(f"{SPACY_MODEL}-*"):
+            if path != target:
+                shutil.rmtree(path, ignore_errors=True)
 
 
 def models_dir() -> Path:
@@ -183,8 +182,8 @@ def spacy_model() -> "Language | None":
 
 @lru_cache(maxsize=2)
 def load_spacy(name: str) -> "Language":
-    """Загрузка модели spaCy один раз на процесс: она загружается около секунды"""
+    """Загрузка модели spaCy один раз на процесс"""
     import spacy
 
-    # Синтаксису не нужны сущности и леммы spaCy: без них разбор вдвое быстрее
+    # Синтаксису не нужны сущности и леммы spaCy, а без них разбор быстрее
     return spacy.load(name, exclude=["ner", "lemmatizer"])

@@ -36,7 +36,7 @@ def blank(tmp_path):
 
 @pytest.fixture
 def network(monkeypatch, blank):
-    """download_file без сети: compatibility.json spaCy и wheel модели из файлов blank"""
+    """download_file без сети; в wheel, как в настоящем, два корня: модель и .dist-info"""
     calls = []
     state = {
         "compatibility": {
@@ -44,7 +44,8 @@ def network(monkeypatch, blank):
                 spacy.util.get_minor_version(spacy.about.__version__): {SPACY_MODEL: [VERSION]}
             }
         },
-        "members": {PREFIX: b""} | {PREFIX + name: data for name, data in blank.items()},
+        "members": {PREFIX: b"", f"{SPACY_MODEL}-{VERSION}.dist-info/METADATA": b""}
+        | {PREFIX + name: data for name, data in blank.items()},
     }
 
     def download_file(url, dirpath, filename=None, force=False, user_agent=""):
@@ -109,10 +110,47 @@ def test_download_without_model(not_installed, network):
     assert list(models_dir().iterdir()) == []
 
 
-def test_download_outside(not_installed, network):
-    """Файл архива с .. в пути не выходит за каталог модели"""
+@pytest.mark.parametrize("name", [PREFIX + "../../escape.txt", "/escape.txt"])
+def test_download_outside(not_installed, network, data_dir, name):
+    """Файл архива с путем за каталог отвергается, ничего не распаковывается"""
     _, state = network
-    state["members"][PREFIX + "../escape.txt"] = b""
-    with pytest.raises(DownloadError, match=r"ведет за каталог модели$"):
+    state["members"][name] = b""
+    with pytest.raises(DownloadError, match=r"^Не удалось распаковать модель из "):
         SpacyModel(models_dir()).download()
-    assert not (models_dir() / "escape.txt").exists()
+    assert list(models_dir().iterdir()) == []
+    assert not list(data_dir.parent.rglob("escape.txt"))
+
+
+def test_download_interrupted(not_installed, network, monkeypatch):
+    """Оборванная распаковка не оставляет каталогов, которые filepath принял бы за модель"""
+
+    def extract_archive(archive, directory):
+        model = Path(directory) / SPACY_MODEL / f"{SPACY_MODEL}-{VERSION}"
+        model.mkdir(parents=True)
+        (model / "meta.json").write_text(json.dumps({"spacy_version": ">=0"}))
+        raise OSError(28, "No space left on device")
+
+    monkeypatch.setattr(anyts.datasets, "extract_archive", extract_archive)
+    model = SpacyModel(models_dir())
+    with pytest.raises(DownloadError, match=r"^Не удалось распаковать модель из "):
+        model.download()
+    assert list(models_dir().iterdir()) == []
+    assert model.filepath is None
+
+
+def test_broken_meta(not_installed, network):
+    """Каталог с нечитаемым meta.json пропускается и не мешает скачать модель заново"""
+    broken = models_dir() / f"{SPACY_MODEL}-{VERSION}"
+    broken.mkdir(parents=True)
+    (broken / "meta.json").write_text("{")
+    model = SpacyModel(models_dir())
+    assert model.filepath is None
+    model.download(force=True)
+    assert model.filepath == str(broken)
+
+
+def test_download_removes_other_versions(not_installed, network):
+    old = models_dir() / f"{SPACY_MODEL}-1.0.0"
+    old.mkdir(parents=True)
+    SpacyModel(models_dir()).download()
+    assert [path.name for path in models_dir().iterdir()] == [f"{SPACY_MODEL}-{VERSION}"]
