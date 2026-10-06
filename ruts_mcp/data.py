@@ -99,18 +99,23 @@ class SpacyModel:
         Вывод:
             str | None: То, что принимает spacy.load; None - модели нет
         """
-        import spacy
-
         if self.installed:
             return SPACY_MODEL
         for path in sorted(self.data_dir.glob(f"{SPACY_MODEL}-*"), reverse=True):
-            try:
-                required = json.loads((path / "meta.json").read_text("utf-8"))["spacy_version"]
-            except (OSError, ValueError, KeyError, TypeError):
-                continue
-            if spacy.util.is_compatible_version(spacy.about.__version__, required):
+            if self._usable(path):
                 return str(path)
         return None
+
+    @staticmethod
+    def _usable(path: Path) -> bool:
+        """Читается ли meta.json каталога модели и совместима ли модель с установленным spaCy"""
+        import spacy
+
+        try:
+            required = json.loads((path / "meta.json").read_text("utf-8"))["spacy_version"]
+        except (OSError, ValueError, KeyError, TypeError):
+            return False
+        return bool(spacy.util.is_compatible_version(spacy.about.__version__, required))
 
     def download(self, force: bool = False) -> None:
         """
@@ -140,7 +145,7 @@ class SpacyModel:
         finally:
             Path(compatibility).unlink()
         target = self.data_dir / f"{SPACY_MODEL}-{version}"
-        if target.is_dir() and not force:
+        if not force and self._usable(target):
             return
         wheel = Path(
             download_file(

@@ -145,7 +145,7 @@ def test_broken_meta(not_installed, network):
     (broken / "meta.json").write_text("{")
     model = SpacyModel(models_dir())
     assert model.filepath is None
-    model.download(force=True)
+    model.download()
     assert model.filepath == str(broken)
 
 
