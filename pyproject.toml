@@ -1,6 +1,6 @@
 [project]
 name = "ruts-mcp"
-version = "0.1.0.dev9"
+version = "0.1.0.dev10"
 description = "MCP server for ruTS: statistics of Russian texts as tools for LLM agents"
 readme = "README.md"
 requires-python = ">=3.11"
@@ -70,7 +70,7 @@ publish-url = "https://test.pypi.org/legacy/"
 explicit = true
 
 [dependency-groups]
-test = ["pytest>=8.3", "pytest-cov>=6.0"]
+test = ["pytest>=8.3", "pytest-cov>=6.0", "ru-core-news-sm"]
 lint = ["mypy>=1.14", "pre-commit>=4.0", "ruff>=0.9"]
 docs = [
     "mkdocs>=1.6",
@@ -83,6 +83,9 @@ dev = [
     { include-group = "lint" },
     { include-group = "docs" },
 ]
+
+[tool.uv.sources]
+ru-core-news-sm = { url = "https://github.com/explosion/spacy-models/releases/download/ru_core_news_sm-3.8.0/ru_core_news_sm-3.8.0-py3-none-any.whl" }
 
 [tool.ruff]
 target-version = "py311"

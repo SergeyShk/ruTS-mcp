@@ -40,7 +40,8 @@ def test_verse_without_dict(data_dir):
     (warning,) = warnings
     assert warning.startswith(
         "Словарь ударений Козиева не скачан: группа verse не посчитана. "
-        "Словари скачивает команда ruts-mcp download"
+        "Словари и модель скачивает команда ruts-mcp "
+        "download"
     )
 
 
