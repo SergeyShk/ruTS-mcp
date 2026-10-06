@@ -18,9 +18,12 @@ KEYNESS_MEASURES = {
     "chi2": "хи-квадрат с поправкой Йейтса: значимость различия",
     "diff": "%DIFF (Gabrielatos и Marchi 2011): разность частот на миллион слов в процентах "
     "от частоты в эталоне",
-    "bic": "BIC (Wilson 2013): по модулю выше 2 - положительное свидетельство различия, "
-    "выше 6 - сильное, выше 10 - очень сильное",
-    "ell": "ELL (Johnston, Berry и Mielke 2006): размер эффекта G², от 0 до 1",
+    "bic": "BIC (Wilson 2013): при том же знаке, что у g2, от 2 - положительное свидетельство "
+    "различия, от 6 - сильное, от 10 - очень сильное; знак, обратный g2, - свидетельства нет",
+    "ell": "ELL (Johnston, Berry и Mielke 2006): размер эффекта G² со знаком G², обычно от 0 до 1; "
+    "null, когда наименьшая ожидаемая частота не больше 1 - со словарем и на коротком тексте "
+    "у большинства слов, и тогда наверх выходят частые служебные слова; размер эффекта надежнее "
+    "дает log_ratio",
     "odds_ratio": "отношение шансов: 1 - шансы равны",
 }
 KEYWORD_FIELDS = (
@@ -76,14 +79,15 @@ def keyness(
 ) -> dict[str, Any]:
     """Найти ключевые слова текста - слова, которые в нем значимо чаще (или реже), чем в эталоне.
 
-    Используйте, чтобы понять, чем лексика текста отличается от обычного языка (эталон по умолчанию - частотный словарь, его нужно скачать командой ruts-mcp download) или от другого текста (параметр reference). Слова сравниваются в нижнем регистре, ё сводится к е. Со словарем числа и слова с латиницей отбрасываются, а слово вне словаря получает его наименьшую частоту: имена, термины и опечатки попадают в ключевые слова.
+    Используйте, чтобы понять, чем лексика текста отличается от обычного языка (эталон по умолчанию - частотный словарь, его нужно скачать командой ruts-mcp download) или от другого текста (параметр reference). Слова сравниваются в нижнем регистре, ё сводится к е. Со словарем числа и слова с латиницей отбрасываются, а слово вне словаря получает его наименьшую частоту (freq_reference около 37): имена, термины и опечатки попадают в ключевые слова.
 
-    В результате "n_words" - число слов текста, "reference" - эталон, "measure" - мера сортировки и как ее читать, "keywords" - слова по убыванию меры: частота в тексте "freq_target" и в эталоне "freq_reference", они же на миллион слов "ipm_target" и "ipm_reference", логарифм правдоподобия "g2" (значимость, со знаком минус - слово чаще в эталоне) с p-значением "p_value", Log Ratio "log_ratio" (размер эффекта) и значение меры "score". p_value не поправлено на число проверенных слов: надежнее p < 0,0001 (g2 от 15,13). Ключ "warnings" - предупреждения: текст не на русском языке, ключевых слов нет.
+    В результате "n_words" - число слов текста, которые сравниваются с эталоном, "reference" - эталон, "measure" - мера сортировки и как ее читать, "keywords" - слова по убыванию меры: частота в тексте "freq_target" и в эталоне "freq_reference", они же на миллион слов "ipm_target" и "ipm_reference", логарифм правдоподобия "g2" (значимость, со знаком минус - слово чаще в эталоне) с p-значением "p_value", Log Ratio "log_ratio" (размер эффекта) и значение меры "score". p_value не поправлено на число проверенных слов: надежнее p < 0,0001 (g2 от 15,13). Ключ "warnings" - предупреждения: текст не на русском языке, ключевых слов нет.
     """
     from anyts.constants import G2_CRITICAL_VALUES
     from ruts.corpus import keyness as ruts_keyness
     from ruts.datasets.freq2011 import CORPUS_SIZE
     from ruts.exceptions import DatasetNotFoundError
+    from ruts.lexical_stats import DICTIONARY_WORD
 
     check_text(text)
     warnings = language_warnings(text)
@@ -100,6 +104,7 @@ def keyness(
                     missing_warning(FREQ_DICT_TITLE, "ключевые слова не посчитаны")
                     + "; эталоном может быть и другой текст (reference)"
                 ) from None
+            target = tuple(word for word in target if DICTIONARY_WORD.fullmatch(word))
             size = CORPUS_SIZE // 1_000_000
             source = f"частотный словарь Ляшевской и Шарова (НКРЯ, {size} млн слов)"
         else:
@@ -108,7 +113,12 @@ def keyness(
             found = ruts_keyness(target, reference_words, measure, min_freq, positive, top_n)
             source = f"текст-эталон, {len(reference_words)} слов"
     if not found:
-        warnings.append(f"Ключевых слов с частотой от {min_freq} нет: уменьшите min_freq")
+        direction = "чаще" if positive else "реже"
+        warnings.append(
+            f"Ключевых слов с частотой от {min_freq} нет: уменьшите min_freq"
+            if min_freq > 1
+            else f"Слов, которые в тексте {direction}, чем в эталоне, нет"
+        )
     critical = ", ".join(f"{value} - p < {level}" for level, value in G2_CRITICAL_VALUES.items())
     return {
         "n_words": len(target),
@@ -145,14 +155,18 @@ def compare_texts(
 
     Признаки по префиксам: basic_ - доли длинных, сложных, одно- и многосложных слов, букв, пробелов и знаков, буквы и слоги на слово; readability_ - формулы удобочитаемости; diversity_ - меры лексического разнообразия; morph_ - доли частей речи от слов (morph_pos_NOUN) и значений признаков внутри признака (morph_case_Gen, morph_tense_Past); sents_ - средняя длина предложения в словах, ее стандартное отклонение, коэффициент вариации и автокорреляция соседних длин; punct_ - знаки по типам на 1000 слов и доля буквы ё.
 
-    В результате "n_windows" и "n_texts" - число окон и текстов в A и B, "features" - признаки по убыванию модуля дельты Клиффа: средние по окнам "mean_a" и "mean_b", разность медиан A - B "median_diff" с 95% бутстрэп-интервалом "ci_low" - "ci_high", дельта Клиффа "cliff_delta" (от -1 до 1: доля пар окон, где в A больше, минус доля, где меньше; по модулю от 0,147 - малый, от 0,33 - средний, от 0,474 - большой эффект, Romano и др. 2006) и p-значение U-критерия Манна-Уитни с поправкой Холма на число признаков "p_holm". Ключ "warnings" - предупреждения: текст не на русском языке, ни одно различие не значимо.
+    В результате "n_windows" и "n_texts" - число окон и текстов в A и B, "features" - признаки по убыванию модуля дельты Клиффа: средние по окнам "mean_a" и "mean_b", разность медиан A - B "median_diff" с 95% бутстрэп-интервалом "ci_low" - "ci_high", дельта Клиффа "cliff_delta" (от -1 до 1: доля пар окон, где в A больше, минус доля, где меньше; по модулю от 0,147 - малый, от 0,33 - средний, от 0,474 - большой эффект, Romano и др. 2006) и p-значение U-критерия Манна-Уитни с поправкой Холма на число признаков "p_holm". Окна одного текста не независимы: p_holm считает их независимыми и занижено, если текстов в корпусе мало, а бутстрэп-интервал берет целые тексты и при одном тексте в корпусе не определен. Ключ "warnings" - предупреждения: корпус не на русском языке, в корпусе один текст, ни одно различие не значимо.
     """
     from ruts.corpus import compare_corpora
     from ruts.exceptions import SourceError
 
-    for corpus in (a, b):
-        check_text("\n\n".join(corpus))
-    warnings = language_warnings("\n\n".join(a + b))
+    warnings = []
+    for label, corpus in (("A", a), ("B", b)):
+        joined = "\n\n".join(corpus)
+        check_text(joined)
+        if not any(text_words(text, lemmatize=False) for text in corpus):
+            raise ToolError(f"Корпус {label}: в текстах нет слов")
+        warnings += [f"Корпус {label}: {warning}" for warning in language_warnings(joined)]
     with ruts_errors():
         try:
             table = compare_corpora(a, b, window=window, labels=("A", "B"))
@@ -162,6 +176,19 @@ def compare_texts(
                 "уменьшите window или сравните тексты целиком (window=null)"
             ) from error
     n_windows = {"a": int(table["n_A"].max()), "b": int(table["n_B"].max())}
+    n_texts = {"a": int(table["n_texts_A"].max()), "b": int(table["n_texts_B"].max())}
+    if min(n_windows.values()) < 2:
+        raise ToolError(
+            f"Окон в A - {n_windows['a']}, в B - {n_windows['b']}: для сравнения распределений "
+            "нужно хотя бы два окна в каждом корпусе; уменьшите window или добавьте текстов"
+        )
+    for label, count in n_texts.items():
+        if count < 2:
+            warnings.append(
+                f"В корпусе {label.upper()} один текст: интервал разности медиан не определен, "
+                "а p_holm считает окна одного текста независимыми и занижено; различия могут "
+                "быть особенностями текста, а не корпуса"
+            )
     if not (table["p_holm"] < SIGNIFICANCE).any():
         warnings.append(
             f"Ни одно различие не значимо после поправки Холма (p_holm < {SIGNIFICANCE}): окон "
@@ -170,7 +197,7 @@ def compare_texts(
         )
     return {
         "n_windows": n_windows,
-        "n_texts": {"a": int(table["n_texts_A"].max()), "b": int(table["n_texts_B"].max())},
+        "n_texts": n_texts,
         "features": [
             {"feature": feature}
             | {field: clean(float(row[column])) for field, column in COMPARISON_FIELDS.items()}

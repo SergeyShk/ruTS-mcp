@@ -73,6 +73,21 @@ def test_keyness_measures():
     ]
 
 
+def test_keyness_no_keywords():
+    """При min_freq=1 уменьшать нечего: предупреждение говорит, что таких слов нет"""
+    assert keyness(CAT, reference=CAT, min_freq=1)["warnings"] == [
+        "Слов, которые в тексте чаще, чем в эталоне, нет"
+    ]
+    assert keyness(CAT, reference=CAT, positive=False, min_freq=1)["warnings"] == [
+        "Слов, которые в тексте реже, чем в эталоне, нет"
+    ]
+
+
+def test_keyness_dictionary_words(dicts):
+    """Со словарем числа и латиница не сравниваются и не входят в n_words"""
+    assert keyness(f"{CAT} 2020 Python", min_freq=1)["n_words"] == 8
+
+
 def test_keyness_warnings():
     result = keyness(REFERENCE, reference="The cat sleeps", min_freq=10)
     assert result["warnings"] == [
@@ -97,14 +112,33 @@ def test_compare_texts(chekhov):
     assert result["warnings"] == []
 
 
-def test_compare_texts_not_significant(chekhov):
-    """На двух текстах целиком статистики нет, предупреждение называет число окон"""
-    result = compare_texts([chekhov], [PUSHKIN * 6], window=None)
-    assert result["n_windows"] == {"a": 1, "b": 1}
-    assert result["features"][0]["p_holm"] is None
-    (warning,) = result["warnings"]
-    assert warning.startswith("Ни одно различие не значимо после поправки Холма")
-    assert "окон в A - 1, в B - 1" in warning
+def test_compare_texts_single_texts(chekhov):
+    """По два окна из одного текста: оговорка об одном тексте и о незначимости"""
+    result = compare_texts([chekhov], [PUSHKIN * 12], window=100)
+    assert result["n_windows"] == {"a": 2, "b": 2}
+    assert result["n_texts"] == {"a": 1, "b": 1}
+    assert result["features"][0]["ci_low"] is None
+    one_text, _, not_significant = result["warnings"]
+    assert one_text.startswith("В корпусе A один текст: интервал разности медиан не определен")
+    assert not_significant.startswith("Ни одно различие не значимо после поправки Холма")
+    assert "окон в A - 2, в B - 2" in not_significant
+
+
+def test_compare_texts_one_window(chekhov):
+    with pytest.raises(ToolError, match=r"^Окон в A - 1, в B - 1: для сравнения распределений"):
+        compare_texts([chekhov], [PUSHKIN * 6], window=None)
+
+
+def test_compare_texts_no_words(chekhov):
+    with pytest.raises(ToolError, match=r"^Корпус B: в текстах нет слов$"):
+        compare_texts([chekhov], ["", "..."], window=None)
+
+
+def test_compare_texts_language(chekhov):
+    """Язык проверяется у каждого корпуса: короткий английский корпус не теряется в склейке"""
+    english = "The cat sleeps on the window and the dog barks at the cat. " * 20
+    result = compare_texts([chekhov] * 2, [english] * 2, window=100)
+    assert result["warnings"][0].startswith("Корпус B: Букв русского алфавита - только 0%")
 
 
 def test_compare_texts_short():
