@@ -1,6 +1,7 @@
 from fastmcp import FastMCP
 
 from . import __version__
+from .compare import compare_texts, keyness
 from .corpus import collocations, dispersion, kwic
 from .tools import analyze_text
 
@@ -16,3 +17,5 @@ mcp.tool(analyze_text, title="Анализ русского текста", annot
 mcp.tool(kwic, title="Конкорданс", annotations=READ_ONLY)
 mcp.tool(collocations, title="Коллокации", annotations=READ_ONLY)
 mcp.tool(dispersion, title="Дисперсия слов", annotations=READ_ONLY)
+mcp.tool(keyness, title="Ключевые слова", annotations=READ_ONLY)
+mcp.tool(compare_texts, title="Сравнение корпусов", annotations=READ_ONLY)
