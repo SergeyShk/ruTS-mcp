@@ -48,9 +48,10 @@ def test_lexical_without_dict(data_dir):
     (warning,) = warnings
     assert warning.startswith(
         f"Частотный словарь Ляшевской и Шарова не скачан: метрики {', '.join(DICT_STATS)} "
-        "не посчитаны. Словари скачивает команда ruts-mcp download"
+        "не посчитаны. Словари и модель скачивает команда ruts-mcp "
+        "download"
     )
-    assert warning.endswith(f"в каталог {data_dir / 'dicts'}")
+    assert warning.endswith(f"в каталог {data_dir}")
 
 
 NOT_FOUND = (

@@ -10,10 +10,20 @@ from .morph import morph_group
 from .phon import phon_group
 from .readability import readability_group
 from .style import style_group
+from .syntax import syntax_group
 from .verse import verse_group
 
 Group = Literal[
-    "basic", "readability", "diversity", "morph", "phon", "cohesion", "style", "lexical", "verse"
+    "basic",
+    "readability",
+    "diversity",
+    "morph",
+    "phon",
+    "cohesion",
+    "style",
+    "lexical",
+    "verse",
+    "syntax",
 ]
 
 DEFAULT_GROUPS: tuple[Group, ...] = ("basic", "readability")
@@ -27,4 +37,5 @@ GROUPS: dict[Group, Callable[[Analysis], GroupResult]] = {
     "style": style_group,
     "lexical": lexical_group,
     "verse": verse_group,
+    "syntax": syntax_group,
 }

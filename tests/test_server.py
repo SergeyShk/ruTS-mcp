@@ -54,6 +54,7 @@ async def test_tools():
         "style",
         "lexical",
         "verse",
+        "syntax",
     ]
     assert groups["default"] == ["basic", "readability"]
     preset = tool.input_schema["properties"]["readability_preset"]
@@ -87,9 +88,9 @@ async def test_call_kwic():
         ({"text": ""}, "The data source has no words"),
         ({"text": TEXT, "groups": []}, "at least 1 item"),
         (
-            {"text": TEXT, "groups": ["syntax"]},
+            {"text": TEXT, "groups": ["unknown"]},
             "Input should be 'basic', 'readability', 'diversity', 'morph', 'phon', "
-            "'cohesion', 'style', 'lexical' or 'verse'",
+            "'cohesion', 'style', 'lexical', 'verse' or 'syntax'",
         ),
     ],
 )
