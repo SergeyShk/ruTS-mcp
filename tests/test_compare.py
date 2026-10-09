@@ -153,14 +153,26 @@ def test_compare_texts_single_texts(chekhov):
 
 def test_compare_texts_lost_remainders(chekhov):
     """Остатки текстов короче окна не сравниваются: ответ говорит, сколько слов не вошло"""
-    result = compare_texts([chekhov], [PUSHKIN * 12], window=100)
+    result = compare_texts([chekhov], [PUSHKIN * 12] * 2, window=120)
     assert [item for item in result["warnings"] if item.startswith("Остатки")] == [
-        f"Остатки текстов корпуса {label} короче окна в 100 слов не вошли в сравнение: "
-        f"{lost} из {total} слов; окно поменьше теряет меньше текста"
-        for label, lost, total in (("A", 41, 241), ("B", 28, 228))
+        "Остатки текстов корпуса B короче окна в 120 слов не вошли в сравнение: 216 из 456 "
+        "слов; окно поменьше теряет меньше текста"
     ]
     auto = compare_texts([chekhov], [PUSHKIN * 12])
     assert not any(item.startswith("Остатки") for item in auto["warnings"])
+
+
+def test_compare_texts_min_window(chekhov):
+    """При наименьшем окне совет уменьшить окно не дается"""
+    warnings = compare_texts([chekhov], [PUSHKIN * 12], window=100)["warnings"]
+    assert [item for item in warnings if item.startswith("Остатки")] == [
+        f"Остатки текстов корпуса {label} короче окна в 100 слов не вошли в сравнение: "
+        f"{lost} из {total} слов; окно меньше 100 слов не задается, тексты целиком "
+        "сравнивает whole_texts=true"
+        for label, lost, total in (("A", 41, 241), ("B", 28, 228))
+    ]
+    significance = next(item for item in warnings if item.startswith("Ни одно различие"))
+    assert "Нужно больше текста; дельта Клиффа" in significance
 
 
 def test_compare_texts_auto_window(chekhov):
@@ -174,6 +186,7 @@ def test_compare_texts_whole(chekhov):
     result = compare_texts([chekhov, chekhov * 2], [PUSHKIN * 12, PUSHKIN * 20], whole_texts=True)
     assert result["window"] is None
     assert result["n_windows"] == result["n_texts"] == {"a": 2, "b": 2}
+    assert any("Нужно больше текстов; дельта Клиффа" in item for item in result["warnings"])
 
 
 def test_compare_texts_paths(tmp_path, chekhov):

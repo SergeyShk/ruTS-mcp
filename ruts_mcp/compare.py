@@ -218,9 +218,15 @@ def coverage_warnings(
             total = sum(count for count, item in zip(sizes[label], items, strict=True) if item)
             lost = total - sum(map(len, items)) * size
             if lost > LOST_SHARE * total:
+                advice = (
+                    "окно поменьше теряет меньше текста"
+                    if size > MIN_WINDOW
+                    else f"окно меньше {MIN_WINDOW} слов не задается, тексты целиком сравнивает "
+                    "whole_texts=true"
+                )
                 warnings.append(
                     f"Остатки текстов корпуса {label} короче окна в {size} слов не вошли "
-                    f"в сравнение: {lost} из {total} слов; окно поменьше теряет меньше текста"
+                    f"в сравнение: {lost} из {total} слов; {advice}"
                 )
     if size is None:
         means = {
@@ -355,10 +361,13 @@ def compare_texts(
                 "быть особенностями текста, а не корпуса"
             )
     if not (table["p_holm"] < SIGNIFICANCE).any():
+        more = {None: "больше текстов", MIN_WINDOW: "больше текста"}.get(
+            size, "больше текста или окно поменьше"
+        )
         warnings.append(
             f"Ни одно различие не значимо после поправки Холма (p_holm < {SIGNIFICANCE}): окон "
-            f"в A - {n_windows['a']}, в B - {n_windows['b']}. Нужно больше текста или окно "
-            "поменьше; дельта Клиффа на таком числе окон - грубая оценка"
+            f"в A - {n_windows['a']}, в B - {n_windows['b']}. Нужно {more}; дельта Клиффа "
+            "на таком числе окон - грубая оценка"
         )
     scale = table[["mean_A", "mean_B"]].abs().max(axis=1)
     ordered = table.assign(
