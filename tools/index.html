@@ -771,6 +771,7 @@
 <h1 id="_1">Инструменты<a class="headerlink" href="#_1" title="Permanent link">&para;</a></h1>
 <h2 id="common">Общее<a class="headerlink" href="#common" title="Permanent link">&para;</a></h2>
 <p>Все инструменты только читают переданный текст: ничего не сохраняют и не ходят в сеть. Текст и корпус ограничены по длине (<code>RUTS_MCP_MAX_TEXT_LENGTH</code>, по умолчанию 500 000 символов, см. <a href="../installation/#settings">Настройки</a>).</p>
+<p>Текст передается аргументом <code>text</code> или путем к файлу <code>path</code> - абсолютным путем к файлу в UTF-8 на машине, где запущен сервер. Файл удобнее для длинного текста: агенту не нужно пересылать его в аргументе, и статистики считаются по исходному тексту, а не по его пересказу. Знаки ударения и мягкие переносы внутри слов не мешают анализу: слова сравниваются без них, <code>kwic</code> показывает текст как написан, а группа <code>verse</code> берет из знака ударение.</p>
 <p>В каждом ответе есть ключ <code>warnings</code> - причины, по которым значения могут быть неустойчивы или не иметь смысла для этого текста: короткий текст, текст не на русском языке, не скачанные словари или модель, статистика, не определенная на тексте. Агенту стоит читать их до выводов. Числа округляются до четырех значащих цифр, неопределенное значение отдается как <code>null</code>.</p>
 <p>Определения и формулы метрик - в <a href="https://sergeyshk.github.io/ruTS/">документации ruTS</a>; сервер передает значения ruTS как есть.</p>
 <h2 id="analyze_text">analyze_text<a class="headerlink" href="#analyze_text" title="Permanent link">&para;</a></h2>
@@ -790,6 +791,11 @@
 <td style="text-align: left;">Текст на русском языке</td>
 </tr>
 <tr>
+<td style="text-align: left;"><code>path</code></td>
+<td style="text-align: center;">-</td>
+<td style="text-align: left;">Путь к файлу с текстом вместо <code>text</code></td>
+</tr>
+<tr>
 <td style="text-align: left;"><code>groups</code></td>
 <td style="text-align: center;"><code>["basic", "readability"]</code></td>
 <td style="text-align: left;">Группы статистик; каждая - ключ результата</td>
@@ -802,7 +808,12 @@
 <tr>
 <td style="text-align: left;"><code>readability_preset</code></td>
 <td style="text-align: center;"><code>plainrussian</code></td>
-<td style="text-align: left;">Коэффициенты формул удобочитаемости: <code>plainrussian</code> - тексты общего назначения, <code>fiction</code> - художественные, <code>academic</code> - учебные</td>
+<td style="text-align: left;">Коэффициенты формул удобочитаемости: <code>plainrussian</code> откалиброван по школьным классам и подходит для любых текстов; <code>fiction</code> - коэффициенты Оборневой по художественным текстам, дает класс на несколько лет выше; <code>academic</code> - коэффициенты Соловьёва, Иванова и Солнышкиной по учебникам 5-11 классов</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>descriptions</code></td>
+<td style="text-align: center;"><code>true</code></td>
+<td style="text-align: left;">Добавить к статистикам описания; <code>false</code> - ответ короче, когда описания уже известны по прошлому вызову</td>
 </tr>
 </tbody>
 </table>
@@ -847,7 +858,7 @@
 </tr>
 <tr>
 <td style="text-align: left;"><code>style</code></td>
-<td style="text-align: left;">Тошнота, водность, заспамленность с прочтением по нормам SEO-сервисов, маркеры канцелярита (<a href="https://sergeyshk.github.io/ruTS/stats/style_stats/">StyleStats</a>)</td>
+<td style="text-align: left;">Тошнота, водность, заспамленность с прочтением по нормам SEO-сервисов, самые частые словоформы, маркеры канцелярита с найденными словами и фразами (<a href="https://sergeyshk.github.io/ruTS/stats/style_stats/">StyleStats</a>)</td>
 <td style="text-align: center;">-</td>
 </tr>
 <tr>
@@ -857,7 +868,7 @@
 </tr>
 <tr>
 <td style="text-align: left;"><code>verse</code></td>
-<td style="text-align: left;">Метр, число стоп, рифмовка, окончания строк (<a href="https://sergeyshk.github.io/ruTS/stats/verse_stats/">VerseStats</a>)</td>
+<td style="text-align: left;">Метр, число стоп, рифмовка, окончания строк; знак ударения в тексте («замо́к») важнее словаря (<a href="https://sergeyshk.github.io/ruTS/stats/verse_stats/">VerseStats</a>)</td>
 <td style="text-align: center;">словарь ударений</td>
 </tr>
 <tr>
@@ -890,11 +901,16 @@
 <td style="text-align: left;">Прочтение по шкале или норме ruTS, если шкала есть: класс и возраст читателя, полоса индекса Флеша, норма Text.ru</td>
 </tr>
 <tr>
+<td style="text-align: left;"><code>count</code>, <code>found</code></td>
+<td style="text-align: left;">У маркеров канцелярита группы <code>style</code>: число вхождений и найденные слова и фразы с частотами</td>
+</tr>
+<tr>
 <td style="text-align: left;"><code>description</code></td>
 <td style="text-align: left;">Что считает статистика</td>
 </tr>
 </tbody>
 </table>
+<p><code>analyze_text</code>, как ruTS, считает «ещё» и «еще» разными словами, а <code>kwic</code>, <code>collocations</code>, <code>dispersion</code> и <code>keyness</code> сводят ё к е.</p>
 <p>Шкалы прочтения отдают <a href="../resources/#resources">ресурсы</a> <code>ruts://scales/readability</code> и <code>ruts://scales/style</code>.</p>
 <h2 id="kwic">kwic<a class="headerlink" href="#kwic" title="Permanent link">&para;</a></h2>
 <p>Все вхождения слова или словосочетания с контекстом слева и справа - конкорданс, по которому агент цитирует текст.</p>
@@ -908,14 +924,19 @@
 </thead>
 <tbody>
 <tr>
+<td style="text-align: left;"><code>keyword</code></td>
+<td style="text-align: center;">-</td>
+<td style="text-align: left;">Слово или словосочетание</td>
+</tr>
+<tr>
 <td style="text-align: left;"><code>text</code></td>
 <td style="text-align: center;">-</td>
 <td style="text-align: left;">Текст</td>
 </tr>
 <tr>
-<td style="text-align: left;"><code>keyword</code></td>
+<td style="text-align: left;"><code>path</code></td>
 <td style="text-align: center;">-</td>
-<td style="text-align: left;">Слово или словосочетание</td>
+<td style="text-align: left;">Путь к файлу с текстом вместо <code>text</code></td>
 </tr>
 <tr>
 <td style="text-align: left;"><code>window</code></td>
@@ -934,7 +955,7 @@
 </tr>
 </tbody>
 </table>
-<p>Ответ - число вхождений <code>n_matches</code> и строки <code>matches</code> с полями <code>left</code>, <code>keyword</code> и <code>right</code>.</p>
+<p>Ответ - число вхождений <code>n_matches</code> и строки <code>matches</code> с полями <code>left</code>, <code>keyword</code> и <code>right</code>. Кроме <code>limit</code>, строки ограничены объемом: около 40 000 символов контекста на ответ; если показаны не все вхождения, предупреждение говорит, сколько.</p>
 <h2 id="collocations">collocations<a class="headerlink" href="#collocations" title="Permanent link">&para;</a></h2>
 <p>Коллокации - пары слов, которые встречаются вместе чаще, чем случайно: устойчивые сочетания, термины, сочетаемость слова.</p>
 <table>
@@ -950,6 +971,11 @@
 <td style="text-align: left;"><code>text</code></td>
 <td style="text-align: center;">-</td>
 <td style="text-align: left;">Текст</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>path</code></td>
+<td style="text-align: center;">-</td>
+<td style="text-align: left;">Путь к файлу с текстом вместо <code>text</code></td>
 </tr>
 <tr>
 <td style="text-align: left;"><code>window</code></td>
@@ -1001,6 +1027,11 @@
 <td style="text-align: left;">Текст</td>
 </tr>
 <tr>
+<td style="text-align: left;"><code>path</code></td>
+<td style="text-align: center;">-</td>
+<td style="text-align: left;">Путь к файлу с текстом вместо <code>text</code></td>
+</tr>
+<tr>
 <td style="text-align: left;"><code>words</code></td>
 <td style="text-align: center;">-</td>
 <td style="text-align: left;">Слова, дисперсия которых нужна, до 200; не задано - самые частые слова</td>
@@ -1039,9 +1070,19 @@
 <td style="text-align: left;">Текст</td>
 </tr>
 <tr>
+<td style="text-align: left;"><code>path</code></td>
+<td style="text-align: center;">-</td>
+<td style="text-align: left;">Путь к файлу с текстом вместо <code>text</code></td>
+</tr>
+<tr>
 <td style="text-align: left;"><code>reference</code></td>
 <td style="text-align: center;">-</td>
 <td style="text-align: left;">Текст-эталон; не задано - частотный словарь</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>reference_path</code></td>
+<td style="text-align: center;">-</td>
+<td style="text-align: left;">Путь к файлу с текстом-эталоном вместо <code>reference</code></td>
 </tr>
 <tr>
 <td style="text-align: left;"><code>measure</code></td>
@@ -1070,9 +1111,9 @@
 </tr>
 </tbody>
 </table>
-<p>Для каждого слова ответ дает частоты в тексте и эталоне, логарифм правдоподобия G² с p-значением и Log Ratio - во сколько раз слово чаще. Со словарем имена, термины и опечатки, которых в нем нет, попадают в ключевые слова.</p>
+<p>Для каждого слова ответ дает частоты в тексте и эталоне, логарифм правдоподобия G² с p-значением и Log Ratio - во сколько раз слово чаще. Если в эталоне слова нет, Log Ratio - оценка с поправкой 0,5 и бывает меньше нуля, хотя слово чаще в тексте. Со словарем имена, термины и опечатки, которых в нем нет, попадают в ключевые слова, а статьи словаря, к которым не приводится ни одно слово текста (его, ее, их, во, со - формы лемм он, она, они, в, с), в слова, которые чаще в эталоне, не попадают.</p>
 <h2 id="compare_texts">compare_texts<a class="headerlink" href="#compare_texts" title="Permanent link">&para;</a></h2>
-<p>Сравнение двух корпусов по признакам стиля - для атрибуции авторства, сравнения жанров и переводов, текстов человека и модели. Тексты режутся на окна равной длины, у каждого окна считаются около 110 признаков ruTS, и распределения каждого признака в корпусах сравниваются.</p>
+<p>Сравнение двух корпусов по признакам стиля - для атрибуции авторства, сравнения жанров и переводов, текстов человека и модели. Тексты режутся на окна по <code>window</code> слов, у каждого окна считаются около 110 признаков ruTS, и распределения каждого признака в корпусах сравниваются.</p>
 <table>
 <thead>
 <tr>
@@ -1085,17 +1126,32 @@
 <tr>
 <td style="text-align: left;"><code>a</code></td>
 <td style="text-align: center;">-</td>
-<td style="text-align: left;">Тексты первого корпуса</td>
+<td style="text-align: left;">Тексты первого корпуса, до 1000</td>
 </tr>
 <tr>
 <td style="text-align: left;"><code>b</code></td>
 <td style="text-align: center;">-</td>
-<td style="text-align: left;">Тексты второго корпуса</td>
+<td style="text-align: left;">Тексты второго корпуса, до 1000</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>a_paths</code></td>
+<td style="text-align: center;">-</td>
+<td style="text-align: left;">Пути к файлам с текстами первого корпуса, вместе с <code>a</code> или вместо</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>b_paths</code></td>
+<td style="text-align: center;">-</td>
+<td style="text-align: left;">Пути к файлам с текстами второго корпуса, вместе с <code>b</code> или вместо</td>
 </tr>
 <tr>
 <td style="text-align: left;"><code>window</code></td>
-<td style="text-align: center;"><code>1000</code></td>
-<td style="text-align: left;">Размер окна в словах, от 100 до 10 000; <code>null</code> - тексты целиком</td>
+<td style="text-align: center;">-</td>
+<td style="text-align: left;">Размер окна в словах, от 100 до 10 000; не задано - не больше 1000 и такой, чтобы самый короткий текст делился хотя бы на два окна</td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>whole_texts</code></td>
+<td style="text-align: center;"><code>false</code></td>
+<td style="text-align: left;">Сравнивать тексты целиком, без окон</td>
 </tr>
 <tr>
 <td style="text-align: left;"><code>top_n</code></td>
@@ -1104,7 +1160,8 @@
 </tr>
 </tbody>
 </table>
-<p>Ответ - признаки по убыванию различия: средние по окнам, разность медиан с 95% доверительным интервалом, дельта Клиффа (по модулю от 0,147 - малый, от 0,33 - средний, от 0,474 - большой эффект) и p-значение с поправкой Холма. В каждом корпусе нужно хотя бы по два окна; надежнее, когда в корпусах по нескольку текстов: окна одного текста не независимы.</p>
+<p>Текст режется подряд на окна ровно по <code>window</code> слов; остаток короче окна и текст короче окна в сравнение не входят (ответ предупреждает о таких текстах и о потере больше 10 % слов корпуса на остатках; окно поменьше теряет меньше текста). При сравнении текстов целиком ответ предупреждает, если средняя длина текстов в корпусах заметно различается: признаки, которые зависят от длины текста, различаются и из-за нее.</p>
+<p>Ответ - признаки по убыванию модуля дельты Клиффа, при равной дельте - по относительной разности медиан: средние по окнам, разность медиан с 95% доверительным интервалом, дельта Клиффа (по модулю от 0,147 - малый, от 0,33 - средний, от 0,474 - большой эффект) и p-значение с поправкой Холма. В каждом корпусе нужно хотя бы по два окна; надежнее, когда в корпусах по нескольку текстов: окна одного текста не независимы.</p>
 
 
 
