@@ -6,7 +6,10 @@ repo_url: https://github.com/SergeyShk/ruTS-mcp
 nav:
     - Главная:
       - О проекте: index.md
+      - Установка: installation.md
       - Авторы: authors.md
+    - Инструменты: tools.md
+    - Ресурсы и промпты: resources.md
 
 theme:
   name: material
@@ -41,7 +44,10 @@ plugins:
           nav_translations:
             Главная: Home
             О проекте: About
+            Установка: Installation
             Авторы: Authors
+            Инструменты: Tools
+            Ресурсы и промпты: Resources and prompts
 
 extra:
   social:
