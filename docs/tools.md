@@ -28,7 +28,7 @@
 | `phon` | Классы звуков, сочетания согласных, аллитерация и ассонанс ([PhonStats](https://sergeyshk.github.io/ruTS/stats/phon_stats/)) | - |
 | `cohesion` | Связность: повторы между предложениями, данность, коннекторы ([CohesionStats](https://sergeyshk.github.io/ruTS/stats/cohesion_stats/)) | - |
 | `style` | Тошнота, водность, заспамленность с прочтением по нормам SEO-сервисов, маркеры канцелярита ([StyleStats](https://sergeyshk.github.io/ruTS/stats/style_stats/)) | - |
-| `lexical` | Частотность слов, частотные полосы, сюрпризал, лексическая плотность ([LexicalStats](https://sergeyshk.github.io/ruTS/stats/lexical_stats/)) | частотный словарь |
+| `lexical` | Частотность слов, частотные полосы, сюрпризал, лексическая плотность ([LexicalStats](https://sergeyshk.github.io/ruTS/stats/lexical_stats/)) | частотный словарь для частотности и сюрпризала |
 | `verse` | Метр, число стоп, рифмовка, окончания строк ([VerseStats](https://sergeyshk.github.io/ruTS/stats/verse_stats/)) | словарь ударений |
 | `syntax` | Длины зависимостей, глубина дерева, клаузы, обороты, пассив, расщепленные сказуемые ([SyntaxStats](https://sergeyshk.github.io/ruTS/stats/syntax_stats/)) | модель spaCy |
 

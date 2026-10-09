@@ -61,7 +61,7 @@ One command downloads all of them:
 uvx ruts-mcp download
 ```
 
-A repeated run skips what is already downloaded, `--force` downloads it again. Without the data a group does not fail: its metrics are not computed, and a warning in the result names this command. The [`ruts://data`](resources.md#resources) resource shows what is downloaded.
+A repeated run skips what is already downloaded, `--force` downloads it again. Without the data a group does not fail: the metrics that need it are not computed, and a warning in the result names this command. Without the dictionary the `lexical` group still computes the shares of frequency bands and lexical density. The [`ruts://data`](resources.md#resources) resource shows what is downloaded.
 
 The data is kept in the user data directory and survives server updates:
 

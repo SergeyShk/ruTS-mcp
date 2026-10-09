@@ -28,7 +28,7 @@ Statistics of a text by groups; only the requested groups are computed.
 | `phon` | Sound classes, consonant clusters, alliteration and assonance ([PhonStats](https://sergeyshk.github.io/ruTS/en/stats/phon_stats/)) | - |
 | `cohesion` | Cohesion: overlaps between sentences, givenness, connectives ([CohesionStats](https://sergeyshk.github.io/ruTS/en/stats/cohesion_stats/)) | - |
 | `style` | Nausea, water content, spam score read by the norms of SEO services, officialese markers ([StyleStats](https://sergeyshk.github.io/ruTS/en/stats/style_stats/)) | - |
-| `lexical` | Word frequency, frequency bands, surprisal, lexical density ([LexicalStats](https://sergeyshk.github.io/ruTS/en/stats/lexical_stats/)) | frequency dictionary |
+| `lexical` | Word frequency, frequency bands, surprisal, lexical density ([LexicalStats](https://sergeyshk.github.io/ruTS/en/stats/lexical_stats/)) | frequency dictionary for frequency and surprisal |
 | `verse` | Meter, number of feet, rhyme schemes, line endings ([VerseStats](https://sergeyshk.github.io/ruTS/en/stats/verse_stats/)) | stress dictionary |
 | `syntax` | Dependency lengths, tree depth, clauses, participial and adverbial phrases, passive, split predicates ([SyntaxStats](https://sergeyshk.github.io/ruTS/en/stats/syntax_stats/)) | spaCy model |
 

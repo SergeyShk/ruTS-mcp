@@ -39,7 +39,7 @@ Asked "what reader is this text written for?", the agent calls `analyze_text` wi
 }
 ```
 
-This is a single sentence of bureaucratese: "В целях повышения качества обслуживания клиентов в кратчайшие сроки осуществляется проведение мероприятий..." The consensus grade reads as postgraduate level, and the warning says one sentence is too little for the formulas.
+This is a single sentence of bureaucratese: «В целях повышения качества обслуживания клиентов в кратчайшие сроки осуществляется проведение мероприятий по модернизации оборудования, предусмотренных утвержденным планом развития организации на текущий период.» The consensus grade reads as postgraduate level, and the warning says one sentence is too little for the formulas.
 
 ## Quick start { #quickstart }
 

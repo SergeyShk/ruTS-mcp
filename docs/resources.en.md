@@ -24,10 +24,4 @@ Prompts are ready review scenarios: which tools to call, how to read the result 
 | `seo_review` | `text` | Norms of SEO services and keywords of a text for a website |
 | `compare_review` | `text_a`, `text_b` | How two texts differ by style and vocabulary |
 
-In Claude Code a prompt is called as a command with the text in quotes:
-
-```text
-/mcp__ruts__readability_review "В целях повышения качества обслуживания..."
-```
-
-Other clients show MCP prompts in their own way; the arguments are the same.
+In Claude Code a prompt is called as the `/mcp__ruts__<name>` command, for example `/mcp__ruts__readability_review`. Claude Code splits the arguments of the command on whitespace, and quotes do not help: only the first word gets into the `text` argument. So in Claude Code your own text is easier to review with a plain request, for example "assess the readability of this text with ruts" followed by the text. Other clients show MCP prompts in their own way.
