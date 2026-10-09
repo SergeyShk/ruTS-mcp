@@ -1,3 +1,4 @@
+import unicodedata
 from typing import get_args
 
 import pytest
@@ -7,6 +8,7 @@ from anyts.constants import (
 )
 from fastmcp.exceptions import ToolError
 from ruts.corpus import collocations as ruts_collocations, dispersion as ruts_dispersion
+from ruts.utils import strip_marks
 
 from ruts_mcp.analysis import clean
 from ruts_mcp.corpus import (
@@ -21,6 +23,10 @@ from ruts_mcp.corpus import (
 )
 
 TEXT = "Кот спит. Коты играют в саду, а кот смотрит на котов. Кошка спит."
+MARKED = (
+    "Ко\u0301т спит. Коты\u0301 играют, а ко\u00adт смотрит на ещё одного кота\u0301.",
+    unicodedata.normalize("NFD", "Кот спит. Коты играют, а кот смотрит на ещё одного кота."),
+)
 
 
 def test_kwic():
@@ -73,6 +79,17 @@ def test_kwic_stress_marks(tmp_path):
     ]
     assert kwic("чудесный", path=str(path))["matches"] == result["matches"]
     assert kwic("мороз", path=str(path))["n_matches"] == 1
+
+
+@pytest.mark.parametrize("text", MARKED, ids=["marks", "nfd"])
+def test_corpus_stress_marks(text):
+    """Знаки ударения, мягкие переносы и NFD не меняют коллокаций и дисперсии"""
+    plain = strip_marks(text)
+    assert collocations(text, node="ко\u0301т", min_freq=1) == collocations(
+        plain, node="кот", min_freq=1
+    )
+    words = ["кот", "еще"]
+    assert dispersion(text, words=words, parts=2) == dispersion(plain, words=words, parts=2)
 
 
 def test_kwic_not_found():

@@ -4,7 +4,7 @@
 
 All tools only read the given text: they store nothing and do not go to the network. A text and a corpus are limited in length (`RUTS_MCP_MAX_TEXT_LENGTH`, 500,000 characters by default, see [Settings](installation.md#settings)).
 
-A text is given by the `text` argument or by the path to a file `path` - an absolute path to a UTF-8 file on the machine where the server runs. A file is handier for a long text: the agent does not have to send it in an argument, and the statistics are computed on the original text rather than on its retelling. Stress marks and soft hyphens inside words are ignored.
+A text is given by the `text` argument or by the path to a file `path` - an absolute path to a UTF-8 file on the machine where the server runs. A file is handier for a long text: the agent does not have to send it in an argument, and the statistics are computed on the original text rather than on its retelling. Stress marks and soft hyphens inside words do not get in the way: words are compared without them, `kwic` shows the text as written, and the `verse` group takes the stress from the mark.
 
 Every result has the `warnings` key - the reasons why values may be unstable or meaningless for this text: a short text, a text not in Russian, dictionaries or the model not downloaded, a statistic undefined on the text. The agent should read them before drawing conclusions. Numbers are rounded to four significant digits, an undefined value is `null`. Descriptions, readings and warnings are in Russian.
 
@@ -117,7 +117,7 @@ For every word the result gives the frequencies in the text and the reference, t
 
 ## compare_texts { #compare_texts }
 
-Comparison of two corpora by style features - for authorship attribution, comparing genres and translations, human and model texts. The texts are cut into windows of about `window` words, about 110 features of ruTS are computed for every window, and the distributions of every feature in the corpora are compared.
+Comparison of two corpora by style features - for authorship attribution, comparing genres and translations, human and model texts. The texts are cut into windows of `window` words, about 110 features of ruTS are computed for every window, and the distributions of every feature in the corpora are compared.
 
 | Parameter | Default | Description |
 | :-------- | :-----: | :---------- |
@@ -129,6 +129,6 @@ Comparison of two corpora by style features - for authorship attribution, compar
 | `whole_texts` | `false` | Compare whole texts, without windows |
 | `top_n` | `15` | Number of features with the largest difference, up to 200 |
 
-A text is cut in a row into windows of exactly `window` words; a remainder shorter than a window and a text shorter than a window are left out of the comparison (the result warns about such texts). When whole texts are compared, the result warns if the mean text length differs noticeably between the corpora: features that depend on the text length differ because of it as well.
+A text is cut in a row into windows of exactly `window` words; a remainder shorter than a window and a text shorter than a window are left out of the comparison (the result warns about such texts and about a loss of more than 10% of the words of a corpus on remainders; a smaller window loses less text). When whole texts are compared, the result warns if the mean text length differs noticeably between the corpora: features that depend on the text length differ because of it as well.
 
 The result is the features by descending absolute Cliff's delta, with equal deltas by the relative difference of medians: the means over windows, the difference of medians with a 95% confidence interval, Cliff's delta (in absolute value from 0.147 - small, from 0.33 - medium, from 0.474 - large effect) and the p-value with the Holm correction. Each corpus needs at least two windows; several texts per corpus are more reliable, since the windows of one text are not independent.

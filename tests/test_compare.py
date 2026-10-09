@@ -6,6 +6,7 @@ from anyts.constants import G2_CRITICAL_VALUES, KEYNESS_MEASURES as CORE_KEYNESS
 from fastmcp.exceptions import ToolError
 from ruts.corpus import compare_corpora, keyness as ruts_keyness
 from ruts.datasets import FreqDict
+from ruts.utils import strip_marks
 
 from ruts_mcp.analysis import clean
 from ruts_mcp.compare import (
@@ -19,6 +20,7 @@ from ruts_mcp.compare import (
 )
 from ruts_mcp.corpus import text_words
 from tests.conftest import CAT, PUSHKIN
+from tests.test_corpus import MARKED
 
 REFERENCE = "Кот спал. Собака лаяла на кота, а кот спал на окне. Собака ушла."
 CHEKHOV_LONG = (Path(__file__).parent / "data" / "chekhov.txt").read_text(encoding="utf-8") * 4
@@ -140,10 +142,25 @@ def test_compare_texts_single_texts(chekhov):
     assert result["n_windows"] == {"a": 2, "b": 2}
     assert result["n_texts"] == {"a": 1, "b": 1}
     assert result["features"][0]["ci_low"] is None
-    one_text, _, not_significant, _ = result["warnings"]
+    one_text, not_significant = (
+        next(item for item in result["warnings"] if item.startswith(start))
+        for start in ("В корпусе A один текст", "Ни одно различие не значимо")
+    )
     assert one_text.startswith("В корпусе A один текст: интервал разности медиан не определен")
     assert not_significant.startswith("Ни одно различие не значимо после поправки Холма")
     assert "окон в A - 2, в B - 2" in not_significant
+
+
+def test_compare_texts_lost_remainders(chekhov):
+    """Остатки текстов короче окна не сравниваются: ответ говорит, сколько слов не вошло"""
+    result = compare_texts([chekhov], [PUSHKIN * 12], window=100)
+    assert [item for item in result["warnings"] if item.startswith("Остатки")] == [
+        f"Остатки текстов корпуса {label} короче окна в 100 слов не вошли в сравнение: "
+        f"{lost} из {total} слов; окно поменьше теряет меньше текста"
+        for label, lost, total in (("A", 41, 241), ("B", 28, 228))
+    ]
+    auto = compare_texts([chekhov], [PUSHKIN * 12])
+    assert not any(item.startswith("Остатки") for item in auto["warnings"])
 
 
 def test_compare_texts_auto_window(chekhov):
@@ -346,3 +363,15 @@ def test_keyness_paths(tmp_path):
 def test_keyness_log_ratio_note():
     measure = keyness(REFERENCE, reference=CAT, measure="log_ratio")["measure"]
     assert "при нулевой частоте в эталоне она заменяется на 0,5" in measure
+
+
+@pytest.mark.parametrize("text", MARKED, ids=["marks", "nfd"])
+def test_stress_marks(dicts, chekhov, text):
+    """Знаки ударения, мягкие переносы и NFD не меняют ключевых слов и сравнения корпусов"""
+    plain = strip_marks(text)
+    for options in ({}, {"positive": False}, {"reference": CAT}):
+        assert keyness(text, min_freq=1, **options) == keyness(plain, min_freq=1, **options)
+    marked = text * 20
+    assert compare_texts([marked] * 2, [chekhov] * 2) == compare_texts(
+        [strip_marks(marked)] * 2, [chekhov] * 2
+    )
