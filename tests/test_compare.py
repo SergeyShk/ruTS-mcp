@@ -228,8 +228,16 @@ def test_compare_texts_language(chekhov):
 
 
 def test_compare_texts_short():
-    with pytest.raises(ToolError, match=r"сравните результаты analyze_text$"):
+    """Окно уже наименьшее: совет - сравнить тексты целиком, а не уменьшить окно"""
+    with pytest.raises(
+        ToolError, match=r"наименьшего окна в 100 слов: сравните тексты целиком \(whole_texts=true"
+    ):
         compare_texts(["Короткий текст"], ["Другой текст"])
+
+
+def test_compare_texts_window_too_large(chekhov):
+    with pytest.raises(ToolError, match=r"окна в 1000 слов: задайте window поменьше"):
+        compare_texts([chekhov] * 2, [PUSHKIN * 12] * 2, window=1000)
 
 
 def test_compare_texts_limit(monkeypatch, chekhov):
@@ -249,6 +257,10 @@ def pronouns(data_dir):
         ("в", "pr", 30000.0),
         ("во", "pr", 600.0),
         ("его", "apro", 2000.0),
+        ("ее", "apro", 1500.0),
+        ("она", "spro", 9000.0),
+        ("род", "s", 300.0),
+        ("родиться", "v", 200.0),
         ("кот", "s", 40.3),
         ("он", "spro", 15000.0),
         ("сон", "s", 100.0),
@@ -273,6 +285,21 @@ def test_keyness_unreachable_entries(pronouns):
     assert "во" not in words
     full = ruts_keyness(text_words(text, lemmatize=False), FreqDict(pronouns), positive=False)
     assert {"его", "во"} <= {item.word for item in full}
+
+
+def test_keyness_reachable_entries(pronouns):
+    """Статья остается, если к ней приводится другая форма: «род» - «родиться», но «рода» - «род»"""
+    words = [item["word"] for item in keyness("Кот спал.", positive=False, min_freq=1)["keywords"]]
+    assert {"род", "черт", "черта", "она"} <= set(words)
+    assert not {"его", "во", "ее"} & set(words)
+
+
+def test_keyness_yo_pronoun(pronouns):
+    """«Её» и «ее» - одно слово «она», как в тексте без ё"""
+    with_yo = keyness("Её кот видел её.", min_freq=1)
+    without_yo = keyness("Ее кот видел ее.", min_freq=1)
+    assert with_yo["keywords"] == without_yo["keywords"]
+    assert "она" in [item["word"] for item in with_yo["keywords"]]
 
 
 def test_keyness_dictionary_yo(pronouns):

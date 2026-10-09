@@ -20,7 +20,7 @@ Statistics of a text by groups; only the requested groups are computed.
 | `path` | - | Path to a file with the text instead of `text` |
 | `groups` | `["basic", "readability"]` | Groups of statistics; each is a key of the result |
 | `distributions` | `false` | Add the distributions of words by letters and syllables and of punctuation marks by type (the `basic` group) |
-| `readability_preset` | `plainrussian` | Coefficients of the readability formulas: `plainrussian` is calibrated by school grades and fits any text; `fiction` and `academic` are Oborneva's variants for fiction and educational texts, `fiction` gives a grade several years higher |
+| `readability_preset` | `plainrussian` | Coefficients of the readability formulas: `plainrussian` is calibrated by school grades and fits any text; `fiction` - Oborneva's coefficients from fiction, gives a grade several years higher; `academic` - the coefficients of Solovyev, Ivanov and Solnyshkina from textbooks for grades 5-11 |
 | `descriptions` | `true` | Add descriptions to the statistics; `false` - a shorter result when the descriptions are known from a previous call |
 
 | Group | What it computes | Data |

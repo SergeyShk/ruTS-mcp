@@ -120,8 +120,9 @@ def keyness(
     warnings = language_warnings(text)
     source: Any
     if reference is None and reference_path is None:
-        # Без normalize_yo: ruTS лемматизирует слово с ё и сам сводит лемму к словарю
-        target: tuple[str, ...] = tuple(WordsExtractor(lowercase=True).extract(text))
+        target: tuple[str, ...] = tuple(
+            map(dictionary_form, WordsExtractor(lowercase=True).extract(text))
+        )
         n_words = sum(1 for word in target if DICTIONARY_WORD.fullmatch(word))
         if not n_words:
             raise ToolError(
@@ -170,6 +171,29 @@ def keyness(
     }
 
 
+def dictionary_form(word: str) -> str:
+    """
+    Слово текста в том виде, в каком его сравнивают со словарем
+
+    Описание:
+        Буква ё остается: с ней pymorphy3 разбирает слово точнее (чёрт - черт,
+        а не черта). Исключение - «её»: pymorphy3 разбирает его как
+        притяжательное «ее», а «ее» - как «она», и тексты с ё и без нее
+        расходились бы
+
+    Аргументы:
+        word (str): Слово в нижнем регистре
+
+    Вывод:
+        str: Слово для сравнения со словарем
+
+    Пример использования:
+        >>> [dictionary_form(word) for word in ("её", "чёрт", "ее")]
+        ['ее', 'чёрт', 'ее']
+    """
+    return "ее" if word == "её" else word
+
+
 def _keywords(
     target: tuple[str, ...],
     source: Any,
@@ -185,23 +209,33 @@ def _keywords(
         Слово текста приводится к статье словаря через лемму pymorphy3, и статьи
         вроде «его» или «во» (лемма - «он», «в») получают нулевую частоту в любом
         тексте; среди слов, которые чаще в эталоне, остаются статьи, к которым
-        приводится собственная форма
+        приводится хотя бы одна форма их лексем pymorphy3 (род - через «рода»)
     """
     from ruts.corpus import keyness as ruts_keyness
     from ruts.datasets import FreqDict
     from ruts.lexical_stats import dictionary_lemma
-    from ruts.utils import parse_word
+    from ruts.utils import get_morph_analyzer, normalize_yo, parse_word
 
     if positive or not isinstance(source, FreqDict):
         return ruts_keyness(target, source, measure, min_freq, positive, top_n)
     entries = source.entries
-    reachable = (
-        keyword
-        for keyword in ruts_keyness(target, source, measure, min_freq, positive)
-        if dictionary_lemma(keyword.word, parse_word(keyword.word).normal_form, entries)
-        == keyword.word
-    )
-    return list(islice(reachable, top_n))
+    morph = get_morph_analyzer()
+
+    def reached(word: str, entry: str) -> bool:
+        return dictionary_lemma(word, parse_word(word).normal_form, entries) == entry
+
+    def reachable(entry: str) -> bool:
+        if reached(entry, entry):
+            return True
+        forms = {form.word for parse in morph.parse(entry) for form in parse.lexeme}
+        return any(
+            reached(spelling, entry)
+            for form in forms
+            for spelling in {dictionary_form(form), normalize_yo(form)}
+        )
+
+    found = ruts_keyness(target, source, measure, min_freq, positive)
+    return list(islice((keyword for keyword in found if reachable(keyword.word)), top_n))
 
 
 def auto_window(shortest: int) -> int:
@@ -308,14 +342,22 @@ def compare_texts(
         }
     n_windows = {label.lower(): sum(map(len, items)) for label, items in windows.items()}
     if min(n_windows.values()) < 2:
-        advice = (
-            "передайте хотя бы по два текста с словами в каждый корпус или сравнивайте окнами "
-            "(whole_texts=false)"
-            if size is None
-            else f"тексты коротки для окна в {size} слов: задайте window поменьше (не меньше "
-            f"{MIN_WINDOW}), добавьте текстов или сравните тексты целиком (whole_texts=true); "
-            "если в корпусе меньше 200 слов, сравните результаты analyze_text"
-        )
+        if size is None:
+            advice = (
+                "передайте хотя бы по два текста со словами в каждый корпус или сравнивайте "
+                "окнами (whole_texts=false)"
+            )
+        elif size > MIN_WINDOW:
+            advice = (
+                f"тексты коротки для окна в {size} слов: задайте window поменьше (не меньше "
+                f"{MIN_WINDOW}), добавьте текстов или сравните тексты целиком (whole_texts=true)"
+            )
+        else:
+            advice = (
+                f"тексты коротки даже для наименьшего окна в {MIN_WINDOW} слов: сравните тексты "
+                "целиком (whole_texts=true, нужно хотя бы по два текста в корпусе) или, если "
+                "текстов меньше, сравните результаты analyze_text"
+            )
         raise ToolError(
             f"Окон в A - {n_windows['a']}, в B - {n_windows['b']}: для сравнения распределений "
             f"нужно хотя бы два окна в каждом корпусе; {advice}"
