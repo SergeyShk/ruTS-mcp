@@ -1,3 +1,7 @@
+<p align="center">
+  <img src="https://raw.githubusercontent.com/SergeyShk/ruTS-mcp/master/docs/img/ruts-mcp.png" alt="ruTS-mcp" width="480">
+</p>
+
 <h1 align="center">ruTS-mcp</h1>
 
 <p align="center">
