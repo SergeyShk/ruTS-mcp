@@ -15,6 +15,27 @@
         <xhtml:link rel="alternate" hreflang="en" href="https://sergeyshk.github.io/ruTS-mcp/en/authors/"/>
     </url>
     <url>
+        <loc>https://sergeyshk.github.io/ruTS-mcp/installation/</loc>
+        <lastmod>2026-10-09</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="ru" href="https://sergeyshk.github.io/ruTS-mcp/installation/"/>
+        <xhtml:link rel="alternate" hreflang="en" href="https://sergeyshk.github.io/ruTS-mcp/en/installation/"/>
+    </url>
+    <url>
+        <loc>https://sergeyshk.github.io/ruTS-mcp/resources/</loc>
+        <lastmod>2026-10-09</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="ru" href="https://sergeyshk.github.io/ruTS-mcp/resources/"/>
+        <xhtml:link rel="alternate" hreflang="en" href="https://sergeyshk.github.io/ruTS-mcp/en/resources/"/>
+    </url>
+    <url>
+        <loc>https://sergeyshk.github.io/ruTS-mcp/tools/</loc>
+        <lastmod>2026-10-09</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="ru" href="https://sergeyshk.github.io/ruTS-mcp/tools/"/>
+        <xhtml:link rel="alternate" hreflang="en" href="https://sergeyshk.github.io/ruTS-mcp/en/tools/"/>
+    </url>
+    <url>
         <loc>https://sergeyshk.github.io/ruTS-mcp/en/</loc>
         <lastmod>2026-10-09</lastmod>
         <changefreq>daily</changefreq>
@@ -27,5 +48,26 @@
         <changefreq>daily</changefreq>
         <xhtml:link rel="alternate" hreflang="en" href="https://sergeyshk.github.io/ruTS-mcp/en/authors/"/>
         <xhtml:link rel="alternate" hreflang="ru" href="https://sergeyshk.github.io/ruTS-mcp/authors/"/>
+    </url>
+    <url>
+        <loc>https://sergeyshk.github.io/ruTS-mcp/en/installation/</loc>
+        <lastmod>2026-10-09</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="en" href="https://sergeyshk.github.io/ruTS-mcp/en/installation/"/>
+        <xhtml:link rel="alternate" hreflang="ru" href="https://sergeyshk.github.io/ruTS-mcp/installation/"/>
+    </url>
+    <url>
+        <loc>https://sergeyshk.github.io/ruTS-mcp/en/resources/</loc>
+        <lastmod>2026-10-09</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="en" href="https://sergeyshk.github.io/ruTS-mcp/en/resources/"/>
+        <xhtml:link rel="alternate" hreflang="ru" href="https://sergeyshk.github.io/ruTS-mcp/resources/"/>
+    </url>
+    <url>
+        <loc>https://sergeyshk.github.io/ruTS-mcp/en/tools/</loc>
+        <lastmod>2026-10-09</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="en" href="https://sergeyshk.github.io/ruTS-mcp/en/tools/"/>
+        <xhtml:link rel="alternate" hreflang="ru" href="https://sergeyshk.github.io/ruTS-mcp/tools/"/>
     </url>
 </urlset>

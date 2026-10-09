@@ -14,7 +14,7 @@
       
       
       
-        <link rel="next" href="authors/">
+        <link rel="next" href="installation/">
       
       
         
@@ -241,6 +241,44 @@
   
 
       
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="tools/" class="md-tabs__link">
+        
+  
+  
+    
+  
+  Tools
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="resources/" class="md-tabs__link">
+        
+  
+  
+    
+  
+  Resources and prompts
+
+      </a>
+    </li>
+  
+
+      
     </ul>
   </div>
 </nav>
@@ -357,6 +395,24 @@
         
       
       
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    About
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
       <a href="./" class="md-nav__link md-nav__link--active">
         
   
@@ -374,6 +430,86 @@
 
       </a>
       
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#features" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Features
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#example" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Example
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#quickstart" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Quick start
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="installation/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Installation
+  
+
+    
+  </span>
+  
+  
+
+      </a>
     </li>
   
 
@@ -414,6 +550,60 @@
   
 
     
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="tools/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Tools
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="resources/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Resources and prompts
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
   </ul>
 </nav>
                   </div>
@@ -434,6 +624,47 @@
     
   
   
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#features" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Features
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#example" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Example
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#quickstart" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Quick start
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
 </nav>
                   </div>
                 </div>
@@ -453,11 +684,70 @@
 
 
 <h1 id="ruts-mcp">ruTS-mcp<a class="headerlink" href="#ruts-mcp" title="Permanent link">&para;</a></h1>
-<p><strong>ruTS-mcp</strong> is an <a href="https://modelcontextprotocol.io">MCP</a> server for <a href="https://sergeyshk.github.io/ruTS/en/">ruTS</a>, a library of statistics of Russian texts. It gives an LLM agent tools to measure a text instead of judging it by eye: readability, lexical diversity, morphology, comparison of corpora - each value with the scale to read it by and the limits of its applicability.</p>
-<div class="admonition note">
-<p class="admonition-title">Note</p>
-<p>The server is in development: the tools and the installation instructions will appear with the first release.</p>
-</div>
+<p><strong>ruTS-mcp</strong> is an <a href="https://modelcontextprotocol.io">MCP</a> server for <a href="https://sergeyshk.github.io/ruTS/en/">ruTS</a>, a library of statistics of Russian texts. It gives an LLM agent tools to measure a text instead of judging it by eye: readability, lexical diversity, morphology, syntax, verse, comparison of corpora - each value with the scale to read it by and the limits of its applicability.</p>
+<h2 id="features">Features<a class="headerlink" href="#features" title="Permanent link">&para;</a></h2>
+<table>
+<thead>
+<tr>
+<th style="text-align: left;">Tool</th>
+<th style="text-align: left;">What it does</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: left;"><a href="tools/#analyze_text"><code>analyze_text</code></a></td>
+<td style="text-align: left;">Statistics of a text by groups: basic, readability, lexical diversity, morphology, phonetics, cohesion, style and officialese, lexical sophistication, verse, syntax</td>
+</tr>
+<tr>
+<td style="text-align: left;"><a href="tools/#kwic"><code>kwic</code></a></td>
+<td style="text-align: left;">All occurrences of a word or a phrase with their context</td>
+</tr>
+<tr>
+<td style="text-align: left;"><a href="tools/#collocations"><code>collocations</code></a></td>
+<td style="text-align: left;">Set phrases and the collocates of a word</td>
+</tr>
+<tr>
+<td style="text-align: left;"><a href="tools/#dispersion"><code>dispersion</code></a></td>
+<td style="text-align: left;">How evenly words are spread over the text</td>
+</tr>
+<tr>
+<td style="text-align: left;"><a href="tools/#keyness"><code>keyness</code></a></td>
+<td style="text-align: left;">Keywords of a text against the Russian language or another text</td>
+</tr>
+<tr>
+<td style="text-align: left;"><a href="tools/#compare_texts"><code>compare_texts</code></a></td>
+<td style="text-align: left;">How two corpora of texts differ by style features</td>
+</tr>
+</tbody>
+</table>
+<p>Besides the tools, the server provides <a href="resources/#resources">resources</a> - readability scales, style norms, the state of the dictionaries - and <a href="resources/#prompts">prompts</a> for typical reviews: readability, officialese, a poem, an SEO check, a comparison of two texts.</p>
+<h2 id="example">Example<a class="headerlink" href="#example" title="Permanent link">&para;</a></h2>
+<p>Asked "what reader is this text written for?", the agent calls <code>analyze_text</code> with the <code>readability</code> group and gets not just the numbers but their reading and caveats (the server answers in Russian):</p>
+<div class="highlight"><pre><span></span><code><span class="p">{</span>
+<span class="w">  </span><span class="nt">"readability"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="nt">"consensus_grade"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+<span class="w">      </span><span class="nt">"value"</span><span class="p">:</span><span class="w"> </span><span class="mf">25.5</span><span class="p">,</span>
+<span class="w">      </span><span class="nt">"interpretation"</span><span class="p">:</span><span class="w"> </span><span class="s2">"аспирантура (старше 22 лет)"</span><span class="p">,</span>
+<span class="w">      </span><span class="nt">"description"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Сводный класс: медиана формул класса и индекса Флеша, переведенного в класс; число лет обучения, нужное для понимания текста"</span>
+<span class="w">    </span><span class="p">},</span>
+<span class="w">    </span><span class="nt">"flesch_reading_easy"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+<span class="w">      </span><span class="nt">"value"</span><span class="p">:</span><span class="w"> </span><span class="mf">-39.95</span><span class="p">,</span>
+<span class="w">      </span><span class="nt">"interpretation"</span><span class="p">:</span><span class="w"> </span><span class="s2">"выпускник университета"</span><span class="p">,</span>
+<span class="w">      </span><span class="nt">"description"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Индекс Флеша: номинально от 0 до 100, чем выше, тем легче текст; прочтение по шкале Флеша"</span>
+<span class="w">    </span><span class="p">}</span>
+<span class="w">  </span><span class="p">},</span>
+<span class="w">  </span><span class="nt">"warnings"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span>
+<span class="w">    </span><span class="s2">"Предложений в тексте: 1, меньше 30. Формулы удобочитаемости опираются на среднюю длину предложения, исходный SMOG - на выборку из 30 предложений: на коротком тексте значения неустойчивы, включая сводный класс, это грубая оценка"</span>
+<span class="w">  </span><span class="p">]</span>
+<span class="p">}</span>
+</code></pre></div>
+<p>This is a single sentence of bureaucratese: «В целях повышения качества обслуживания клиентов в кратчайшие сроки осуществляется проведение мероприятий по модернизации оборудования, предусмотренных утвержденным планом развития организации на текущий период.» The consensus grade reads as postgraduate level, and the warning says one sentence is too little for the formulas.</p>
+<h2 id="quickstart">Quick start<a class="headerlink" href="#quickstart" title="Permanent link">&para;</a></h2>
+<p>Connecting to Claude Code and downloading the dictionaries and the spaCy model for the <code>lexical</code>, <code>verse</code> and <code>syntax</code> groups:</p>
+<div class="highlight"><pre><span></span><code>claude<span class="w"> </span>mcp<span class="w"> </span>add<span class="w"> </span>ruts<span class="w"> </span>--<span class="w"> </span>uvx<span class="w"> </span>ruts-mcp
+uvx<span class="w"> </span>ruts-mcp<span class="w"> </span>download
+</code></pre></div>
+<p>Connecting to Claude Desktop, Cursor and other clients and the server settings are on the <a href="installation/">Installation</a> page.</p>
 
 
 
