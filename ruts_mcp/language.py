@@ -4,6 +4,10 @@ MIN_RUSSIAN_SHARE = 0.5
 MAX_FOREIGN_CYRILLIC_SHARE = 0.03
 RUSSIAN = re.compile(r"[а-яё]", re.IGNORECASE)
 FOREIGN_CYRILLIC = re.compile(r"(?![а-яё])[\u0400-\u052f]", re.IGNORECASE)
+NO_LETTERS = (
+    "В тексте нет букв: ruTS считает статистики по словам, и для текста из чисел и знаков "
+    "их значения не имеют смысла"
+)
 
 
 def language_warnings(text: str) -> list[str]:
@@ -12,11 +16,12 @@ def language_warnings(text: str) -> list[str]:
 
     Описание:
         ruTS считает слоги и слова по правилам русского языка, поэтому для
-        текста на другом языке ее значения не имеют смысла. Текст без букв
-        предупреждений не получает. Предупреждение дают меньше половины букв
+        текста на другом языке и текста без букв ее значения не имеют смысла.
+        Предупреждение дают текст без букв, меньше половины букв
         русского алфавита и от 3 % букв кириллицы не из него (і, ї, ў, ј, қ),
         как в украинском, белорусском, сербском или казахском тексте; доля
-        в сообщении округляется вниз
+        в сообщении округляется вниз. Буквы считаются без знаков ударения
+        (strip_marks): ѐ, ѝ и «чтó» - русские
 
     Аргументы:
         text (str): Текст, переданный инструменту
@@ -32,9 +37,12 @@ def language_warnings(text: str) -> list[str]:
         >>> language_warnings("Він прийшов додому")
         ['Букв кириллицы не из русского алфавита - 6% (і): текст, похоже, не на русском языке, а ruTS считает слоги и слова по правилам русского, так что значения могут быть неверны']
     """
+    from ruts.utils import strip_marks
+
+    text = strip_marks(text)
     letters = sum(char.isalpha() for char in text)
     if not letters:
-        return []
+        return [NO_LETTERS]
     warnings = []
     russian = len(RUSSIAN.findall(text))
     if russian / letters < MIN_RUSSIAN_SHARE:

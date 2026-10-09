@@ -5,7 +5,8 @@ from fastmcp.exceptions import ToolError
 from pydantic import Field
 
 from .analysis import clean
-from .errors import check_text, ruts_errors
+from .errors import ruts_errors
+from .inputs import PATH, TEXT, load_ruts, read_source
 from .language import language_warnings
 
 CollocationMeasure = Literal[
@@ -28,6 +29,8 @@ COLLOCATION_MEASURES = {
     "всегда стоит рядом, получает {adjacent}, 1 - пара, которая встречается на каждом "
     "расстоянии в окне",
 }
+KWIC_LIMIT = 500
+KWIC_BUDGET = 40_000
 DISPERSION_FIELDS = (
     "dp",
     "dp_norm",
@@ -62,7 +65,7 @@ def text_words(text: str, lemmatize: bool) -> tuple[str, ...]:
 
 def one_word(word: str, lemmatize: bool) -> str:
     """
-    Слово запроса в том виде, в каком сравниваются слова текста
+    Слово запроса в том виде, в каком сравниваются слова текста (text_words)
 
     Аргументы:
         word (str): Слово, переданное инструменту
@@ -81,48 +84,61 @@ def one_word(word: str, lemmatize: bool) -> str:
 
 
 def kwic(
-    text: Annotated[str, Field(description="Текст на русском языке")],
     keyword: Annotated[str, Field(description="Слово или словосочетание", min_length=1)],
+    text: Annotated[str, Field(description=TEXT)] = "",
+    path: Annotated[str | None, Field(description=PATH)] = None,
     window: Annotated[
         int, Field(description="Число слов контекста слева и справа", ge=0, le=50)
     ] = 5,
     by_lemma: Annotated[
         bool, Field(description="Искать все формы слова по лемме: «кот» находит «кота», «коты»")
     ] = False,
-    limit: Annotated[int, Field(description="Наибольшее число строк ответа", ge=1, le=500)] = 50,
+    limit: Annotated[
+        int, Field(description="Наибольшее число строк ответа", ge=1, le=KWIC_LIMIT)
+    ] = 50,
 ) -> dict[str, Any]:
     """Найти все вхождения слова или словосочетания в тексте с контекстом (конкорданс KWIC).
 
     Используйте, чтобы увидеть, как слово употребляется в тексте, и цитировать точно. Слова сравниваются без учета регистра и буквы ё, с by_lemma - по леммам pymorphy3; словосочетание не переходит через конец предложения.
 
-    В результате "n_matches" - число вхождений, "matches" - строки по порядку в тексте: контекст слева "left", вхождение "keyword", как оно записано в тексте, и контекст справа "right". Ключ "warnings" - предупреждения: текст не на русском языке, показаны не все вхождения.
+    В результате "n_matches" - число вхождений, "matches" - строки по порядку в тексте: контекст слева "left", вхождение "keyword", как оно записано в тексте, и контекст справа "right". Строки ограничены параметром limit и общим объемом ответа около 40 тысяч символов. Ключ "warnings" - предупреждения: текст не на русском языке, показаны не все вхождения.
     """
+    load_ruts()
     from ruts.corpus import kwic as ruts_kwic
 
-    check_text(text)
+    text = read_source(text, path)
     warnings = language_warnings(text)
     with ruts_errors():
         lines = ruts_kwic(text, keyword, window, by_lemma)
-    if len(lines) > limit:
+    matches: list[dict[str, str]] = []
+    size = 0
+    for line in lines[:limit]:
+        size += len(line.left) + len(line.keyword) + len(line.right)
+        if matches and size > KWIC_BUDGET:
+            break
+        matches.append({"left": line.left, "keyword": line.keyword, "right": line.right})
+    if len(matches) < min(limit, len(lines)):
         warnings.append(
-            f"Вхождений: {len(lines)}, показаны первые {limit}; больше строк дает параметр limit"
+            f"Вхождений: {len(lines)}, показаны первые {len(matches)}: ответ ограничен "
+            f"{KWIC_BUDGET} символами контекста; уменьшите window, чтобы увидеть больше строк"
         )
+    elif len(lines) > limit:
+        more = (
+            "больше строк дает параметр limit"
+            if limit < KWIC_LIMIT
+            else f"больше {KWIC_LIMIT} строк за вызов не показывается"
+        )
+        warnings.append(f"Вхождений: {len(lines)}, показаны первые {limit}; {more}")
     if not lines and not by_lemma:
         warnings.append(
             "Вхождений нет. Поиск шел по словоформе: другие формы слова находит by_lemma"
         )
-    return {
-        "n_matches": len(lines),
-        "matches": [
-            {"left": line.left, "keyword": line.keyword, "right": line.right}
-            for line in lines[:limit]
-        ],
-        "warnings": warnings,
-    }
+    return {"n_matches": len(lines), "matches": matches, "warnings": warnings}
 
 
 def collocations(
-    text: Annotated[str, Field(description="Текст на русском языке")],
+    text: Annotated[str, Field(description=TEXT)] = "",
+    path: Annotated[str | None, Field(description=PATH)] = None,
     window: Annotated[
         int,
         Field(description="Наибольшее расстояние между словами пары; 1 - биграммы", ge=1, le=10),
@@ -153,16 +169,18 @@ def collocations(
 
     В результате "n_words" - число слов текста, "measure" - мера и как ее читать, "collocations" - пары по убыванию меры: левое слово "left", правое "right", их частоты "freq_left" и "freq_right", частота пары "freq_pair" и значение меры "score". freq_pair - число пар позиций, где правое слово стоит в окне после левого: слово, повторенное в окне, дает несколько пар, поэтому freq_pair бывает больше частоты слова, и такая пара - повтор, а не устойчивое сочетание. Ключ "warnings" - предупреждения: текст не на русском языке, слова node нет в тексте, пар с такой частотой нет.
     """
+    load_ruts()
     from ruts.corpus import collocations as ruts_collocations
 
-    check_text(text)
+    text = read_source(text, path)
     warnings = language_warnings(text)
     with ruts_errors():
         words = text_words(text, lemmatize)
         node_word = None if node is None else one_word(node, lemmatize)
         found = ruts_collocations(words, window, measure, min_freq, node_word, top_n)
-    if node_word is not None and node_word not in words:
-        warnings.append(f"Слова нет в тексте: {node_word}")
+    if node is not None and node_word not in words:
+        shown = node_word if node_word == node.strip().lower() else f"{node} ({node_word})"
+        warnings.append(f"Слова нет в тексте: {shown}")
     elif not found:
         warnings.append(
             f"Пар, которые встречаются вместе от {min_freq} раз на расстоянии до {window} слов, "
@@ -190,7 +208,8 @@ def collocations(
 
 
 def dispersion(
-    text: Annotated[str, Field(description="Текст на русском языке")],
+    text: Annotated[str, Field(description=TEXT)] = "",
+    path: Annotated[str | None, Field(description=PATH)] = None,
     words: Annotated[
         list[str] | None,
         Field(
@@ -221,9 +240,10 @@ def dispersion(
     - kl_divergence: дивергенция Кульбака-Лейблера в битах; 0 - пропорционально, растет при сосредоточении.
     У слова, которого нет в тексте, частота 0 и меры null. Слово с частотой меньше parts не может попасть во все части, и его меры показывают сосредоточенность даже при самом ровном распределении. Ключ "warnings" - предупреждения: текст не на русском языке, слов нет в тексте, частота слов меньше числа частей.
     """
+    load_ruts()
     from ruts.corpus import dispersion as ruts_dispersion
 
-    check_text(text)
+    text = read_source(text, path)
     warnings = language_warnings(text)
     with ruts_errors():
         sequence = text_words(text, lemmatize)

@@ -5,6 +5,8 @@ from ..analysis import NO_WORDS_WARNING, Analysis, GroupResult, stat, undefined_
 from ..data import STRESS_DICT_TITLE, missing_warning, stress_dict
 
 TOP_SCHEMES = 10
+MAX_SCHEME = 32
+LADDER_PYRRHICS = 0.5
 
 # Пояснения к описаниям ruTS: что считает статистика
 VERSE_NOTES = {
@@ -22,7 +24,13 @@ VERSE_NOTES = {
 }
 RHYME_SCHEMES = (
     "Самые частые схемы рифмовки строф, до {top}, и число строф с каждой: рифмующиеся строки "
-    "обозначены одной буквой по порядку появления, нерифмованные - дефисом (ABAB, -A-A)"
+    "обозначены одной буквой по порядку появления, нерифмованные - дефисом (ABAB, -A-A); "
+    f"схема длиннее {MAX_SCHEME} строк обрезана с многоточием"
+)
+LADDER_WARNING = (
+    "Метр {meter} ({feet}-стопный, доля пропущенных ударений {pyrrhics}) может быть случайным: "
+    "так бывает со стихом, записанным лесенкой, и с текстом, где строка - не стих. Стих "
+    "лесенкой соберите в строки по смыслу и посчитайте заново"
 )
 METER_REASON = (
     "метр не определен: текст не силлабо-тонический (дольник, акцентный стих, верлибр, проза) "
@@ -47,10 +55,11 @@ def verse_group(analysis: Analysis) -> GroupResult:
     Стиховедческие статистики текста: метр, рифма и окончания строк
 
     Описание:
-        Статистики VerseStats из ruTS: ударения по словарю ударений Козиева
-        и правилам, метр по алгоритму Барахнина, Кожемякиной и Кузнецовой,
-        рифма по фонетическому ключу окончания внутри строфы; к ним добавлены
-        самые частые схемы рифмовки строф. Без скачанного словаря и у текста
+        Статистики VerseStats из ruTS: ударения из знаков ударения в тексте,
+        по словарю ударений Козиева и правилам, метр по алгоритму Барахнина,
+        Кожемякиной и Кузнецовой, рифма по фонетическому ключу окончания
+        внутри строфы; к ним добавлены самые частые схемы рифмовки строф.
+        Без скачанного словаря и у текста
         без слов, кроме чисел, группа пуста, а предупреждение называет причину.
         Статистики, не определенные на тексте (метр не подобран, ударения
         последних слов строк не найдены, нет строк с русскими словами),
@@ -77,9 +86,12 @@ def verse_group(analysis: Analysis) -> GroupResult:
     for name, value in vs.get_stats().items():
         note = VERSE_NOTES.get(name, "").format(window=RHYME_WINDOW)
         stats[name] = stat(value, ": ".join(filter(None, (VERSE_STATS_DESC[name], note))))
+    schemes = Counter(
+        scheme if len(scheme) <= MAX_SCHEME else scheme[: MAX_SCHEME - 1] + "…"
+        for scheme in vs.rhyme_schemes
+    )
     stats["rhyme_schemes"] = stat(
-        dict(Counter(vs.rhyme_schemes).most_common(TOP_SCHEMES)),
-        RHYME_SCHEMES.format(top=TOP_SCHEMES),
+        dict(schemes.most_common(TOP_SCHEMES)), RHYME_SCHEMES.format(top=TOP_SCHEMES)
     )
     if not vs.n_lines:
         return stats, undefined_warnings(stats, NO_LINES_REASON)
@@ -89,4 +101,10 @@ def verse_group(analysis: Analysis) -> GroupResult:
     warnings = []
     for reason, items in by_reason.items():
         warnings += undefined_warnings(items, reason.format(min_stresses=VERSE_MIN_STRESSES))
+    if vs.meter is not None and (vs.n_feet == 1 or vs.p_pyrrhics > LADDER_PYRRHICS):
+        warnings.append(
+            LADDER_WARNING.format(
+                meter=vs.meter, feet=vs.n_feet, pyrrhics=stats["p_pyrrhics"]["value"]
+            )
+        )
     return stats, warnings

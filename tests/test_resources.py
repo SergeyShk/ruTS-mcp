@@ -62,6 +62,10 @@ def test_data_status_downloaded(dicts, data_dir, monkeypatch):
     assert "| syntax | скачана |" in text
 
 
+def test_data_status_damaged(damaged_dict):
+    assert "| lexical, keyness | поврежден, скачайте заново с --force |" in data_status()
+
+
 @pytest.mark.parametrize("resource", [readability_scales, style_norms, data_status])
 def test_markdown(resource):
     assert resource().startswith("# ")

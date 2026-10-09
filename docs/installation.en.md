@@ -71,7 +71,7 @@ The data is kept in the user data directory and survives server updates:
 | Linux | `~/.local/share/ruts-mcp` |
 | Windows | `%LOCALAPPDATA%\ruts-mcp` |
 
-The `RUTS_DATA_DIR` variable sets another directory, for example the one where the ruTS library has already downloaded its dictionaries. If the `ru_core_news_sm` package is installed in the server environment, the model is taken from it.
+The `RUTS_DATA_DIR` variable sets another directory by an absolute path, for example the one where the ruTS library has already downloaded its dictionaries. If the `ru_core_news_sm` package is installed in the server environment, the model is taken from it.
 
 ## Settings { #settings }
 
@@ -80,7 +80,7 @@ Settings are environment variables:
 | Variable | Default | Description |
 | :------- | :-----: | :---------- |
 | `RUTS_MCP_MAX_TEXT_LENGTH` | `500000` | Greatest number of characters of a text or a corpus that a tool accepts |
-| `RUTS_DATA_DIR` | user data directory | Directory of the dictionaries and the spaCy model |
+| `RUTS_DATA_DIR` | user data directory | Directory of the dictionaries and the spaCy model, an absolute path |
 
 In Claude Code a variable is passed with `-e`:
 

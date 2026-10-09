@@ -1,3 +1,4 @@
+from pathlib import Path
 from typing import get_args
 
 import pytest
@@ -5,6 +6,7 @@ from anyts.constants import G2_CRITICAL_VALUES, KEYNESS_MEASURES as CORE_KEYNESS
 from fastmcp.exceptions import ToolError
 from ruts.corpus import compare_corpora, keyness as ruts_keyness
 from ruts.datasets import FreqDict
+from ruts.utils import strip_marks
 
 from ruts_mcp.analysis import clean
 from ruts_mcp.compare import (
@@ -12,13 +14,16 @@ from ruts_mcp.compare import (
     KEYNESS_MEASURES,
     KEYWORD_FIELDS,
     KeynessMeasure,
+    auto_window,
     compare_texts,
     keyness,
 )
 from ruts_mcp.corpus import text_words
 from tests.conftest import CAT, PUSHKIN
+from tests.test_corpus import MARKED
 
 REFERENCE = "Кот спал. Собака лаяла на кота, а кот спал на окне. Собака ушла."
+CHEKHOV_LONG = (Path(__file__).parent / "data" / "chekhov.txt").read_text(encoding="utf-8") * 4
 
 
 def rows(keywords):
@@ -100,16 +105,35 @@ def test_keyness_warnings():
 def test_compare_texts(chekhov):
     a, b = [chekhov] * 5, [PUSHKIN * 12] * 5
     result = compare_texts(a, b, window=100, top_n=5)
-    table = compare_corpora(a, b, window=100, labels=("A", "B")).head(5)
+    table = compare_corpora(a, b, window=100, labels=("A", "B"))
+    assert result["window"] == 100
     assert result["n_windows"] == {"a": 10, "b": 10}
     assert result["n_texts"] == {"a": 5, "b": 5}
-    assert result["features"] == [
-        {"feature": feature}
-        | {field: clean(float(row[column])) for field, column in COMPARISON_FIELDS.items()}
-        for feature, row in table.iterrows()
-    ]
+    by_feature = dict(table.iterrows())
+    for item in result["features"]:
+        row = by_feature[item["feature"]]
+        assert item == {"feature": item["feature"]} | {
+            field: clean(float(row[column])) for field, column in COMPARISON_FIELDS.items()
+        }
+    assert abs(result["features"][0]["cliff_delta"]) == table["cliff_delta"].abs().max()
     assert result["features"][0]["p_holm"] < 0.05
-    assert result["warnings"] == []
+
+
+def test_compare_texts_ties(chekhov):
+    """При равной дельте Клиффа выше признак с большей относительной разностью медиан"""
+    result = compare_texts([chekhov], [PUSHKIN * 12], window=100, top_n=10)
+    features = result["features"]
+    assert all(abs(item["cliff_delta"]) == 1 for item in features)
+    relative = [
+        abs(item["median_diff"]) / max(abs(item["mean_a"]), abs(item["mean_b"]))
+        for item in features
+    ]
+    assert relative == sorted(relative, reverse=True)
+    assert result["warnings"][-1].startswith(
+        "Еще 57 признаков с тем же модулем дельты Клиффа 1.0 не показаны"
+    )
+    everything = compare_texts([chekhov], [PUSHKIN * 12], window=100, top_n=200)
+    assert not any(item.startswith("Еще ") for item in everything["warnings"])
 
 
 def test_compare_texts_single_texts(chekhov):
@@ -118,20 +142,105 @@ def test_compare_texts_single_texts(chekhov):
     assert result["n_windows"] == {"a": 2, "b": 2}
     assert result["n_texts"] == {"a": 1, "b": 1}
     assert result["features"][0]["ci_low"] is None
-    one_text, _, not_significant = result["warnings"]
+    one_text, not_significant = (
+        next(item for item in result["warnings"] if item.startswith(start))
+        for start in ("В корпусе A один текст", "Ни одно различие не значимо")
+    )
     assert one_text.startswith("В корпусе A один текст: интервал разности медиан не определен")
     assert not_significant.startswith("Ни одно различие не значимо после поправки Холма")
     assert "окон в A - 2, в B - 2" in not_significant
 
 
+def test_compare_texts_lost_remainders(chekhov):
+    """Остатки текстов короче окна не сравниваются: ответ говорит, сколько слов не вошло"""
+    result = compare_texts([chekhov], [PUSHKIN * 12] * 2, window=120)
+    assert [item for item in result["warnings"] if item.startswith("Остатки")] == [
+        "Остатки текстов корпуса B короче окна в 120 слов не вошли в сравнение: 216 из 456 "
+        "слов; окно поменьше теряет меньше текста"
+    ]
+    auto = compare_texts([chekhov], [PUSHKIN * 12])
+    assert not any(item.startswith("Остатки") for item in auto["warnings"])
+
+
+def test_compare_texts_min_window(chekhov):
+    """При наименьшем окне совет уменьшить окно не дается"""
+    warnings = compare_texts([chekhov], [PUSHKIN * 12], window=100)["warnings"]
+    assert [item for item in warnings if item.startswith("Остатки")] == [
+        f"Остатки текстов корпуса {label} короче окна в 100 слов не вошли в сравнение: "
+        f"{lost} из {total} слов; окно меньше 100 слов не задается, тексты целиком "
+        "сравнивает whole_texts=true"
+        for label, lost, total in (("A", 41, 241), ("B", 28, 228))
+    ]
+    significance = next(item for item in warnings if item.startswith("Ни одно различие"))
+    assert "Нужно больше текста; дельта Клиффа" in significance
+
+
+def test_compare_texts_auto_window(chekhov):
+    """Окно по самому короткому тексту: в нем 228 слов, и он делится на два окна по 114"""
+    result = compare_texts([chekhov], [PUSHKIN * 12])
+    assert result["window"] == auto_window(228) == 114
+    assert result["n_windows"] == {"a": 2, "b": 2}
+
+
+def test_compare_texts_whole(chekhov):
+    result = compare_texts([chekhov, chekhov * 2], [PUSHKIN * 12, PUSHKIN * 20], whole_texts=True)
+    assert result["window"] is None
+    assert result["n_windows"] == result["n_texts"] == {"a": 2, "b": 2}
+    assert any("Нужно больше текстов; дельта Клиффа" in item for item in result["warnings"])
+
+
+def test_compare_texts_paths(tmp_path, chekhov):
+    paths = []
+    for name, text in (("a.txt", chekhov), ("b.txt", PUSHKIN * 12)):
+        paths.append(str(tmp_path / name))
+        Path(paths[-1]).write_text(text, encoding="utf-8")
+    expected = compare_texts([chekhov, chekhov], [PUSHKIN * 12, PUSHKIN * 12], window=100)
+    assert (
+        compare_texts(
+            [chekhov], b_paths=[paths[1]], a_paths=[paths[0]], b=[PUSHKIN * 12], window=100
+        )
+        == expected
+    )
+
+
+def test_compare_texts_dropped(chekhov):
+    result = compare_texts([chekhov, chekhov, "Короткий текст."], [PUSHKIN * 12] * 2, window=100)
+    assert result["n_texts"] == {"a": 2, "b": 2}
+    assert (
+        "1 из 3 текстов корпуса A короче окна в 100 слов и не вошли в сравнение"
+        in (result["warnings"])
+    )
+    whole = compare_texts([chekhov, chekhov, "..."], [chekhov, PUSHKIN * 12], whole_texts=True)
+    assert "1 из 3 текстов корпуса A без слов и не вошли в сравнение" in whole["warnings"]
+
+
+def test_compare_texts_text_lengths():
+    """Тексты корпусов разной длины: признаки, зависящие от длины, различаются и из-за нее"""
+    whole = compare_texts([CHEKHOV_LONG] * 2, [PUSHKIN] * 2, whole_texts=True)
+    warning = next(item for item in whole["warnings"] if "Средняя длина" in item)
+    assert warning.startswith("Средняя длина текста в A - ")
+    assert warning.endswith("сравнивайте окнами (whole_texts=false)")
+    windows = compare_texts([PUSHKIN * 7] * 3, [CHEKHOV_LONG] * 2, window=100)
+    assert not any("Средняя длина" in item for item in windows["warnings"])
+
+
 def test_compare_texts_one_window(chekhov):
-    with pytest.raises(ToolError, match=r"^Окон в A - 1, в B - 1: для сравнения распределений"):
-        compare_texts([chekhov], [PUSHKIN * 6], window=None)
+    with pytest.raises(
+        ToolError, match=r"^Окон в A - 1, в B - 1: .*передайте хотя бы по два текста"
+    ):
+        compare_texts([chekhov], [PUSHKIN * 6], whole_texts=True)
 
 
 def test_compare_texts_no_words(chekhov):
     with pytest.raises(ToolError, match=r"^Корпус B: в текстах нет слов$"):
-        compare_texts([chekhov], ["", "..."], window=None)
+        compare_texts([chekhov], ["", "..."])
+
+
+def test_compare_texts_empty(chekhov):
+    with pytest.raises(
+        ToolError, match=r"^Корпус A пуст: передайте тексты в a или пути к файлам в a_paths$"
+    ):
+        compare_texts(b=[chekhov])
 
 
 def test_compare_texts_language(chekhov):
@@ -142,12 +251,140 @@ def test_compare_texts_language(chekhov):
 
 
 def test_compare_texts_short():
-    with pytest.raises(ToolError, match=r"сравните тексты целиком \(window=null\)$"):
+    """Окно уже наименьшее: совет - сравнить тексты целиком, а не уменьшить окно"""
+    with pytest.raises(
+        ToolError, match=r"наименьшего окна в 100 слов: сравните тексты целиком \(whole_texts=true"
+    ):
         compare_texts(["Короткий текст"], ["Другой текст"])
 
 
+def test_compare_texts_window_too_large(chekhov):
+    with pytest.raises(ToolError, match=r"окна в 1000 слов: задайте window поменьше"):
+        compare_texts([chekhov] * 2, [PUSHKIN * 12] * 2, window=1000)
+
+
 def test_compare_texts_limit(monkeypatch, chekhov):
-    """Лимит длины действует на корпус целиком"""
-    monkeypatch.setenv("RUTS_MCP_MAX_TEXT_LENGTH", str(len(chekhov) + 10))
-    with pytest.raises(ToolError, match="лимит"):
-        compare_texts([chekhov, chekhov], [PUSHKIN])
+    """Лимит длины действует на сумму длин текстов корпуса, без разделителей"""
+    monkeypatch.setenv("RUTS_MCP_MAX_TEXT_LENGTH", str(2 * len(chekhov)))
+    compare_texts([chekhov, chekhov], [PUSHKIN * 12] * 2, window=100)
+    with pytest.raises(
+        ToolError, match=rf"^Корпус B длиннее лимита сервера \(символов: {2 * len(chekhov) + 1},"
+    ):
+        compare_texts([chekhov, chekhov], [chekhov, chekhov + "."])
+
+
+@pytest.fixture
+def pronouns(data_dir):
+    """Словарь со статьями, которые лемматизатор не дает: «его» и «во» приводятся к «он» и «в»"""
+    rows = (
+        ("в", "pr", 30000.0),
+        ("во", "pr", 600.0),
+        ("его", "apro", 2000.0),
+        ("ее", "apro", 1500.0),
+        ("она", "spro", 9000.0),
+        ("род", "s", 300.0),
+        ("родиться", "v", 200.0),
+        ("кот", "s", 40.3),
+        ("он", "spro", 15000.0),
+        ("сон", "s", 100.0),
+        ("черт", "s", 50.0),
+        ("черта", "s", 60.0),
+        ("видеть", "v", 800.0),
+    )
+    path = data_dir / "dicts"
+    path.mkdir(parents=True)
+    lines = ["Lemma\tPoS\tFreq(ipm)\tR\tD\tDoc"] + [
+        f"{lemma}\t{pos}\t{ipm}\t90\t90\t1000" for lemma, pos, ipm in rows
+    ]
+    path.joinpath("freqrnc2011.csv").write_text("\n".join(lines) + "\n", encoding="utf-8")
+    return path
+
+
+def test_keyness_unreachable_entries(pronouns):
+    """«Его» в тексте - форма «он», поэтому статья «его» не бывает реже в тексте"""
+    text = "Кот видел его во сне. Его кот спал."
+    words = [item["word"] for item in keyness(text, positive=False, min_freq=1)["keywords"]]
+    assert "его" not in words
+    assert "во" not in words
+
+
+def test_keyness_reachable_entries(pronouns):
+    """Статья остается, если к ней приводится другая форма: «род» - «родиться», но «рода» - «род»"""
+    words = [item["word"] for item in keyness("Кот спал.", positive=False, min_freq=1)["keywords"]]
+    assert {"род", "черт", "черта", "она"} <= set(words)
+    assert not {"его", "во", "ее"} & set(words)
+
+
+def test_keyness_yo_pronoun(pronouns):
+    """«Её» и «ее» - одно слово «она», как в тексте без ё"""
+    with_yo = keyness("Её кот видел её.", min_freq=1)
+    without_yo = keyness("Ее кот видел ее.", min_freq=1)
+    assert with_yo["keywords"] == without_yo["keywords"]
+    assert "она" in [item["word"] for item in with_yo["keywords"]]
+
+
+def test_keyness_dictionary_yo(pronouns):
+    """Слово с ё лемматизируется до замены ё: «чёрт» - «черт», а не «черта»"""
+    words = [item["word"] for item in keyness("Чёрт, чёрт побери!", min_freq=1)["keywords"]]
+    assert "черт" in words
+    assert "черта" not in words
+
+
+def test_keyness_damaged_dictionary(damaged_dict):
+    with pytest.raises(
+        ToolError, match=r"^Частотный словарь Ляшевской и Шарова поврежден: ключевые слова"
+    ):
+        keyness(CAT)
+
+
+def test_keyness_no_cyrillic(dicts):
+    with pytest.raises(
+        ToolError, match=r"^Со словарем сравниваются только слова из кириллических"
+    ):
+        keyness("iPhone iPhone Wi-Fi 2020")
+
+
+def test_keyness_rare_hint():
+    """Совет уменьшить min_freq - только когда с min_freq=1 ключевые слова есть"""
+    assert keyness(CAT, reference=CAT)["warnings"] == [
+        "Слов, которые в тексте чаще, чем в эталоне, нет"
+    ]
+
+
+@pytest.mark.parametrize(
+    ("text", "reference", "message"),
+    [
+        ("...", CAT, r"^В тексте нет слов$"),
+        (CAT, "...", r"^В эталоне нет слов$"),
+        (CAT, "", r"^Эталон не задан: передайте текст или путь к файлу$"),
+    ],
+    ids=["text", "reference", "empty-reference"],
+)
+def test_keyness_reference_errors(text, reference, message):
+    with pytest.raises(ToolError, match=message):
+        keyness(text, reference=reference)
+
+
+def test_keyness_paths(tmp_path):
+    text, reference = tmp_path / "text.txt", tmp_path / "reference.txt"
+    text.write_text(REFERENCE, encoding="utf-8")
+    reference.write_text(CAT, encoding="utf-8")
+    result = keyness(path=str(text), reference_path=str(reference), min_freq=1)
+    assert result == keyness(REFERENCE, reference=CAT, min_freq=1)
+
+
+def test_keyness_log_ratio_note():
+    measure = keyness(REFERENCE, reference=CAT, measure="log_ratio")["measure"]
+    assert "при нулевой частоте в эталоне она заменяется на 0,5" in measure
+
+
+@pytest.mark.parametrize("text", MARKED, ids=["marks", "nfd"])
+def test_stress_marks(dicts, chekhov, text):
+    """Знаки ударения, мягкие переносы и NFD не меняют ключевых слов и сравнения корпусов"""
+    plain = strip_marks(text)
+    for options in ({}, {"positive": False}, {"reference": CAT}):
+        assert keyness(text, min_freq=1, **options) == keyness(plain, min_freq=1, **options)
+    marked = text * 20
+    assert compare_texts([marked] * 2, [chekhov] * 2) == compare_texts(
+        [strip_marks(marked)] * 2, [chekhov] * 2
+    )

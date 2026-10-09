@@ -3403,7 +3403,7 @@ wheels = [
 
 [[package]]
 name = "ruts"
-version = "0.15.2"
+version = "0.16.0"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "anyts" },
@@ -3419,14 +3419,14 @@ dependencies = [
     { name = "scipy", version = "1.18.1", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.12'" },
     { name = "spacy" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/2d/8c/b892ee09407af15cbdb7cd4e117be17945036271fea1dfa970bf30b05ae3/ruts-0.15.2.tar.gz", hash = "sha256:85e086a150331cd7c37b51c7c15e7781c9f806eb66128561e483ce74ba683e3a", size = 229769, upload-time = "2026-10-05T16:33:58.306Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/e4/b0/7562e292e3cc09d938a9b1644ce6efbcfdaf1ff6efa15ab3de050544649a/ruts-0.16.0.tar.gz", hash = "sha256:6ac67054c130a14a1c85d859103f1132e933cf5c287bf67f727a8c7a1d3ae4b8", size = 244844, upload-time = "2026-10-09T22:25:44.762Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/fb/06/2b19351ded38139bd9c9cd6fbf9c1dbd53cf6ed1234d50bb71189f95adb8/ruts-0.15.2-py3-none-any.whl", hash = "sha256:7329ef80c8b23750ec3ca00742b8527df8f2f1047a16646019136d578aeca50e", size = 234427, upload-time = "2026-10-05T16:33:56.695Z" },
+    { url = "https://files.pythonhosted.org/packages/75/ec/a2d8fa20343b832ce8b7d797661287c0d230d8452a442889dc15d89a7d4b/ruts-0.16.0-py3-none-any.whl", hash = "sha256:f2f6ab00914ae3f5bfca4109e1f7c64d1ec6291071e9e3edaba1de9d25549cf2", size = 256091, upload-time = "2026-10-09T22:25:42.932Z" },
 ]
 
 [[package]]
 name = "ruts-mcp"
-version = "0.1.0.dev12"
+version = "0.1.0.dev13"
 source = { editable = "." }
 dependencies = [
     { name = "fastmcp" },
@@ -3468,7 +3468,7 @@ test = [
 requires-dist = [
     { name = "fastmcp", specifier = ">=4,<5" },
     { name = "platformdirs", specifier = ">=4" },
-    { name = "ruts", specifier = ">=0.15.2,<0.16" },
+    { name = "ruts", specifier = ">=0.16,<0.17" },
 ]
 
 [package.metadata.requires-dev]

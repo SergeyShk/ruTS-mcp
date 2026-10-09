@@ -40,12 +40,14 @@ async def test_tools():
         assert tool.annotations.read_only_hint
         assert tool.annotations.idempotent_hint
         assert not tool.annotations.open_world_hint
-    assert tools["kwic"].input_schema["required"] == ["text", "keyword"]
+    assert tools["kwic"].input_schema["required"] == ["keyword"]
+    for name in ("analyze_text", "collocations", "dispersion", "keyness", "compare_texts"):
+        assert "required" not in tools[name].input_schema
+    assert tools["keyness"].input_schema["properties"]["path"]["anyOf"][0]["type"] == "string"
     measure = tools["collocations"].input_schema["properties"]["measure"]
     assert measure["enum"][0] == measure["default"] == "logdice"
     tool = tools["analyze_text"]
     assert tool.description.startswith("Измерить русский текст")
-    assert tool.input_schema["required"] == ["text"]
     groups = tool.input_schema["properties"]["groups"]
     assert groups["items"]["enum"] == [
         "basic",
@@ -112,8 +114,8 @@ async def test_prompts():
         "verse_review": [("text", TEXT_ARGUMENT)],
         "seo_review": [("text", TEXT_ARGUMENT)],
         "compare_review": [
-            ("text_a", "Первый текст (A); не задан - тексты из предыдущих сообщений разговора"),
-            ("text_b", "Второй текст (B); не задан - тексты из предыдущих сообщений разговора"),
+            ("text_a", "Первый текст (A); не задан - текст из предыдущих сообщений разговора"),
+            ("text_b", "Второй текст (B); не задан - текст из предыдущих сообщений разговора"),
         ],
     }
     assert not any(argument.required for item in prompts.values() for argument in item.arguments)
@@ -126,13 +128,15 @@ async def test_prompts():
 async def test_call_kwic():
     async with Client(mcp) as client:
         result = await client.call_tool("kwic", {"text": TEXT, "keyword": "раму", "window": 1})
-    assert result.structured_content == kwic(TEXT, "раму", window=1)
+    assert result.structured_content == kwic("раму", TEXT, window=1)
 
 
 @pytest.mark.parametrize(
     ("arguments", "message"),
     [
-        ({"text": ""}, "The data source has no words"),
+        ({"text": ""}, "Текст не задан: передайте текст или путь к файлу"),
+        ({}, "Текст не задан: передайте текст или путь к файлу"),
+        ({"text": "..."}, "The data source has no words"),
         ({"text": TEXT, "groups": []}, "at least 1 item"),
         (
             {"text": TEXT, "groups": ["unknown"]},

@@ -12,6 +12,7 @@ if TYPE_CHECKING:
 
 CHUNK_SIZE = 20_000
 SENTENCE_END = re.compile(r"[.!?…]+\s+")
+WORD_CHAR = re.compile(r"\w")
 
 # Пояснения к описаниям ruTS там, где по названию статистику не прочитать
 SYNTAX_NOTES = {
@@ -102,7 +103,10 @@ def parse(nlp: "Language", text: str) -> "Doc":
 
     Описание:
         Куски text_chunks разбираются по одному, чтобы память не росла с длиной
-        текста; разбор меняется только у предложений на стыке кусков
+        текста; разбор меняется только у предложений на стыке кусков. Пробелы
+        и переводы строк по краям куска отбрасываются: за ними spaCy иначе
+        разбирает последнее предложение. Тензоры кусков статистикам не нужны
+        и тоже отбрасываются
 
     Аргументы:
         nlp (Language): Модель spaCy
@@ -111,9 +115,14 @@ def parse(nlp: "Language", text: str) -> "Doc":
     Вывод:
         Doc: Разобранный текст
     """
+    import numpy
     from spacy.tokens import Doc
 
-    return Doc.from_docs(list(nlp.pipe(text_chunks(text), batch_size=1)))
+    docs = []
+    for doc in nlp.pipe((chunk.strip() for chunk in text_chunks(text)), batch_size=1):
+        doc.tensor = numpy.zeros((0,), dtype="float32")
+        docs.append(doc)
+    return Doc.from_docs(docs)
 
 
 def syntax_group(analysis: Analysis) -> GroupResult:
@@ -123,10 +132,12 @@ def syntax_group(analysis: Analysis) -> GroupResult:
     Описание:
         Статистики SyntaxStats из ruTS по разбору моделью spaCy ru_core_news_sm:
         длины зависимостей, форма дерева, клаузы, сочинительные цепочки, обороты,
-        пассив, цепочки родительных падежей, расщепленные сказуемые. Без модели
-        группа пуста, а предупреждение говорит, как ее скачать. Статистики,
-        не определенные на тексте (средняя длина оборота без оборотов, доля
-        пассива без глаголов), отдаются как None с причиной
+        пассив, цепочки родительных падежей, расщепленные сказуемые. Модель
+        разбирает текст без знаков ударения и мягких переносов (strip_marks):
+        слова со знаками она размечает неверно. Без модели группа пуста,
+        а предупреждение говорит, как ее скачать. Статистики, не определенные
+        на тексте (средняя длина оборота без оборотов, доля пассива без
+        глаголов), отдаются как None с причиной
 
     Аргументы:
         analysis (Analysis): Текст и настройки
@@ -140,11 +151,16 @@ def syntax_group(analysis: Analysis) -> GroupResult:
     """
     from ruts import SyntaxStats
     from ruts.constants import SYNTAX_STATS_DESC
+    from ruts.exceptions import SourceError
+    from ruts.utils import strip_marks
 
+    # Разбор длинного текста занимает секунды, а без букв и цифр слов в нем нет
+    if not WORD_CHAR.search(analysis.text):
+        raise SourceError("В источнике данных отсутствуют слова")
     nlp = spacy_model()
     if nlp is None:
         return {}, [missing_warning(SPACY_MODEL_TITLE, "группа syntax не посчитана", "не скачана")]
-    syntax = SyntaxStats(parse(nlp, analysis.text))
+    syntax = SyntaxStats(parse(nlp, strip_marks(analysis.text)))
     stats: dict[str, Any] = {}
     for name, value in syntax.get_stats().items():
         description = ": ".join(filter(None, (SYNTAX_STATS_DESC[name], SYNTAX_NOTES.get(name))))

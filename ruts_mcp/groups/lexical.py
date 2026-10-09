@@ -2,7 +2,13 @@ from collections import defaultdict
 from typing import Any
 
 from ..analysis import NO_WORDS_WARNING, Analysis, GroupResult, stat, undefined_warnings
-from ..data import FREQ_DICT_TITLE, freq_dict, missing_warning
+from ..data import (
+    FREQ_DICT_TITLE,
+    damaged_warning,
+    freq_dict,
+    freq_dict_damaged,
+    missing_warning,
+)
 
 CONTENT_WORDS = (
     "существительных, прилагательных, глаголов (с причастиями и деепричастиями) и наречий"
@@ -55,8 +61,9 @@ def lexical_group(analysis: Analysis) -> GroupResult:
         редки относительно языка. Частотность, диапазон, дисперсия, сюрпризал
         и доля найденных слов считаются по частотному словарю Ляшевской
         и Шарова, доли частотных полос и лексическая плотность - по вшитому
-        списку и разбору pymorphy3. Без скачанного словаря метрики по словарю
-        отдаются как None, а предупреждение говорит, как его скачать. Числа
+        списку и разбору pymorphy3. Без скачанного словаря (или с поврежденным
+        файлом) метрики по словарю отдаются как None, а предупреждение говорит,
+        как его скачать. Числа
         словами не считаются: у текста без других слов группа пуста,
         с предупреждением, а остальные группы вызова считаются
 
@@ -76,10 +83,12 @@ def lexical_group(analysis: Analysis) -> GroupResult:
     from ruts.constants import LEXICAL_STATS_DESC
     from ruts.exceptions import DatasetNotFoundError, SourceError
 
+    dictionary = freq_dict()
     try:
-        ls = LexicalStats(analysis.text, freq_dict=freq_dict())
+        ls = LexicalStats(analysis.text, freq_dict=dictionary)
     except SourceError:
         return {}, [NO_WORDS_WARNING.format(group="lexical")]
+    damaged = freq_dict_damaged(dictionary)
     stats: dict[str, Any] = {}
     missing = []
     for name, title in LEXICAL_STATS_DESC.items():
@@ -88,12 +97,20 @@ def lexical_group(analysis: Analysis) -> GroupResult:
         except DatasetNotFoundError:
             value = None
             missing.append(name)
+        except (ValueError, StopIteration):
+            if not damaged:
+                raise
+            value = None
+            missing.append(name)
         description = ": ".join(filter(None, (title, LEXICAL_NOTES.get(name, ""))))
         stats[name] = stat(value, description)
     warnings = []
     if missing:
+        consequence = f"метрики {', '.join(missing)} не посчитаны"
         warnings.append(
-            missing_warning(FREQ_DICT_TITLE, f"метрики {', '.join(missing)} не посчитаны")
+            damaged_warning(FREQ_DICT_TITLE, consequence)
+            if damaged
+            else missing_warning(FREQ_DICT_TITLE, consequence)
         )
     by_reason: dict[str, dict[str, Any]] = defaultdict(dict)
     for name, item in stats.items():
