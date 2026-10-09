@@ -1,6 +1,7 @@
 import pytest
 
 from ruts_mcp.prompts import (
+    FROM_CONVERSATION,
     READ_WARNINGS,
     compare_review,
     officialese_review,
@@ -36,3 +37,22 @@ def test_compare_review():
     assert "половине числа его слов, но не меньше 100" in message
     assert "меньше 150 слов, compare_texts не подойдет" in message
     assert message.endswith("Текст A:\n\nТекст первый.\n\nТекст B:\n\nТекст второй.")
+
+
+@pytest.mark.parametrize(
+    "prompt", [readability_review, officialese_review, verse_review, seo_review]
+)
+def test_text_from_conversation(prompt):
+    """Без текста промпт берет его из разговора: Claude Code делит аргументы по пробелам"""
+    assert prompt().endswith(FROM_CONVERSATION)
+    assert prompt("  ") == prompt()
+    assert "Текст:" not in prompt()
+
+
+def test_compare_from_conversation():
+    message = compare_review()
+    assert message.endswith(
+        "Тексты A и B - в предыдущих сообщениях разговора: первый текст - A, второй - B. "
+        "Если двух текстов там нет, попроси пользователя прислать их и не вызывай инструменты."
+    )
+    assert compare_review("Текст первый.") == message
