@@ -24,7 +24,7 @@ TEXT = "Кот спит. Коты играют в саду, а кот смотр
 
 
 def test_kwic():
-    result = kwic(TEXT, "кот", window=2)
+    result = kwic("кот", TEXT, window=2)
     assert result == {
         "n_matches": 2,
         "matches": [
@@ -33,28 +33,58 @@ def test_kwic():
         ],
         "warnings": [],
     }
-    assert kwic(TEXT, "кот", by_lemma=True)["n_matches"] == 4
+    assert kwic("кот", TEXT, by_lemma=True)["n_matches"] == 4
 
 
 def test_kwic_limit():
-    result = kwic(TEXT, "кот", by_lemma=True, limit=3)
+    result = kwic("кот", TEXT, by_lemma=True, limit=3)
     assert len(result["matches"]) == 3
     assert result["warnings"] == [
         "Вхождений: 4, показаны первые 3; больше строк дает параметр limit"
     ]
 
 
+def test_kwic_max_limit(monkeypatch):
+    monkeypatch.setattr("ruts_mcp.corpus.KWIC_LIMIT", 3)
+    result = kwic("кот", TEXT, by_lemma=True, limit=3)
+    assert result["warnings"] == [
+        "Вхождений: 4, показаны первые 3; больше 3 строк за вызов не показывается"
+    ]
+
+
+def test_kwic_budget(monkeypatch):
+    """Объем ответа ограничен: строк меньше limit, предупреждение советует уменьшить window"""
+    monkeypatch.setattr("ruts_mcp.corpus.KWIC_BUDGET", 40)
+    result = kwic("кот", TEXT, by_lemma=True, window=3)
+    assert 1 <= len(result["matches"]) < 4
+    assert result["warnings"] == [
+        f"Вхождений: 4, показаны первые {len(result['matches'])}: ответ ограничен 40 символами "
+        "контекста; уменьшите window, чтобы увидеть больше строк"
+    ]
+
+
+def test_kwic_normalized(tmp_path):
+    """Знаки ударения и мягкие переносы не мешают поиску ни в тексте, ни в запросе"""
+    path = tmp_path / "text.txt"
+    path.write_text("Моро\u0301з и со\u00adлнце; день чуде\u0301сный!", encoding="utf-8")
+    result = kwic("чуде\u0301сный", path=str(path))
+    assert result["matches"] == [
+        {"left": "Мороз и солнце; день", "keyword": "чудесный", "right": ""}
+    ]
+    assert kwic("мороз", path=str(path))["n_matches"] == 1
+
+
 def test_kwic_not_found():
     """Без вхождений по словоформе предупреждение подсказывает поиск по лемме"""
-    assert kwic(TEXT, "котам")["warnings"] == [
+    assert kwic("котам", TEXT)["warnings"] == [
         "Вхождений нет. Поиск шел по словоформе: другие формы слова находит by_lemma"
     ]
-    assert kwic(TEXT, "собака", by_lemma=True)["warnings"] == []
+    assert kwic("собака", TEXT, by_lemma=True)["warnings"] == []
 
 
 def test_kwic_errors():
     with pytest.raises(ToolError):
-        kwic(TEXT, "...")
+        kwic("...", TEXT)
 
 
 def test_collocations(chekhov):
@@ -102,6 +132,9 @@ def test_collocations_yo():
 def test_collocations_absent_node():
     assert collocations(TEXT, node="собака", min_freq=1)["warnings"] == [
         "Слова нет в тексте: собака"
+    ]
+    assert collocations(TEXT, node="Собаками", min_freq=1)["warnings"] == [
+        "Слова нет в тексте: Собаками (собака)"
     ]
 
 
@@ -159,5 +192,5 @@ def test_one_word():
 def test_language_warnings():
     for tool in (kwic, collocations, dispersion):
         arguments = {"keyword": "cat"} if tool is kwic else {}
-        result = tool("The cat sleeps and the cat eats and the cat runs", **arguments)
+        result = tool(text="The cat sleeps and the cat eats and the cat runs", **arguments)
         assert result["warnings"][0].startswith("Букв русского алфавита - только 0%")

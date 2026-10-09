@@ -57,3 +57,12 @@ def dicts(data_dir):
     stress = ["\t".join(row) for row in sorted(STRESS_ROWS)]
     path.joinpath("all_accents.tsv").write_text("\n".join(stress) + "\n", encoding="utf-8")
     return path
+
+
+@pytest.fixture
+def damaged_dict(data_dir):
+    """Усеченный файл частотного словаря: строка без полей ipm, R, D и числа текстов"""
+    path = data_dir / "dicts"
+    path.mkdir(parents=True)
+    path.joinpath("freqrnc2011.csv").write_text("Lemma\tPoS\nкот\ts\n", encoding="utf-8")
+    return path

@@ -1,5 +1,7 @@
 import importlib
+import io
 import json
+import re
 import runpy
 import sys
 from importlib.metadata import version
@@ -145,6 +147,74 @@ def test_download_help(capsys):
     with pytest.raises(SystemExit):
         main(["download", "--help"])
     output = capsys.readouterr().out
-    assert output.startswith("usage: ruts-mcp download [-h] [--force]")
+    assert output.startswith("использование: ruts-mcp download [-h] [--force]")
     assert "словарь ударений Козиева" in output
     assert "ru_core_news_sm" in output
+
+
+def test_help_russian(capsys):
+    with pytest.raises(SystemExit):
+        main(["--help"])
+    output = capsys.readouterr().out
+    assert output.startswith("использование: ruts-mcp [-h] [--version] [КОМАНДА ...]")
+    assert "\nпараметры:\n" in output
+    assert "options" not in output
+
+
+@pytest.mark.parametrize(
+    ("argv", "message"),
+    [
+        (["foo"], r"аргумент КОМАНДА: неизвестное значение 'foo' \(допустимые: '?download'?\)"),
+        (["download", "--x"], "неизвестные аргументы: --x"),
+        (["--version=1"], "аргумент --version: лишнее значение '1'"),
+    ],
+    ids=["choice", "unrecognized", "explicit"],
+)
+def test_errors_russian(capsys, runs, argv, message):
+    with pytest.raises(SystemExit) as info:
+        main(argv)
+    assert info.value.code == 2
+    error = capsys.readouterr().err
+    assert error.startswith("использование: ruts-mcp")
+    assert re.search(f"\nruts-mcp: ошибка: {message}\n$", error)
+    assert runs == []
+
+
+@pytest.mark.parametrize("argv", [[], ["download"]])
+def test_interrupted(monkeypatch, capsys, argv):
+    """Ctrl+C завершает сервер и загрузку с кодом 130 без трейсбека"""
+
+    def interrupt(*args, **kwargs):
+        raise KeyboardInterrupt
+
+    monkeypatch.setattr(mcp, "run", interrupt)
+    monkeypatch.setattr(FreqDict, "download", interrupt)
+    with pytest.raises(SystemExit) as info:
+        main(argv)
+    assert info.value.code == 130
+    assert capsys.readouterr().err == ""
+
+
+def test_download_os_error(downloads, monkeypatch, capsys):
+    def fail(self, force=False):
+        raise PermissionError(13, "Permission denied")
+
+    monkeypatch.setattr(StressDict, "download", fail)
+    with pytest.raises(SystemExit) as info:
+        main(["download"])
+    assert info.value.code == 1
+    assert capsys.readouterr().err == (
+        "Словарь ударений Козиева: не удалось скачать - [Errno 13] Permission denied\n"
+    )
+
+
+def test_output_errors_replace(monkeypatch, runs):
+    """Справка печатается и на консоли без кириллицы: символы заменяются, а не роняют команду"""
+    buffer = io.BytesIO()
+    stdout = io.TextIOWrapper(buffer, encoding="cp1252")
+    monkeypatch.setattr(sys, "stdout", stdout)
+    monkeypatch.setattr(sys, "stderr", io.StringIO())
+    with pytest.raises(SystemExit):
+        main(["--help"])
+    stdout.flush()
+    assert buffer.getvalue().startswith(b"?????????????: ruts-mcp")

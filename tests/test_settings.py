@@ -32,3 +32,10 @@ def test_invalid(value):
         ValueError, match=r"^RUTS_MCP_MAX_TEXT_LENGTH должна быть целым положительным числом"
     ):
         Settings.from_env({"RUTS_MCP_MAX_TEXT_LENGTH": value})
+
+
+@pytest.mark.parametrize("value", ["ruts_data", "./data", "../data"])
+def test_relative_data_dir(value):
+    """Относительный путь указывал бы в текущий каталог клиента, который запустил сервер"""
+    with pytest.raises(ValueError, match=r"^RUTS_DATA_DIR должна быть абсолютным путем"):
+        Settings.from_env({"RUTS_DATA_DIR": value})

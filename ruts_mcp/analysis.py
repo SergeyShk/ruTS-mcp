@@ -87,6 +87,7 @@ def stat(
     description: str,
     share: float | None = None,
     interpretation: str | None = None,
+    details: dict[str, Any] | None = None,
 ) -> dict[str, Any]:
     """
     Статистика в ответе инструмента
@@ -96,9 +97,10 @@ def stat(
         description (str): Что считает статистика
         share (float): Доля от всех слов или символов; None - без доли
         interpretation (str): Прочтение значения по шкале; None - без шкалы
+        details (dict[str, Any]): Другие ключи статистики перед описанием
 
     Вывод:
-        dict[str, Any]: Значение, доля, прочтение и описание
+        dict[str, Any]: Значение, доля, прочтение, другие ключи и описание
 
     Пример использования:
         >>> stat(0.85714, "Доля", interpretation="высокая")
@@ -109,6 +111,7 @@ def stat(
         item["share"] = clean(share)
     if interpretation is not None:
         item["interpretation"] = interpretation
+    item |= details or {}
     item["description"] = description
     return item
 

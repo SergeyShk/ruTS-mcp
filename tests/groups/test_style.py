@@ -1,3 +1,5 @@
+from collections import Counter
+
 import pytest
 from ruts import StyleStats
 from ruts.constants import STYLE_NORMS, STYLE_STATS_DESC
@@ -16,14 +18,19 @@ def test_style_group(chekhov):
     stats, warnings = style_group(Analysis(chekhov))
     ss = StyleStats(chekhov)
     assert list(STYLE_NOTES) == list(STYLE_STATS_DESC)
-    assert {name: item["value"] for name, item in stats.items()} == {
+    assert list(stats) == ["n_words", "top_words", *STYLE_STATS_DESC]
+    assert stats["n_words"]["value"] == len(ss.words) == 241
+    assert stats["top_words"]["value"] == dict(Counter(ss.words).most_common(ss.top_n))
+    assert list(stats["top_words"]["value"].items())[:2] == [("и", 11), ("тонкий", 5)]
+    metrics = {name: stats[name] for name in STYLE_STATS_DESC}
+    assert {name: item["value"] for name, item in metrics.items()} == {
         name: clean(value) for name, value in ss.get_stats().items()
     }
-    assert {name: item.get("interpretation") for name, item in stats.items()} == {
+    assert {name: item.get("interpretation") for name, item in metrics.items()} == {
         name: ss.describe(name) for name in STYLE_STATS_DESC
     }
-    assert {name for name, item in stats.items() if "interpretation" in item} == set(STYLE_NORMS)
-    for name, item in stats.items():
+    assert {name for name, item in metrics.items() if "interpretation" in item} == set(STYLE_NORMS)
+    for name, item in metrics.items():
         assert item["description"].startswith(f"{STYLE_STATS_DESC[name]}: ")
     assert f"{ss.top_n} самых частых слов" in stats["academic_nausea"]["description"]
     assert all("{" not in item["description"] for item in stats.values())
@@ -69,3 +76,40 @@ def test_style_new_metric(monkeypatch):
     monkeypatch.setattr(StyleStats, "keyword_stuffing", 1.0, raising=False)
     stats, _ = style_group(Analysis("Мама мыла раму."))
     assert stats["keyword_stuffing"] == {"value": 1.0, "description": "Перебор ключевых слов (%)"}
+
+
+def test_style_officialese_markers():
+    text = (
+        "В связи с этим, таким образом, мы, конечно, на сегодняшний день довели до сведения. "
+        "Ввиду чего и ввиду этого, с точки зрения закона, организация и решение вопросов."
+    )
+    stats, _ = style_group(Analysis(text))
+    found = {name: stats[name]["found"] for name in ("compound_prepositions", "parentheticals")}
+    assert found == {
+        "compound_prepositions": {"ввиду": 2, "в связи с": 1},
+        "parentheticals": {"таким образом": 1, "конечно": 1},
+    }
+    assert stats["cliches"]["found"] == {
+        "на сегодняшний день": 1,
+        "довели до сведения": 1,
+        "с точки зрения": 1,
+    }
+    assert stats["verbal_nouns"]["found"] == {
+        "сведения": 1,
+        "зрения": 1,
+        "организация": 1,
+        "решение": 1,
+    }
+    n_words = stats["n_words"]["value"]
+    for name in ("compound_prepositions", "parentheticals", "cliches"):
+        assert stats[name]["count"] == sum(stats[name]["found"].values())
+        assert stats[name]["value"] == clean(100 * stats[name]["count"] / n_words)
+    assert "found - найденные слова и фразы" in stats["cliches"]["description"]
+    assert "count" not in stats["water"]
+
+
+def test_style_found_top(monkeypatch):
+    monkeypatch.setattr("ruts_mcp.groups.style.TOP_FOUND", 2)
+    stats, _ = style_group(Analysis("Решение, решение, решение, организация, развитие, ввиду."))
+    assert stats["verbal_nouns"]["count"] == 5
+    assert stats["verbal_nouns"]["found"] == {"решение": 3, "организация": 1}

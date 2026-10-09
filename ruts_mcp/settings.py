@@ -44,6 +44,7 @@ class Settings:
 
         Исключения:
             ValueError: Если значение переменной не целое положительное число
+                или RUTS_DATA_DIR - относительный путь
 
         Пример использования:
             >>> settings = Settings.from_env({"RUTS_MCP_MAX_TEXT_LENGTH": "1000"})
@@ -51,11 +52,22 @@ class Settings:
             (1000, 'ruts-mcp')
         """
         environ = os_environ if environ is None else environ
-        data_dir = environ.get("RUTS_DATA_DIR")
         return cls(
             max_text_length=_positive_int(environ, "MAX_TEXT_LENGTH", cls.max_text_length),
-            data_dir=Path(data_dir).expanduser().resolve() if data_dir else DEFAULT_DATA_DIR,
+            data_dir=_data_dir(environ),
         )
+
+
+def _data_dir(environ: Mapping[str, str]) -> Path:
+    """Каталог данных из RUTS_DATA_DIR или каталог данных пользователя"""
+    raw = environ.get("RUTS_DATA_DIR")
+    if not raw:
+        return DEFAULT_DATA_DIR
+    data_dir = Path(raw).expanduser()
+    # Клиент запускает сервер из своего текущего каталога, и относительный путь указывал бы туда
+    if not data_dir.is_absolute():
+        raise ValueError(f"RUTS_DATA_DIR должна быть абсолютным путем, получено {raw!r}")
+    return data_dir.resolve()
 
 
 def _positive_int(environ: Mapping[str, str], name: str, default: int) -> int:

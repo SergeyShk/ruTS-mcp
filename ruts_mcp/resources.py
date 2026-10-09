@@ -8,9 +8,11 @@ from .data import (
     STRESS_DICT_TITLE,
     SpacyModel,
     freq_dict,
+    freq_dict_damaged,
     models_dir,
     stress_dict,
 )
+from .inputs import load_ruts
 from .settings import Settings
 
 
@@ -90,6 +92,7 @@ def readability_scales() -> str:
     Вывод:
         str: Текст Markdown
     """
+    load_ruts()
     from ruts import ReadabilityStats
     from ruts.constants import (
         GRADE_AGE_LEVELS,
@@ -135,6 +138,7 @@ def style_norms() -> str:
     Вывод:
         str: Текст Markdown
     """
+    load_ruts()
     from ruts.constants import STYLE_NORMS, STYLE_STATS_DESC
 
     sections = [
@@ -156,6 +160,14 @@ def data_status() -> str:
         str: Текст Markdown с каталогом данных, состоянием словарей и модели
             и командой, которая их скачивает
     """
+    load_ruts()
+    dictionary = freq_dict()
+    if dictionary.filepath:
+        dictionary_state = (
+            "поврежден, скачайте заново с --force" if freq_dict_damaged(dictionary) else "скачан"
+        )
+    else:
+        dictionary_state = "не скачан"
     model = SpacyModel(models_dir())
     if model.installed:
         model_state = f"установлена пакетом {SPACY_MODEL}"
@@ -164,8 +176,7 @@ def data_status() -> str:
     rows = [
         "| Данные | Группы и инструменты | Состояние |",
         "|---|---|---|",
-        f"| {FREQ_DICT_TITLE} | lexical, keyness | "
-        f"{'скачан' if freq_dict().filepath else 'не скачан'} |",
+        f"| {FREQ_DICT_TITLE} | lexical, keyness | {dictionary_state} |",
         f"| {STRESS_DICT_TITLE} | verse | {'скачан' if stress_dict().filepath else 'не скачан'} |",
         f"| {SPACY_MODEL_TITLE} | syntax | {model_state} |",
     ]

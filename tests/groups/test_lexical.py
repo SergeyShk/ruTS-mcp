@@ -88,3 +88,23 @@ def test_lexical_new_metric(dicts, monkeypatch):
     monkeypatch.setattr(LexicalStats, "rare_share", 0.5, raising=False)
     stats, _ = lexical_group(Analysis(CAT))
     assert stats["rare_share"] == {"value": 0.5, "description": "Доля редких слов"}
+
+
+def test_lexical_damaged_dict(damaged_dict):
+    """Поврежденный словарь не роняет вызов: метрики по словарю - None с предупреждением"""
+    stats, warnings = lexical_group(Analysis(CAT))
+    assert stats["coverage"]["value"] is None
+    assert stats["p_top1000"]["value"] is not None
+    assert warnings[0].startswith("Частотный словарь Ляшевской и Шарова поврежден: метрики ")
+    assert "ruts-mcp download --force" in warnings[0]
+
+
+def test_lexical_value_error(dicts, monkeypatch):
+    """ValueError при целом словаре - ошибка, а не поврежденный словарь"""
+
+    def fail(self):
+        raise ValueError("ошибка")
+
+    monkeypatch.setattr("ruts.LexicalStats.coverage", property(fail))
+    with pytest.raises(ValueError, match="ошибка"):
+        lexical_group(Analysis(CAT))

@@ -1,6 +1,7 @@
 import json
 import shutil
 import tempfile
+import threading
 from functools import lru_cache
 from pathlib import Path
 from typing import TYPE_CHECKING
@@ -19,6 +20,8 @@ SPACY_MODEL_URL = (
     "https://github.com/explosion/spacy-models/releases/download/"
     "{name}-{version}/{name}-{version}-py3-none-any.whl"
 )
+
+_spacy_lock = threading.Lock()
 
 
 def dicts_dir() -> Path:
@@ -61,6 +64,49 @@ def missing_warning(title: str, consequence: str, missing: str = "не скач�
         f"download (при запуске через uvx - uvx ruts-mcp download) в каталог "
         f"{Settings.from_env().data_dir}"
     )
+
+
+def damaged_warning(title: str, consequence: str) -> str:
+    """
+    Предупреждение о скачанном, но нечитаемом словаре
+
+    Аргументы:
+        title (str): Название словаря
+        consequence (str): Что не посчитано
+
+    Вывод:
+        str: Предупреждение с командой, которая скачивает словарь заново
+
+    Пример использования:
+        >>> damaged_warning("Частотный словарь Ляшевской и Шарова", "метрики не посчитаны")[:58]
+        'Частотный словарь Ляшевской и Шарова поврежден: метрики не'
+    """
+    return (
+        f"{title} поврежден: {consequence}. Скачайте его заново командой ruts-mcp download "
+        "--force (при запуске через uvx - uvx ruts-mcp download --force)"
+    )
+
+
+def freq_dict_damaged(dictionary: "FreqDict") -> bool:
+    """
+    Проверка, что скачанный файл частотного словаря не читается
+
+    Аргументы:
+        dictionary (FreqDict): Частотный словарь
+
+    Вывод:
+        bool: True - файл есть, но поврежден; False - файл читается или не скачан
+    """
+    from ruts.exceptions import DatasetNotFoundError
+
+    try:
+        _ = dictionary.min_ipm
+    except DatasetNotFoundError:
+        return False
+    # Усеченный файл: пустой, без полей в строке или с нечислом в частоте
+    except (ValueError, StopIteration):
+        return True
+    return False
 
 
 class SpacyModel:
@@ -132,7 +178,12 @@ class SpacyModel:
         from ruts.constants import USER_AGENT
         from ruts.exceptions import DataFileError, DownloadError
 
-        self.data_dir.mkdir(parents=True, exist_ok=True)
+        try:
+            self.data_dir.mkdir(parents=True, exist_ok=True)
+        except OSError as error:
+            raise DownloadError(
+                f"Не удалось создать каталог {self.data_dir} - {error.strerror}"
+            ) from error
         compatibility = download_file(
             spacy.about.__compatibility__, self.data_dir, force=True, user_agent=USER_AGENT
         )
@@ -185,9 +236,15 @@ def spacy_model() -> "Language | None":
     return None if path is None else load_spacy(path)
 
 
-@lru_cache(maxsize=2)
 def load_spacy(name: str) -> "Language":
-    """Загрузка модели spaCy один раз на процесс"""
+    """Загрузка модели spaCy один раз на процесс, под блокировкой: вызовы идут из пула потоков"""
+    with _spacy_lock:
+        return _load_spacy(name)
+
+
+@lru_cache(maxsize=2)
+def _load_spacy(name: str) -> "Language":
+    """Загрузка модели spaCy"""
     import spacy
 
     # Синтаксису не нужны сущности и леммы spaCy, а без них разбор быстрее

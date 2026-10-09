@@ -1,6 +1,6 @@
 import pytest
 
-from ruts_mcp.language import language_warnings
+from ruts_mcp.language import NO_LETTERS, language_warnings
 
 TEXT = "Не имей сто рублей, а имей сто друзей. Мама мыла раму — и т. д.!"
 
@@ -32,12 +32,15 @@ def test_language_warnings(text, start):
         "абв abc",
         "Это API для LLM-агента, а не SDK",
         "Он вернулся из Киева поздно вечером и вспоминал Київ.",
-        "12345 !!!",
     ],
-    ids=["russian", "half", "terms", "name", "digits"],
+    ids=["russian", "half", "terms", "name"],
 )
 def test_no_language_warnings(text):
     assert language_warnings(text) == []
+
+
+def test_no_letters():
+    assert language_warnings("123 456 7.89 2024") == [NO_LETTERS]
 
 
 def test_both_language_warnings():

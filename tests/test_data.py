@@ -1,5 +1,7 @@
 import json
+import time
 import zipfile
+from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
 
 import anyts.datasets
@@ -7,7 +9,14 @@ import pytest
 import spacy
 from ruts.exceptions import DownloadError
 
-from ruts_mcp.data import SPACY_MODEL, SpacyModel, load_spacy, models_dir, spacy_model
+from ruts_mcp.data import (
+    SPACY_MODEL,
+    SpacyModel,
+    _load_spacy,
+    load_spacy,
+    models_dir,
+    spacy_model,
+)
 
 VERSION = "9.9.9"
 PREFIX = f"{SPACY_MODEL}/{SPACY_MODEL}-{VERSION}/"
@@ -17,9 +26,9 @@ PREFIX = f"{SPACY_MODEL}/{SPACY_MODEL}-{VERSION}/"
 def not_installed(monkeypatch):
     """Пакета модели нет: модель ищется только в каталоге данных"""
     monkeypatch.setattr(spacy.util, "is_package", lambda name: False)
-    load_spacy.cache_clear()
+    _load_spacy.cache_clear()
     yield
-    load_spacy.cache_clear()
+    _load_spacy.cache_clear()
 
 
 @pytest.fixture
@@ -154,3 +163,29 @@ def test_download_removes_other_versions(not_installed, network):
     old.mkdir(parents=True)
     SpacyModel(models_dir()).download()
     assert [path.name for path in models_dir().iterdir()] == [f"{SPACY_MODEL}-{VERSION}"]
+
+
+def test_load_spacy_concurrent(monkeypatch):
+    """Одновременные первые вызовы загружают модель один раз"""
+    _load_spacy.cache_clear()
+    loads = []
+
+    def load(name, exclude):
+        loads.append(name)
+        time.sleep(0.05)
+        return name
+
+    monkeypatch.setattr(spacy, "load", load)
+    with ThreadPoolExecutor(8) as pool:
+        results = list(pool.map(load_spacy, ["model"] * 8))
+    _load_spacy.cache_clear()
+    assert results == ["model"] * 8
+    assert loads == ["model"]
+
+
+def test_download_unwritable(not_installed, tmp_path):
+    """Каталог данных не создается: ошибка загрузки с причиной, а не трейсбек"""
+    blocker = tmp_path / "file"
+    blocker.write_text("", encoding="utf-8")
+    with pytest.raises(DownloadError, match=r"^Не удалось создать каталог .*file/spacy - "):
+        SpacyModel(blocker / "spacy").download()
