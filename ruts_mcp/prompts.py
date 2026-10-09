@@ -1,9 +1,3 @@
-from typing import Annotated
-
-from pydantic import Field
-
-Text = Annotated[str, Field(description="Текст на русском языке")]
-
 READ_WARNINGS = (
     "Сначала прочитай warnings в ответах инструментов: они говорят, когда значения неустойчивы "
     "или не посчитаны (короткий текст, не скачанные словари или модель). Не делай выводов "
@@ -11,8 +5,11 @@ READ_WARNINGS = (
 )
 
 
-def readability_review(text: Text) -> str:
-    """Оценить, для какого читателя написан текст, и предложить, как его упростить."""
+def readability_review(text: str) -> str:
+    """Оценить, для какого читателя написан текст, и предложить, как его упростить.
+
+    :param text: Текст на русском языке
+    """
     return f"""Оцени удобочитаемость текста ниже.
 
 1. Вызови analyze_text с группами basic, readability и syntax.
@@ -26,8 +23,11 @@ def readability_review(text: Text) -> str:
 {text}"""
 
 
-def officialese_review(text: Text) -> str:
-    """Найти в тексте канцелярит и предложить живые замены."""
+def officialese_review(text: str) -> str:
+    """Найти в тексте канцелярит и предложить живые замены.
+
+    :param text: Текст на русском языке
+    """
     return f"""Проверь текст ниже на канцелярит.
 
 1. Вызови analyze_text с группами style и syntax.
@@ -41,8 +41,11 @@ def officialese_review(text: Text) -> str:
 {text}"""
 
 
-def verse_review(text: Text) -> str:
-    """Разобрать стихотворение: метр, рифму, окончания строк и звукопись."""
+def verse_review(text: str) -> str:
+    """Разобрать стихотворение: метр, рифму, окончания строк и звукопись.
+
+    :param text: Текст на русском языке
+    """
     return f"""Разбери стихотворение ниже.
 
 1. Вызови analyze_text с группами verse и phon.
@@ -56,8 +59,11 @@ def verse_review(text: Text) -> str:
 {text}"""
 
 
-def seo_review(text: Text) -> str:
-    """Проверить текст для сайта по SEO-метрикам и найти его ключевые слова."""
+def seo_review(text: str) -> str:
+    """Проверить текст для сайта по SEO-метрикам и найти его ключевые слова.
+
+    :param text: Текст на русском языке
+    """
     return f"""Проверь текст для сайта ниже по SEO-метрикам.
 
 1. Вызови analyze_text с группой style и keyness без reference: эталоном станет частотный словарь русского языка.
@@ -71,14 +77,15 @@ def seo_review(text: Text) -> str:
 {text}"""
 
 
-def compare_review(
-    text_a: Annotated[str, Field(description="Первый текст (A)")],
-    text_b: Annotated[str, Field(description="Второй текст (B)")],
-) -> str:
-    """Сравнить два текста по стилю и лексике."""
+def compare_review(text_a: str, text_b: str) -> str:
+    """Сравнить два текста по стилю и лексике.
+
+    :param text_a: Первый текст (A)
+    :param text_b: Второй текст (B)
+    """
     return f"""Сравни два текста ниже по стилю и лексике.
 
-1. Вызови compare_texts с a = [текст A] и b = [текст B]. Если тексты короче 1000 слов, уменьши window так, чтобы в каждом тексте было хотя бы по два окна.
+1. Вызови compare_texts с a = [текст A] и b = [текст B]. Окно короче половины window отбрасывается, а для сравнения нужно хотя бы по два окна в каждом тексте. Поэтому, если в более коротком тексте меньше 1500 слов, возьми window, равное половине числа его слов, но не меньше 100 (число слов дает analyze_text с группой basic). Если в нем меньше 150 слов, compare_texts не подойдет: сравни результаты analyze_text для обоих текстов.
 2. Вызови keyness с текстом A и reference = текст B, затем с positive = false: это слова, которые в A чаще и реже, чем в B.
 3. {READ_WARNINGS} По одному тексту на корпус различия могут быть особенностями текста, а не автора или жанра.
 4. Опиши главные различия по признакам с наибольшей по модулю дельтой Клиффа и по ключевым словам, с цитатами из обоих текстов.

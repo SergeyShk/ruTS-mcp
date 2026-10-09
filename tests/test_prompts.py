@@ -33,4 +33,6 @@ def test_compare_review():
     message = compare_review("Текст первый.", "Текст второй.")
     assert "compare_texts с a = [текст A] и b = [текст B]" in message
     assert "keyness с текстом A и reference = текст B" in message
+    assert "половине числа его слов, но не меньше 100" in message
+    assert "меньше 150 слов, compare_texts не подойдет" in message
     assert message.endswith("Текст A:\n\nТекст первый.\n\nТекст B:\n\nТекст второй.")

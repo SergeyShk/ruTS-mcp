@@ -102,10 +102,17 @@ async def test_prompts():
         "seo_review": "SEO-проверка текста",
         "compare_review": "Сравнение двух текстов",
     }
-    assert [argument.name for argument in prompts["compare_review"].arguments] == [
-        "text_a",
-        "text_b",
-    ]
+    assert {
+        name: [(argument.name, argument.description) for argument in item.arguments]
+        for name, item in prompts.items()
+    } == {
+        "readability_review": [("text", "Текст на русском языке")],
+        "officialese_review": [("text", "Текст на русском языке")],
+        "verse_review": [("text", "Текст на русском языке")],
+        "seo_review": [("text", "Текст на русском языке")],
+        "compare_review": [("text_a", "Первый текст (A)"), ("text_b", "Второй текст (B)")],
+    }
+    assert ":param" not in prompts["compare_review"].description
     (message,) = result.messages
     assert message.role == "user"
     assert message.content.text == verse_review(TEXT)

@@ -101,7 +101,8 @@ def readability_scales() -> str:
     formulas = ", ".join(READABILITY_STATS_DESC[name] for name in READABILITY_GRADE_STATS)
     grades = ["| Лет обучения | Ступень | Возраст |", "|---|---|---|"]
     grades += [
-        f"| {first}-{last} | {stage} | {age} |" for first, last, stage, age in GRADE_AGE_LEVELS
+        f"| {f'до {last}' if index == 0 else f'{first}-{last}'} | {stage} | {age} |"
+        for index, (first, last, stage, age) in enumerate(GRADE_AGE_LEVELS)
     ]
     grades.append(f"| больше {GRADE_AGE_LEVELS[-1][1]} | {' | '.join(POSTGRADUATE_LEVEL)} |")
     rix = [(value, f"{grade}") for value, grade in ReadabilityStats.grade_scales["rix"]]
@@ -109,7 +110,8 @@ def readability_scales() -> str:
         "# Шкалы удобочитаемости ruTS",
         "## Класс и возраст читателя",
         f"Формулы класса ({formulas}) и сводный класс дают число лет обучения, нужное для "
-        "понимания текста. Оно округляется до целого и читается по таблице:",
+        "понимания текста; у простых текстов оно бывает ниже нуля. Число округляется "
+        "арифметически (6,5 - до 7) и читается по таблице:",
         "\n".join(grades),
         f"## {READABILITY_STATS_DESC['flesch_reading_easy']}",
         "Номинально от 0 до 100, чем выше, тем легче текст:",

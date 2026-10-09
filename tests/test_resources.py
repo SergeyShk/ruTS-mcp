@@ -11,8 +11,11 @@ from ruts_mcp.resources import data_status, readability_scales, style_norms
 
 def test_readability_scales():
     text = readability_scales()
-    for first, last, stage, age in GRADE_AGE_LEVELS:
+    _, last, stage, age = GRADE_AGE_LEVELS[0]
+    assert f"| до {last} | {stage} | {age} |" in text
+    for first, last, stage, age in GRADE_AGE_LEVELS[1:]:
         assert f"| {first}-{last} | {stage} | {age} |" in text
+    assert "округляется арифметически (6,5 - до 7)" in text
     assert f"| больше 17 | {' | '.join(POSTGRADUATE_LEVEL)} |" in text
     for scale in ReadabilityStats.level_scales.values():
         for _, label in scale:
