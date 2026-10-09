@@ -13,6 +13,7 @@ from ruts_mcp.server import INSTRUCTIONS, mcp
 from ruts_mcp.tools import analyze_text
 
 TEXT = "Мама мыла раму. Папа читал газету."
+TEXT_ARGUMENT = "Текст на русском языке; не задан - текст из предыдущих сообщений разговора"
 
 pytestmark = pytest.mark.anyio
 
@@ -106,12 +107,16 @@ async def test_prompts():
         name: [(argument.name, argument.description) for argument in item.arguments]
         for name, item in prompts.items()
     } == {
-        "readability_review": [("text", "Текст на русском языке")],
-        "officialese_review": [("text", "Текст на русском языке")],
-        "verse_review": [("text", "Текст на русском языке")],
-        "seo_review": [("text", "Текст на русском языке")],
-        "compare_review": [("text_a", "Первый текст (A)"), ("text_b", "Второй текст (B)")],
+        "readability_review": [("text", TEXT_ARGUMENT)],
+        "officialese_review": [("text", TEXT_ARGUMENT)],
+        "verse_review": [("text", TEXT_ARGUMENT)],
+        "seo_review": [("text", TEXT_ARGUMENT)],
+        "compare_review": [
+            ("text_a", "Первый текст (A); не задан - тексты из предыдущих сообщений разговора"),
+            ("text_b", "Второй текст (B); не задан - тексты из предыдущих сообщений разговора"),
+        ],
     }
+    assert not any(argument.required for item in prompts.values() for argument in item.arguments)
     assert ":param" not in prompts["compare_review"].description
     (message,) = result.messages
     assert message.role == "user"
