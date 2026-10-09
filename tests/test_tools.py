@@ -1,5 +1,8 @@
+import unicodedata
+
 import pytest
 from fastmcp.exceptions import ToolError
+from ruts.utils import strip_marks
 
 from ruts_mcp.analysis import Analysis, Options
 from ruts_mcp.groups import GROUPS
@@ -66,11 +69,18 @@ def test_analyze_text_path(tmp_path):
     assert analyze_text(path=str(path)) == analyze_text(TEXT)
 
 
-def test_analyze_text_accents():
-    """Ударения и мягкие переносы не меняют статистик: их нет в словах"""
-    accented = "Ма\u0301ма мы\u0301ла ра\u00adму. Па\u0301па чита\u0301л газе\u0301ту."
-    groups = ("basic", "morph", "style")
-    assert analyze_text(accented, groups=groups) == analyze_text(TEXT, groups=groups)
+@pytest.mark.parametrize(
+    "text",
+    [
+        "Ма\u0301ма мы\u0301ла ра\u00adму. Па\u0301па чита\u0301л газе\u0301ту.",
+        unicodedata.normalize("NFD", "Мой ёжик. Папа читал газету."),
+    ],
+    ids=["marks", "nfd"],
+)
+def test_analyze_text_accents(dicts, text):
+    """Ударения, мягкие переносы и NFD не меняют статистик, кроме стиха"""
+    groups = tuple(group for group in GROUPS if group != "verse")
+    assert analyze_text(text, groups=groups) == analyze_text(strip_marks(text), groups=groups)
 
 
 def test_analyze_text_no_letters():

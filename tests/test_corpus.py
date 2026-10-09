@@ -63,14 +63,15 @@ def test_kwic_budget(monkeypatch):
     ]
 
 
-def test_kwic_normalized(tmp_path):
-    """Знаки ударения и мягкие переносы не мешают поиску ни в тексте, ни в запросе"""
+def test_kwic_stress_marks(tmp_path):
+    """Знаки ударения и мягкие переносы не мешают поиску, а контекст - как в тексте"""
     path = tmp_path / "text.txt"
     path.write_text("Моро\u0301з и со\u00adлнце; день чуде\u0301сный!", encoding="utf-8")
     result = kwic("чуде\u0301сный", path=str(path))
     assert result["matches"] == [
-        {"left": "Мороз и солнце; день", "keyword": "чудесный", "right": ""}
+        {"left": "Моро\u0301з и со\u00adлнце; день", "keyword": "чуде\u0301сный", "right": ""}
     ]
+    assert kwic("чудесный", path=str(path))["matches"] == result["matches"]
     assert kwic("мороз", path=str(path))["n_matches"] == 1
 
 

@@ -1,14 +1,11 @@
 import importlib
 import threading
-import unicodedata
 from pathlib import Path
 
 from fastmcp.exceptions import ToolError
 
 from .settings import Settings
 
-# Знаки ударения и мягкий перенос внутри слова: pymorphy3 и словари не узнают такие слова
-INVISIBLE = dict.fromkeys(map(ord, "\u0300\u0301\u00ad"))
 UTF8_MAX_BYTES = 4
 TEXT = "Текст на русском языке; вместо него можно задать path"
 PATH = (
@@ -54,20 +51,23 @@ def load_ruts() -> None:
 
 def normalize(text: str) -> str:
     """
-    Текст без знаков ударения и мягких переносов, в NFC, с переводами строк «\\n»
+    Текст с переводами строк «\\n»
+
+    Описание:
+        Знаки ударения и мягкие переносы остаются: их снимает ruTS, а стих
+        берет из знака ударение
 
     Аргументы:
         text (str): Текст
 
     Вывод:
-        str: Текст, слова которого узнают pymorphy3 и словари ruTS
+        str: Текст, где «\\r\\n» и «\\r» заменены на «\\n»
 
     Пример использования:
-        >>> normalize("Моро\\u0301з и со\\u00adлнце\\r\\nДень")
-        'Мороз и солнце\\nДень'
+        >>> normalize("Моро\\u0301з и солнце\\r\\nДень")
+        'Моро́з и солнце\\nДень'
     """
-    text = unicodedata.normalize("NFD", text).translate(INVISIBLE)
-    return unicodedata.normalize("NFC", text).replace("\r\n", "\n").replace("\r", "\n")
+    return text.replace("\r\n", "\n").replace("\r", "\n")
 
 
 def check_length(length: int, label: str) -> None:

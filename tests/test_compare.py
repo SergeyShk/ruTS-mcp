@@ -128,7 +128,7 @@ def test_compare_texts_ties(chekhov):
     ]
     assert relative == sorted(relative, reverse=True)
     assert result["warnings"][-1].startswith(
-        "Еще 62 признаков с тем же модулем дельты Клиффа 1.0 не показаны"
+        "Еще 57 признаков с тем же модулем дельты Клиффа 1.0 не показаны"
     )
     everything = compare_texts([chekhov], [PUSHKIN * 12], window=100, top_n=200)
     assert not any(item.startswith("Еще ") for item in everything["warnings"])
@@ -177,28 +177,21 @@ def test_compare_texts_dropped(chekhov):
     result = compare_texts([chekhov, chekhov, "Короткий текст."], [PUSHKIN * 12] * 2, window=100)
     assert result["n_texts"] == {"a": 2, "b": 2}
     assert (
-        "1 из 3 текстов корпуса A короче половины окна в 100 слов и не вошли в сравнение"
+        "1 из 3 текстов корпуса A короче окна в 100 слов и не вошли в сравнение"
         in (result["warnings"])
     )
     whole = compare_texts([chekhov, chekhov, "..."], [chekhov, PUSHKIN * 12], whole_texts=True)
     assert "1 из 3 текстов корпуса A без слов и не вошли в сравнение" in whole["warnings"]
 
 
-@pytest.mark.parametrize(
-    ("a", "b", "options", "advice"),
-    [
-        ([PUSHKIN * 7] * 3, [CHEKHOV_LONG] * 2, {"window": 100}, "задайте window меньше длины"),
-        ([CHEKHOV_LONG] * 2, [PUSHKIN] * 2, {"whole_texts": True}, "сравнивайте окнами"),
-    ],
-    ids=["windows", "whole"],
-)
-def test_compare_texts_window_lengths(a, b, options, advice):
-    """Окна корпусов разной длины: признаки, зависящие от длины, различаются и из-за нее"""
-    warning = next(
-        item for item in compare_texts(a, b, **options)["warnings"] if "Средняя длина" in item
-    )
-    assert warning.startswith("Средняя длина окна в A - ")
-    assert advice in warning
+def test_compare_texts_text_lengths():
+    """Тексты корпусов разной длины: признаки, зависящие от длины, различаются и из-за нее"""
+    whole = compare_texts([CHEKHOV_LONG] * 2, [PUSHKIN] * 2, whole_texts=True)
+    warning = next(item for item in whole["warnings"] if "Средняя длина" in item)
+    assert warning.startswith("Средняя длина текста в A - ")
+    assert warning.endswith("сравнивайте окнами (whole_texts=false)")
+    windows = compare_texts([PUSHKIN * 7] * 3, [CHEKHOV_LONG] * 2, window=100)
+    assert not any("Средняя длина" in item for item in windows["warnings"])
 
 
 def test_compare_texts_one_window(chekhov):
@@ -283,8 +276,6 @@ def test_keyness_unreachable_entries(pronouns):
     words = [item["word"] for item in keyness(text, positive=False, min_freq=1)["keywords"]]
     assert "его" not in words
     assert "во" not in words
-    full = ruts_keyness(text_words(text, lemmatize=False), FreqDict(pronouns), positive=False)
-    assert {"его", "во"} <= {item.word for item in full}
 
 
 def test_keyness_reachable_entries(pronouns):

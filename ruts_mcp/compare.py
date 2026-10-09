@@ -1,6 +1,5 @@
-from itertools import islice
 from math import ceil
-from typing import TYPE_CHECKING, Annotated, Any, Literal
+from typing import Annotated, Any, Literal
 
 from fastmcp.exceptions import ToolError
 from pydantic import Field
@@ -17,9 +16,6 @@ from .data import (
 from .errors import ruts_errors
 from .inputs import PATH, TEXT, check_length, load_ruts, prepare_text, read_file, read_source
 from .language import language_warnings
-
-if TYPE_CHECKING:
-    from ruts.corpus import Keyword
 
 KeynessMeasure = Literal["log_likelihood", "log_ratio", "chi2", "diff", "bic", "ell", "odds_ratio"]
 LOG_RATIO_ZERO = (
@@ -65,7 +61,7 @@ SIGNIFICANCE = 0.05
 MAX_TEXTS = 1000
 AUTO_WINDOW = 1000
 MIN_WINDOW = 100
-# Окна корпусов, средняя длина которых различается больше, сравниваются нечестно
+# Тексты корпусов, средняя длина которых различается больше, сравниваются нечестно
 WINDOW_RATIO = 1.25
 
 
@@ -112,6 +108,7 @@ def keyness(
     load_ruts()
     from anyts.constants import G2_CRITICAL_VALUES
     from ruts import WordsExtractor
+    from ruts.corpus import keyness as ruts_keyness
     from ruts.datasets.freq2011 import CORPUS_SIZE
     from ruts.exceptions import DatasetNotFoundError
     from ruts.lexical_stats import DICTIONARY_WORD
@@ -120,9 +117,7 @@ def keyness(
     warnings = language_warnings(text)
     source: Any
     if reference is None and reference_path is None:
-        target: tuple[str, ...] = tuple(
-            map(dictionary_form, WordsExtractor(lowercase=True).extract(text))
-        )
+        target: tuple[str, ...] = WordsExtractor(lowercase=True).extract(text)
         n_words = sum(1 for word in target if DICTIONARY_WORD.fullmatch(word))
         if not n_words:
             raise ToolError(
@@ -145,13 +140,13 @@ def keyness(
         title = f"текст-эталон, {len(source)} слов"
     with ruts_errors():
         try:
-            found = _keywords(target, source, measure, min_freq, positive, top_n)
+            found = ruts_keyness(target, source, measure, min_freq, positive, top_n)
         except DatasetNotFoundError:
             raise ToolError(
                 missing_warning(FREQ_DICT_TITLE, "ключевые слова не посчитаны")
                 + "; эталоном может быть и другой текст (reference)"
             ) from None
-        rare = not found and min_freq > 1 and _keywords(target, source, measure, 1, positive, 1)
+        rare = not found and min_freq > 1 and ruts_keyness(target, source, measure, 1, positive, 1)
     if rare:
         warnings.append(f"Ключевых слов с частотой от {min_freq} нет: уменьшите min_freq")
     elif not found:
@@ -169,73 +164,6 @@ def keyness(
         ],
         "warnings": warnings,
     }
-
-
-def dictionary_form(word: str) -> str:
-    """
-    Слово текста в том виде, в каком его сравнивают со словарем
-
-    Описание:
-        Буква ё остается: с ней pymorphy3 разбирает слово точнее (чёрт - черт,
-        а не черта). Исключение - «её»: pymorphy3 разбирает его как
-        притяжательное «ее», а «ее» - как «она», и тексты с ё и без нее
-        расходились бы
-
-    Аргументы:
-        word (str): Слово в нижнем регистре
-
-    Вывод:
-        str: Слово для сравнения со словарем
-
-    Пример использования:
-        >>> [dictionary_form(word) for word in ("её", "чёрт", "ее")]
-        ['ее', 'чёрт', 'ее']
-    """
-    return "ее" if word == "её" else word
-
-
-def _keywords(
-    target: tuple[str, ...],
-    source: Any,
-    measure: str,
-    min_freq: int,
-    positive: bool,
-    top_n: int,
-) -> list["Keyword"]:
-    """
-    Ключевые слова ruTS; со словарем без статей, которые лемматизатор не дает
-
-    Описание:
-        Слово текста приводится к статье словаря через лемму pymorphy3, и статьи
-        вроде «его» или «во» (лемма - «он», «в») получают нулевую частоту в любом
-        тексте; среди слов, которые чаще в эталоне, остаются статьи, к которым
-        приводится хотя бы одна форма их лексем pymorphy3 (род - через «рода»)
-    """
-    from ruts.corpus import keyness as ruts_keyness
-    from ruts.datasets import FreqDict
-    from ruts.lexical_stats import dictionary_lemma
-    from ruts.utils import get_morph_analyzer, normalize_yo, parse_word
-
-    if positive or not isinstance(source, FreqDict):
-        return ruts_keyness(target, source, measure, min_freq, positive, top_n)
-    entries = source.entries
-    morph = get_morph_analyzer()
-
-    def reached(word: str, entry: str) -> bool:
-        return dictionary_lemma(word, parse_word(word).normal_form, entries) == entry
-
-    def reachable(entry: str) -> bool:
-        if reached(entry, entry):
-            return True
-        forms = {form.word for parse in morph.parse(entry) for form in parse.lexeme}
-        return any(
-            reached(spelling, entry)
-            for form in forms
-            for spelling in {dictionary_form(form), normalize_yo(form)}
-        )
-
-    found = ruts_keyness(target, source, measure, min_freq, positive)
-    return list(islice((keyword for keyword in found if reachable(keyword.word)), top_n))
 
 
 def auto_window(shortest: int) -> int:
@@ -298,11 +226,11 @@ def compare_texts(
 ) -> dict[str, Any]:
     """Сравнить два корпуса текстов по признакам стиля и найти, чем они различаются сильнее всего.
 
-    Используйте для атрибуции авторства, сравнения жанров, переводов, текстов человека и модели. Тексты режутся на окна около window слов (whole_texts - тексты целиком), у каждого окна считаются около 110 признаков ruTS, и распределения признака в корпусах A и B сравниваются. Текст делится на равные окна, число которых - число слов, деленное на window с округлением, поэтому окна разных текстов бывают от половины до полутора window; текст короче половины окна отбрасывается. Для сравнения нужно хотя бы по два окна в каждом корпусе. Тексты из файлов передавайте через a_paths и b_paths.
+    Используйте для атрибуции авторства, сравнения жанров, переводов, текстов человека и модели. Тексты режутся подряд на окна ровно по window слов (whole_texts - тексты целиком), у каждого окна считаются около 110 признаков ruTS, и распределения признака в корпусах A и B сравниваются. Остаток текста короче окна и текст короче окна отбрасываются. Для сравнения нужно хотя бы по два окна в каждом корпусе. Тексты из файлов передавайте через a_paths и b_paths.
 
     Признаки по префиксам: basic_ - доли длинных, сложных, одно- и многосложных слов, букв, пробелов и знаков, буквы и слоги на слово; readability_ - формулы удобочитаемости; diversity_ - меры лексического разнообразия; morph_ - доли частей речи от слов (morph_pos_NOUN) и значений признаков внутри признака (morph_case_Gen, morph_tense_Past); sents_ - средняя длина предложения в словах, ее стандартное отклонение, коэффициент вариации и автокорреляция соседних длин; punct_ - знаки по типам на 1000 слов и доля буквы ё.
 
-    В результате "window" - размер окна (null - тексты целиком), "n_windows" и "n_texts" - число окон и текстов в A и B, "features" - признаки по убыванию модуля дельты Клиффа, при равной дельте - по относительной разности медиан: средние по окнам "mean_a" и "mean_b", разность медиан A - B "median_diff" с 95% бутстрэп-интервалом "ci_low" - "ci_high", дельта Клиффа "cliff_delta" (от -1 до 1: доля пар окон, где в A больше, минус доля, где меньше; по модулю от 0,147 - малый, от 0,33 - средний, от 0,474 - большой эффект, Romano и др. 2006) и p-значение U-критерия Манна-Уитни с поправкой Холма на число признаков "p_holm". Окна одного текста не независимы: p_holm считает их независимыми и занижено, если текстов в корпусе мало, а бутстрэп-интервал берет целые тексты и при одном тексте в корпусе не определен. Ключ "warnings" - предупреждения: корпус не на русском языке, окна корпусов разной длины, тексты не вошли в сравнение, в корпусе один текст, ни одно различие не значимо.
+    В результате "window" - размер окна (null - тексты целиком), "n_windows" и "n_texts" - число окон и текстов в A и B, "features" - признаки по убыванию модуля дельты Клиффа, при равной дельте - по относительной разности медиан: средние по окнам "mean_a" и "mean_b", разность медиан A - B "median_diff" с 95% бутстрэп-интервалом "ci_low" - "ci_high", дельта Клиффа "cliff_delta" (от -1 до 1: доля пар окон, где в A больше, минус доля, где меньше; по модулю от 0,147 - малый, от 0,33 - средний, от 0,474 - большой эффект, Romano и др. 2006) и p-значение U-критерия Манна-Уитни с поправкой Холма на число признаков "p_holm". Окна одного текста не независимы: p_holm считает их независимыми и занижено, если текстов в корпусе мало, а бутстрэп-интервал берет целые тексты и при одном тексте в корпусе не определен. Ключ "warnings" - предупреждения: корпус не на русском языке, тексты корпусов разной длины при whole_texts, тексты не вошли в сравнение, в корпусе один текст, ни одно различие не значимо.
     """
     load_ruts()
     from ruts.corpus import compare_corpora, split_windows
@@ -365,27 +293,23 @@ def compare_texts(
     for label, items in windows.items():
         dropped = sum(1 for item in items if not item)
         if dropped:
-            reason = "без слов" if size is None else f"короче половины окна в {size} слов"
+            reason = "без слов" if size is None else f"короче окна в {size} слов"
             warnings.append(
                 f"{dropped} из {len(items)} текстов корпуса {label} {reason} и не вошли "
                 "в сравнение"
             )
-    lengths = {
-        label: [sum(1 for _ in iter_text_words(part)) for item in items for part in item]
-        for label, items in windows.items()
-    }
-    means = {label: sum(values) / len(values) for label, values in lengths.items()}
-    if max(means.values()) > WINDOW_RATIO * min(means.values()):
-        advice = (
-            "сравнивайте окнами (whole_texts=false)"
-            if size is None
-            else "задайте window меньше длины самых коротких текстов"
-        )
-        warnings.append(
-            f"Средняя длина окна в A - {means['A']:.0f} слов, в B - {means['B']:.0f}: признаки, "
-            "которые зависят от длины текста (лексическое разнообразие, доли и частоты слов), "
-            f"различаются и из-за нее; чтобы окна были близкой длины, {advice}"
-        )
+    if size is None:
+        means = {
+            label: sum(counts) / sum(1 for count in counts if count)
+            for label, counts in sizes.items()
+        }
+        if max(means.values()) > WINDOW_RATIO * min(means.values()):
+            warnings.append(
+                f"Средняя длина текста в A - {means['A']:.0f} слов, в B - {means['B']:.0f}: "
+                "признаки, которые зависят от длины текста (лексическое разнообразие, доли "
+                "и частоты слов), различаются и из-за нее; чтобы сравнивать отрывки одной "
+                "длины, сравнивайте окнами (whole_texts=false)"
+            )
     with ruts_errors():
         table = compare_corpora(corpora["A"], corpora["B"], window=size, labels=("A", "B"))
     n_texts = {"a": int(table["n_texts_A"].max()), "b": int(table["n_texts_B"].max())}

@@ -32,8 +32,9 @@ def test_language_warnings(text, start):
         "абв abc",
         "Это API для LLM-агента, а не SDK",
         "Он вернулся из Киева поздно вечером и вспоминал Київ.",
+        "Мѐд и мѝр, чтó и где\u0301.",
     ],
-    ids=["russian", "half", "terms", "name"],
+    ids=["russian", "half", "terms", "name", "stress-marks"],
 )
 def test_no_language_warnings(text):
     assert language_warnings(text) == []

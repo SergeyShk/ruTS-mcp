@@ -6,7 +6,7 @@ from pydantic import Field
 
 from .analysis import clean
 from .errors import ruts_errors
-from .inputs import PATH, TEXT, load_ruts, normalize, read_source
+from .inputs import PATH, TEXT, load_ruts, read_source
 from .language import language_warnings
 
 CollocationMeasure = Literal[
@@ -65,7 +65,7 @@ def text_words(text: str, lemmatize: bool) -> tuple[str, ...]:
 
 def one_word(word: str, lemmatize: bool) -> str:
     """
-    Слово запроса в том виде, в каком сравниваются слова текста (normalize, text_words)
+    Слово запроса в том виде, в каком сравниваются слова текста (text_words)
 
     Аргументы:
         word (str): Слово, переданное инструменту
@@ -77,7 +77,7 @@ def one_word(word: str, lemmatize: bool) -> str:
     Исключения:
         ToolError: Если в строке не одно слово
     """
-    words = text_words(normalize(word), lemmatize)
+    words = text_words(word, lemmatize)
     if len(words) != 1:
         raise ToolError(f"Нужно одно слово, получено {word!r}")
     return words[0]
@@ -109,7 +109,7 @@ def kwic(
     text = read_source(text, path)
     warnings = language_warnings(text)
     with ruts_errors():
-        lines = ruts_kwic(text, normalize(keyword), window, by_lemma)
+        lines = ruts_kwic(text, keyword, window, by_lemma)
     matches: list[dict[str, str]] = []
     size = 0
     for line in lines[:limit]:

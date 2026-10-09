@@ -32,15 +32,14 @@ def test_load_ruts_concurrent(monkeypatch):
 @pytest.mark.parametrize(
     ("text", "expected"),
     [
-        ("Моро\u0301з", "Мороз"),
-        ("со\u00adлнце", "солнце"),
-        ("е\u0308ж", "ёж"),
         ("Да\r\nнет\rда", "Да\nнет\nда"),
+        ("Моро\u0301з и со\u00adлнце", "Моро\u0301з и со\u00adлнце"),
         ("Мороз и солнце", "Мороз и солнце"),
     ],
-    ids=["accent", "soft-hyphen", "combining-yo", "newlines", "plain"],
+    ids=["newlines", "marks", "plain"],
 )
 def test_normalize(text, expected):
+    """Знаки ударения и мягкие переносы остаются: их снимает ruTS"""
     assert normalize(text) == expected
 
 
@@ -55,7 +54,7 @@ def test_check_length(monkeypatch):
 
 def test_prepare_text(monkeypatch):
     monkeypatch.setenv("RUTS_MCP_MAX_TEXT_LENGTH", "10")
-    assert prepare_text("Моро\u0301з") == "Мороз"
+    assert prepare_text("Моро\u0301з\r\n") == "Моро\u0301з\n"
     with pytest.raises(ToolError, match=r"^Эталон длиннее лимита"):
         prepare_text("а" * 11, "Эталон")
     assert prepare_text("а" * 11, check=False) == "а" * 11
@@ -109,7 +108,7 @@ def test_read_file_relative():
 def test_read_source(tmp_path):
     path = tmp_path / "text.txt"
     path.write_bytes("Моро\u0301з\r\n".encode())
-    assert read_source("", str(path)) == "Мороз\n"
+    assert read_source("", str(path)) == "Моро\u0301з\n"
     assert read_source("Мороз", None) == "Мороз"
 
 

@@ -12,6 +12,7 @@ from ruts_mcp.groups.verse import (
     VERSE_NOTES,
     verse_group,
 )
+from ruts_mcp.inputs import prepare_text
 from tests.conftest import PUSHKIN
 
 METER_STATS = "meter, n_feet, p_deviations, p_pyrrhics"
@@ -31,6 +32,15 @@ def test_verse_group(dicts):
         )
     assert f"не дальше {RHYME_WINDOW} строк" in stats["p_rhymed"]["description"]
     assert warnings == []
+
+
+def test_verse_stress_marks(dicts):
+    """Знак ударения в тексте важнее словаря: «прави́л» - мужское окончание строки"""
+    marked = PUSHKIN.replace("правил", "прави\u0301л")
+    stats, _ = verse_group(Analysis(prepare_text(marked)))
+    vs = VerseStats(marked, stress_dict=StressDict(dicts))
+    assert stats["p_masculine"]["value"] == clean(vs.p_masculine) == 0.75
+    assert stats["rhyme_schemes"]["value"] == {"-A-A": 1}
 
 
 def test_verse_without_dict(data_dir):

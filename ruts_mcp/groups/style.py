@@ -1,5 +1,4 @@
 from collections import Counter
-from collections.abc import Sequence
 
 from ..analysis import Analysis, GroupResult, stat, undefined_warnings
 
@@ -41,7 +40,7 @@ def style_group(analysis: Analysis) -> GroupResult:
         Прочтение дает ruTS (describe): тошнота - по нормам Advego, водность
         и заспамленность - по Text.ru, естественность по Ципфу - по pr-cy
         и megaindex; у маркеров канцелярита норм нет, зато есть число вхождений
-        и найденные слова и фразы (officialese_markers). Добавлены число слов
+        и найденные слова и фразы (StyleStats.markers). Добавлены число слов
         и самые частые словоформы, по которым считаются тошнота и естественность
         по Ципфу. Текст короче 200 или длиннее 1000 слов получает предупреждение: нормы рассчитаны на тексты в несколько
         сотен слов, а тошнота и заспамленность растут с длиной текста
@@ -66,7 +65,7 @@ def style_group(analysis: Analysis) -> GroupResult:
 
     ss = StyleStats(analysis.text)
     n_words = len(ss.words)
-    found = officialese_markers(ss.forms, ss.cliches_list)
+    found = ss.markers()
     stats = {
         "n_words": stat(n_words, "Число слов, по которым считаются метрики"),
         "top_words": stat(
@@ -102,49 +101,3 @@ def style_group(analysis: Analysis) -> GroupResult:
     for name, reason in STYLE_REASONS.items():
         warnings += undefined_warnings({name: stats[name]}, reason)
     return stats, warnings
-
-
-def officialese_markers(forms: Sequence[str], cliches: Sequence[str]) -> dict[str, list[str]]:
-    """
-    Маркеры канцелярита, найденные в тексте, как их считает StyleStats
-
-    Аргументы:
-        forms (list[str]): Словоформы текста в нижнем регистре
-        cliches (list[str]): Штампы
-
-    Вывод:
-        dict[str, list[str]]: Имя метрики - найденные слова и фразы по порядку
-
-    Пример использования:
-        >>> found = officialese_markers(["ввиду", "этого", "мы", "конечно", "решение"], [])
-        >>> found["compound_prepositions"], found["parentheticals"], found["verbal_nouns"]
-        (['ввиду'], ['конечно'], ['решение'])
-    """
-    from ruts.constants import COMPOUND_PREPOSITIONS, PARENTHETICALS
-    from ruts.style_stats import expand_phrases, is_parenthetical
-    from ruts.utils import find_phrases, is_verbal_noun, parse_word
-
-    def phrases(items: Sequence[str], expand: bool = True) -> list[tuple[int, int]]:
-        return find_phrases(forms, expand_phrases(forms, items) if expand else items)
-
-    spans = phrases(PARENTHETICALS, expand=False)
-    covered = {position for start, end in spans for position in range(start, end)}
-    singles = [
-        (position, position + 1)
-        for position, word in enumerate(forms)
-        if position not in covered and is_parenthetical(word)
-    ]
-    found = {
-        "compound_prepositions": phrases(COMPOUND_PREPOSITIONS),
-        "parentheticals": sorted(spans + singles),
-        "cliches": phrases(cliches),
-    }
-    markers = {
-        name: [" ".join(forms[start:end]) for start, end in items] for name, items in found.items()
-    }
-    markers["verbal_nouns"] = [
-        word
-        for word in forms
-        if (parse := parse_word(word)).tag.POS == "NOUN" and is_verbal_noun(parse.normal_form)
-    ]
-    return markers

@@ -41,7 +41,7 @@ classifiers = [
 dependencies = [
     "fastmcp>=4,<5",
     "platformdirs>=4",
-    "ruts>=0.15.2,<0.16",
+    "ruts>=0.16,<0.17",
 ]
 
 [project.scripts]

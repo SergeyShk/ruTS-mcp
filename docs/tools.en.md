@@ -33,7 +33,7 @@ Statistics of a text by groups; only the requested groups are computed.
 | `cohesion` | Cohesion: overlaps between sentences, givenness, connectives ([CohesionStats](https://sergeyshk.github.io/ruTS/en/stats/cohesion_stats/)) | - |
 | `style` | Nausea, water content, spam score read by the norms of SEO services, the most frequent word forms, officialese markers with the words and phrases found ([StyleStats](https://sergeyshk.github.io/ruTS/en/stats/style_stats/)) | - |
 | `lexical` | Word frequency, frequency bands, surprisal, lexical density ([LexicalStats](https://sergeyshk.github.io/ruTS/en/stats/lexical_stats/)) | frequency dictionary for frequency and surprisal |
-| `verse` | Meter, number of feet, rhyme schemes, line endings ([VerseStats](https://sergeyshk.github.io/ruTS/en/stats/verse_stats/)) | stress dictionary |
+| `verse` | Meter, number of feet, rhyme schemes, line endings; a stress mark in the text («замо́к») outweighs the dictionary ([VerseStats](https://sergeyshk.github.io/ruTS/en/stats/verse_stats/)) | stress dictionary |
 | `syntax` | Dependency lengths, tree depth, clauses, participial and adverbial phrases, passive, split predicates ([SyntaxStats](https://sergeyshk.github.io/ruTS/en/stats/syntax_stats/)) | spaCy model |
 
 How to download the data is described in [Dictionaries and the spaCy model](installation.md#data).
@@ -129,6 +129,6 @@ Comparison of two corpora by style features - for authorship attribution, compar
 | `whole_texts` | `false` | Compare whole texts, without windows |
 | `top_n` | `15` | Number of features with the largest difference, up to 200 |
 
-The number of windows of a text is its number of words divided by `window` and rounded, so the windows of different texts range from half to one and a half `window`, and a text shorter than half a window is left out of the comparison (the result warns about it). If the mean window length differs noticeably between the corpora, the result warns too: features that depend on the text length differ because of it as well.
+A text is cut in a row into windows of exactly `window` words; a remainder shorter than a window and a text shorter than a window are left out of the comparison (the result warns about such texts). When whole texts are compared, the result warns if the mean text length differs noticeably between the corpora: features that depend on the text length differ because of it as well.
 
 The result is the features by descending absolute Cliff's delta, with equal deltas by the relative difference of medians: the means over windows, the difference of medians with a 95% confidence interval, Cliff's delta (in absolute value from 0.147 - small, from 0.33 - medium, from 0.474 - large effect) and the p-value with the Holm correction. Each corpus needs at least two windows; several texts per corpus are more reliable, since the windows of one text are not independent.
