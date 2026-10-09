@@ -7,6 +7,8 @@ from fastmcp.client.transports import StdioTransport
 
 import ruts_mcp
 from ruts_mcp.corpus import kwic
+from ruts_mcp.prompts import verse_review
+from ruts_mcp.resources import data_status
 from ruts_mcp.server import INSTRUCTIONS, mcp
 from ruts_mcp.tools import analyze_text
 
@@ -74,6 +76,46 @@ async def test_dispersion_words_limit():
         )
     assert result.is_error
     assert "at most 200 items" in result.content[0].text
+
+
+async def test_resources():
+    async with Client(mcp) as client:
+        resources = {str(item.uri): item for item in await client.list_resources()}
+        data = await client.read_resource("ruts://data")
+    assert {uri: item.title for uri, item in resources.items()} == {
+        "ruts://scales/readability": "Шкалы удобочитаемости",
+        "ruts://scales/style": "Нормы стиля",
+        "ruts://data": "Данные сервера",
+    }
+    assert all(item.mime_type == "text/markdown" for item in resources.values())
+    assert data[0].text == data_status()
+
+
+async def test_prompts():
+    async with Client(mcp) as client:
+        prompts = {item.name: item for item in await client.list_prompts()}
+        result = await client.get_prompt("verse_review", {"text": TEXT})
+    assert {name: item.title for name, item in prompts.items()} == {
+        "readability_review": "Удобочитаемость текста",
+        "officialese_review": "Канцелярит",
+        "verse_review": "Разбор стихотворения",
+        "seo_review": "SEO-проверка текста",
+        "compare_review": "Сравнение двух текстов",
+    }
+    assert {
+        name: [(argument.name, argument.description) for argument in item.arguments]
+        for name, item in prompts.items()
+    } == {
+        "readability_review": [("text", "Текст на русском языке")],
+        "officialese_review": [("text", "Текст на русском языке")],
+        "verse_review": [("text", "Текст на русском языке")],
+        "seo_review": [("text", "Текст на русском языке")],
+        "compare_review": [("text_a", "Первый текст (A)"), ("text_b", "Второй текст (B)")],
+    }
+    assert ":param" not in prompts["compare_review"].description
+    (message,) = result.messages
+    assert message.role == "user"
+    assert message.content.text == verse_review(TEXT)
 
 
 async def test_call_kwic():
