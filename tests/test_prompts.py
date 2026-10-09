@@ -1,8 +1,10 @@
 import pytest
 
 from ruts_mcp.prompts import (
+    COMPARE_FROM_CONVERSATION,
     FROM_CONVERSATION,
     READ_WARNINGS,
+    TRUNCATED,
     compare_review,
     officialese_review,
     readability_review,
@@ -49,10 +51,34 @@ def test_text_from_conversation(prompt):
     assert "Текст:" not in prompt()
 
 
-def test_compare_from_conversation():
-    message = compare_review()
+@pytest.mark.parametrize(
+    "prompt", [readability_review, officialese_review, verse_review, seo_review]
+)
+def test_truncated_argument(prompt):
+    """Claude Code делит аргументы по пробелам: из текста в кавычках приходит первое слово"""
+    message = prompt(' "Мой ')
     assert message.endswith(
-        "Тексты A и B - в предыдущих сообщениях разговора: первый текст - A, второй - B. "
-        "Если двух текстов там нет, попроси пользователя прислать их и не вызывай инструменты."
+        TRUNCATED.format(arguments='"Мой', from_conversation=FROM_CONVERSATION)
     )
-    assert compare_review("Текст первый.") == message
+    assert "Текст:" not in message
+
+
+@pytest.mark.parametrize(
+    ("arguments", "truncated"),
+    [
+        ((), None),
+        (('"текст', 'A"'), '"текст, A"'),
+        (("Текст первый.",), "Текст первый."),
+        (("", "Текст второй."), "Текст второй."),
+    ],
+)
+def test_compare_from_conversation(arguments, truncated):
+    """Без двух полных текстов сравнение берет тексты из разговора"""
+    message = compare_review(*arguments)
+    if truncated is None:
+        assert message.endswith(COMPARE_FROM_CONVERSATION)
+    else:
+        assert message.endswith(
+            TRUNCATED.format(arguments=truncated, from_conversation=COMPARE_FROM_CONVERSATION)
+        )
+    assert "Текст A:" not in message

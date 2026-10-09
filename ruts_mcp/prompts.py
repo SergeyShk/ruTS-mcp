@@ -7,6 +7,20 @@ FROM_CONVERSATION = (
     "Текст для разбора - в предыдущих сообщениях разговора: вставленный текст или приложенный "
     "файл. Если текста там нет, попроси пользователя прислать его и не вызывай инструменты."
 )
+COMPARE_FROM_CONVERSATION = (
+    "Тексты A и B - в предыдущих сообщениях разговора: первый текст - A, второй - B. "
+    "Если двух текстов там нет, попроси пользователя прислать их и не вызывай инструменты."
+)
+TRUNCATED = (
+    "Аргумент промпта пришел неполным ({arguments}): клиент, например Claude Code, мог обрезать "
+    "его по первому пробелу. {from_conversation} Подскажи, что длинный текст нужно вставлять "
+    "сообщением, а промпт вызывать без аргументов."
+)
+
+
+def is_text(argument: str) -> bool:
+    """Текст ли в аргументе промпта: одно слово - это обрезанный клиентом аргумент"""
+    return len(argument.split()) > 1
 
 
 def source(text: str) -> str:
@@ -14,7 +28,10 @@ def source(text: str) -> str:
     Конец промпта: переданный текст или указание взять его из разговора
 
     Описание:
-        Пустой или пробельный аргумент значит, что текст уже прислан в разговоре
+        Пустой аргумент значит, что текст уже прислан в разговоре, аргумент
+        из одного слова - что клиент обрезал текст; в обоих случаях модель
+        берет текст из разговора, а для обрезанного аргумента еще и подсказывает,
+        как вызывать промпт
 
     Аргументы:
         text (str): Текст из аргумента промпта
@@ -27,8 +44,14 @@ def source(text: str) -> str:
         'Текст:\\n\\nМама мыла раму.'
         >>> source(" ") == FROM_CONVERSATION
         True
+        >>> source('"Мама').startswith('Аргумент промпта пришел неполным ("Мама)')
+        True
     """
-    return f"Текст:\n\n{text}" if text.strip() else FROM_CONVERSATION
+    if is_text(text):
+        return f"Текст:\n\n{text}"
+    if not text.strip():
+        return FROM_CONVERSATION
+    return TRUNCATED.format(arguments=text.strip(), from_conversation=FROM_CONVERSATION)
 
 
 def readability_review(text: str = "") -> str:
@@ -101,13 +124,15 @@ def compare_review(text_a: str = "", text_b: str = "") -> str:
     :param text_a: Первый текст (A); не задан - тексты из предыдущих сообщений разговора
     :param text_b: Второй текст (B); не задан - тексты из предыдущих сообщений разговора
     """
-    if text_a.strip() and text_b.strip():
+    if is_text(text_a) and is_text(text_b):
         texts = f"Текст A:\n\n{text_a}\n\nТекст B:\n\n{text_b}"
-    else:
-        texts = (
-            "Тексты A и B - в предыдущих сообщениях разговора: первый текст - A, второй - B. "
-            "Если двух текстов там нет, попроси пользователя прислать их и не вызывай инструменты."
+    elif text_a.strip() or text_b.strip():
+        arguments = ", ".join(
+            argument.strip() for argument in (text_a, text_b) if argument.strip()
         )
+        texts = TRUNCATED.format(arguments=arguments, from_conversation=COMPARE_FROM_CONVERSATION)
+    else:
+        texts = COMPARE_FROM_CONVERSATION
     return f"""Сравни два текста по стилю и лексике.
 
 1. Вызови compare_texts с a = [текст A] и b = [текст B]. Окно короче половины window отбрасывается, а для сравнения нужно хотя бы по два окна в каждом тексте. Поэтому, если в более коротком тексте меньше 1500 слов, возьми window, равное половине числа его слов, но не меньше 100 (число слов дает analyze_text с группой basic). Если в нем меньше 150 слов, compare_texts не подойдет: сравни результаты analyze_text для обоих текстов.

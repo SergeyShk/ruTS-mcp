@@ -30,4 +30,4 @@ The arguments of the prompts are optional: without them a prompt takes the text 
 /mcp__ruts__readability_review
 ```
 
-For a comparison paste both texts, text A first. Other clients show MCP prompts in their own way.
+For a comparison paste both texts, text A first. If a text is passed as an argument anyway and a single word arrives, the prompt takes it as cut off: the model takes the text from the conversation or asks to paste it as a message. Other clients show MCP prompts in their own way.
