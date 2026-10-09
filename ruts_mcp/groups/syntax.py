@@ -103,8 +103,10 @@ def parse(nlp: "Language", text: str) -> "Doc":
 
     Описание:
         Куски text_chunks разбираются по одному, чтобы память не росла с длиной
-        текста; разбор меняется только у предложений на стыке кусков. Тензоры
-        кусков отбрасываются: статистикам они не нужны
+        текста; разбор меняется только у предложений на стыке кусков. Пробелы
+        и переводы строк по краям куска отбрасываются: за ними spaCy иначе
+        разбирает последнее предложение. Тензоры кусков статистикам не нужны
+        и тоже отбрасываются
 
     Аргументы:
         nlp (Language): Модель spaCy
@@ -117,7 +119,7 @@ def parse(nlp: "Language", text: str) -> "Doc":
     from spacy.tokens import Doc
 
     docs = []
-    for doc in nlp.pipe(text_chunks(text), batch_size=1):
+    for doc in nlp.pipe((chunk.strip() for chunk in text_chunks(text)), batch_size=1):
         doc.tensor = numpy.zeros((0,), dtype="float32")
         docs.append(doc)
     return Doc.from_docs(docs)

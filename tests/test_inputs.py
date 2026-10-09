@@ -32,9 +32,9 @@ def test_load_ruts_concurrent(monkeypatch):
 @pytest.mark.parametrize(
     ("text", "expected"),
     [
-        ("Моро́з", "Мороз"),
-        ("со­лнце", "солнце"),
-        ("ёж", "ёж"),
+        ("Моро\u0301з", "Мороз"),
+        ("со\u00adлнце", "солнце"),
+        ("е\u0308ж", "ёж"),
         ("Да\r\nнет\rда", "Да\nнет\nда"),
         ("Мороз и солнце", "Мороз и солнце"),
     ],
@@ -55,7 +55,7 @@ def test_check_length(monkeypatch):
 
 def test_prepare_text(monkeypatch):
     monkeypatch.setenv("RUTS_MCP_MAX_TEXT_LENGTH", "10")
-    assert prepare_text("Моро́з") == "Мороз"
+    assert prepare_text("Моро\u0301з") == "Мороз"
     with pytest.raises(ToolError, match=r"^Эталон длиннее лимита"):
         prepare_text("а" * 11, "Эталон")
     assert prepare_text("а" * 11, check=False) == "а" * 11
@@ -70,7 +70,8 @@ def test_read_file(tmp_path, monkeypatch):
     path = tmp_path / "text.txt"
     path.write_text("Мама мыла раму", encoding="utf-8")
     assert read_file(str(path)) == "Мама мыла раму"
-    monkeypatch.setenv("HOME", str(tmp_path))
+    for variable in ("HOME", "USERPROFILE"):
+        monkeypatch.setenv(variable, str(tmp_path))
     assert read_file("~/text.txt") == "Мама мыла раму"
 
 
@@ -107,7 +108,7 @@ def test_read_file_relative():
 
 def test_read_source(tmp_path):
     path = tmp_path / "text.txt"
-    path.write_text("Моро́з\r\n", encoding="utf-8")
+    path.write_bytes("Моро\u0301з\r\n".encode())
     assert read_source("", str(path)) == "Мороз\n"
     assert read_source("Мороз", None) == "Мороз"
 

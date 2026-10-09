@@ -8,7 +8,7 @@ from fastmcp.exceptions import ToolError
 from .settings import Settings
 
 # Знаки ударения и мягкий перенос внутри слова: pymorphy3 и словари не узнают такие слова
-INVISIBLE = dict.fromkeys(map(ord, "̀́­"))
+INVISIBLE = dict.fromkeys(map(ord, "\u0300\u0301\u00ad"))
 UTF8_MAX_BYTES = 4
 TEXT = "Текст на русском языке; вместо него можно задать path"
 PATH = (

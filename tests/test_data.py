@@ -1,4 +1,5 @@
 import json
+import re
 import time
 import zipfile
 from concurrent.futures import ThreadPoolExecutor
@@ -187,5 +188,8 @@ def test_download_unwritable(not_installed, tmp_path):
     """Каталог данных не создается: ошибка загрузки с причиной, а не трейсбек"""
     blocker = tmp_path / "file"
     blocker.write_text("", encoding="utf-8")
-    with pytest.raises(DownloadError, match=r"^Не удалось создать каталог .*file/spacy - "):
-        SpacyModel(blocker / "spacy").download()
+    target = blocker / "spacy"
+    with pytest.raises(
+        DownloadError, match=rf"^Не удалось создать каталог {re.escape(str(target))} - "
+    ):
+        SpacyModel(target).download()
