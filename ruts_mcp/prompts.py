@@ -126,11 +126,10 @@ def compare_review(text_a: str = "", text_b: str = "") -> str:
     """
     if is_text(text_a) and is_text(text_b):
         texts = f"Текст A:\n\n{text_a}\n\nТекст B:\n\n{text_b}"
-    elif text_a.strip() or text_b.strip():
-        arguments = ", ".join(
-            argument.strip() for argument in (text_a, text_b) if argument.strip()
+    elif cut := [arg.strip() for arg in (text_a, text_b) if arg.strip() and not is_text(arg)]:
+        texts = TRUNCATED.format(
+            arguments=", ".join(cut), from_conversation=COMPARE_FROM_CONVERSATION
         )
-        texts = TRUNCATED.format(arguments=arguments, from_conversation=COMPARE_FROM_CONVERSATION)
     else:
         texts = COMPARE_FROM_CONVERSATION
     return f"""Сравни два текста по стилю и лексике.

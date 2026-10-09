@@ -68,12 +68,13 @@ def test_truncated_argument(prompt):
     [
         ((), None),
         (('"текст', 'A"'), '"текст, A"'),
-        (("Текст первый.",), "Текст первый."),
-        (("", "Текст второй."), "Текст второй."),
+        (("Текст первый.",), None),
+        (("", "Текст второй."), None),
+        (('"текст', "Текст второй."), '"текст'),
     ],
 )
 def test_compare_from_conversation(arguments, truncated):
-    """Без двух полных текстов сравнение берет тексты из разговора"""
+    """Без двух полных текстов сравнение берет тексты из разговора; обрезанным считается слово"""
     message = compare_review(*arguments)
     if truncated is None:
         assert message.endswith(COMPARE_FROM_CONVERSATION)
