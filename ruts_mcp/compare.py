@@ -4,7 +4,7 @@ from typing import Annotated, Any, Literal
 from fastmcp.exceptions import ToolError
 from pydantic import Field
 
-from .analysis import clean
+from .analysis import clean, plural
 from .corpus import text_words
 from .data import (
     FREQ_DICT_TITLE,
@@ -64,6 +64,8 @@ MIN_WINDOW = 100
 # Тексты корпусов, средняя длина которых различается больше, сравниваются нечестно
 WINDOW_RATIO = 1.25
 LOST_SHARE = 0.1
+WORD_FORMS = ("слово", "слова", "слов")
+FEATURE_FORMS = ("признак", "признака", "признаков")
 
 
 def keyness(
@@ -209,10 +211,9 @@ def coverage_warnings(
     for label, items in windows.items():
         dropped = sum(1 for item in items if not item)
         if dropped:
-            reason = "без слов" if size is None else f"короче окна в {size} слов"
+            reason = "без слов" if size is None else f"короче окна в {plural(size, WORD_FORMS)}"
             warnings.append(
-                f"{dropped} из {len(items)} текстов корпуса {label} {reason} и не вошли "
-                "в сравнение"
+                f"Не вошли в сравнение тексты корпуса {label} {reason}: {dropped} из {len(items)}"
             )
         if size is not None:
             total = sum(count for count, item in zip(sizes[label], items, strict=True) if item)
@@ -225,8 +226,8 @@ def coverage_warnings(
                     "whole_texts=true"
                 )
                 warnings.append(
-                    f"Остатки текстов корпуса {label} короче окна в {size} слов не вошли "
-                    f"в сравнение: {lost} из {total} слов; {advice}"
+                    f"Остатки текстов корпуса {label} короче окна в {plural(size, WORD_FORMS)} "
+                    f"не вошли в сравнение: {lost} из {total} слов; {advice}"
                 )
     if size is None:
         means = {
@@ -287,7 +288,7 @@ def compare_texts(
 
     Используйте для атрибуции авторства, сравнения жанров, переводов, текстов человека и модели. Тексты режутся подряд на окна ровно по window слов (whole_texts - тексты целиком), у каждого окна считаются около 110 признаков ruTS, и распределения признака в корпусах A и B сравниваются. Остаток текста короче окна и текст короче окна отбрасываются: ответ предупреждает о таких текстах и о потере больше 10 % слов корпуса на остатках. Для сравнения нужно хотя бы по два окна в каждом корпусе. Тексты из файлов передавайте через a_paths и b_paths.
 
-    Признаки по префиксам: basic_ - доли длинных, сложных, одно- и многосложных слов, букв, пробелов и знаков, буквы и слоги на слово; readability_ - формулы удобочитаемости; diversity_ - меры лексического разнообразия; morph_ - доли частей речи от слов (morph_pos_NOUN) и значений признаков внутри признака (morph_case_Gen, morph_tense_Past); sents_ - средняя длина предложения в словах, ее стандартное отклонение, коэффициент вариации и автокорреляция соседних длин; punct_ - знаки по типам на 1000 слов и доля буквы ё.
+    Признаки по префиксам: basic_ - доли длинных, сложных, одно- и многосложных слов, букв, пробелов и знаков, буквы и слоги на слово; readability_ - формулы удобочитаемости; diversity_ - меры лексического разнообразия; morph_ - доли частей речи, отрицаний и кратких форм от слов (morph_pos_NOUN, morph_polarity_Neg, morph_style_variant_Short) и значений остальных признаков внутри признака (morph_case_Gen, morph_tense_Past); sents_ - средняя длина предложения в словах, ее стандартное отклонение, коэффициент вариации и автокорреляция соседних длин; punct_ - знаки по типам на 1000 слов и доля буквы ё.
 
     В результате "window" - размер окна (null - тексты целиком), "n_windows" и "n_texts" - число окон и текстов в A и B, "features" - признаки по убыванию модуля дельты Клиффа, при равной дельте - по относительной разности медиан: средние по окнам "mean_a" и "mean_b", разность медиан A - B "median_diff" с 95% бутстрэп-интервалом "ci_low" - "ci_high", дельта Клиффа "cliff_delta" (от -1 до 1: доля пар окон, где в A больше, минус доля, где меньше; по модулю от 0,147 - малый, от 0,33 - средний, от 0,474 - большой эффект, Romano и др. 2006) и p-значение U-критерия Манна-Уитни с поправкой Холма на число признаков "p_holm". Окна одного текста не независимы: p_holm считает их независимыми и занижено, если текстов в корпусе мало, а бутстрэп-интервал берет целые тексты и при одном тексте в корпусе не определен. Ключ "warnings" - предупреждения: корпус не на русском языке, тексты корпусов разной длины при whole_texts, тексты или их остатки не вошли в сравнение, в корпусе один текст, ни одно различие не значимо.
     """
@@ -336,8 +337,9 @@ def compare_texts(
             )
         elif size > MIN_WINDOW:
             advice = (
-                f"тексты коротки для окна в {size} слов: задайте window поменьше (не меньше "
-                f"{MIN_WINDOW}), добавьте текстов или сравните тексты целиком (whole_texts=true)"
+                f"тексты коротки для окна в {plural(size, WORD_FORMS)}: задайте window "
+                f"поменьше (не меньше {MIN_WINDOW}), добавьте текстов или сравните тексты целиком "
+                "(whole_texts=true)"
             )
         else:
             advice = (
@@ -378,10 +380,9 @@ def compare_texts(
     hidden = int((ordered["delta"].iloc[top_n:] == last).sum())
     if hidden:
         warnings.append(
-            f"Еще {hidden} признаков с тем же модулем дельты Клиффа {clean(float(last))} "
-            "не показаны: "
-            "при равной дельте признаки упорядочены по относительной разности медиан; больше "
-            "признаков дает top_n"
+            f"Еще {plural(hidden, FEATURE_FORMS)} с тем же модулем дельты Клиффа "
+            f"{clean(float(last))} - за пределами top_n: при равной дельте признаки упорядочены "
+            "по относительной разности медиан; больше признаков дает top_n"
         )
     return {
         "window": size,

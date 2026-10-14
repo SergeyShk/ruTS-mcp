@@ -130,7 +130,7 @@ def test_compare_texts_ties(chekhov):
     ]
     assert relative == sorted(relative, reverse=True)
     assert result["warnings"][-1].startswith(
-        "Еще 57 признаков с тем же модулем дельты Клиффа 1.0 не показаны"
+        "Еще 61 признак с тем же модулем дельты Клиффа 1.0 - за пределами top_n"
     )
     everything = compare_texts([chekhov], [PUSHKIN * 12], window=100, top_n=200)
     assert not any(item.startswith("Еще ") for item in everything["warnings"])
@@ -204,14 +204,14 @@ def test_compare_texts_paths(tmp_path, chekhov):
 
 
 def test_compare_texts_dropped(chekhov):
-    result = compare_texts([chekhov, chekhov, "Короткий текст."], [PUSHKIN * 12] * 2, window=100)
+    result = compare_texts([chekhov, chekhov, "Короткий текст."], [PUSHKIN * 12] * 2, window=121)
     assert result["n_texts"] == {"a": 2, "b": 2}
     assert (
-        "1 из 3 текстов корпуса A короче окна в 100 слов и не вошли в сравнение"
-        in (result["warnings"])
+        "Не вошли в сравнение тексты корпуса A короче окна в 121 слово: 1 из 3"
+        in result["warnings"]
     )
     whole = compare_texts([chekhov, chekhov, "..."], [chekhov, PUSHKIN * 12], whole_texts=True)
-    assert "1 из 3 текстов корпуса A без слов и не вошли в сравнение" in whole["warnings"]
+    assert "Не вошли в сравнение тексты корпуса A без слов: 1 из 3" in whole["warnings"]
 
 
 def test_compare_texts_text_lengths():
