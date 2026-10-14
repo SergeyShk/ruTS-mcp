@@ -167,9 +167,9 @@ def test_compare_texts_min_window(chekhov):
     warnings = compare_texts([chekhov], [PUSHKIN * 12], window=100)["warnings"]
     assert [item for item in warnings if item.startswith("Остатки")] == [
         f"Остатки текстов корпуса {label} короче окна в 100 слов не вошли в сравнение: "
-        f"{lost} из {total} слов; окно меньше 100 слов не задается, тексты целиком "
+        f"{lost} из {total}; окно меньше 100 слов не задается, тексты целиком "
         "сравнивает whole_texts=true"
-        for label, lost, total in (("A", 41, 241), ("B", 28, 228))
+        for label, lost, total in (("A", 41, "241 слова"), ("B", 28, "228 слов"))
     ]
     significance = next(item for item in warnings if item.startswith("Ни одно различие"))
     assert "Нужно больше текста; дельта Клиффа" in significance
@@ -218,7 +218,7 @@ def test_compare_texts_text_lengths():
     """Тексты корпусов разной длины: признаки, зависящие от длины, различаются и из-за нее"""
     whole = compare_texts([CHEKHOV_LONG] * 2, [PUSHKIN] * 2, whole_texts=True)
     warning = next(item for item in whole["warnings"] if "Средняя длина" in item)
-    assert warning.startswith("Средняя длина текста в A - ")
+    assert warning.startswith("Средняя длина текста в A - 964 слова, в B - 19: ")
     assert warning.endswith("сравнивайте окнами (whole_texts=false)")
     windows = compare_texts([PUSHKIN * 7] * 3, [CHEKHOV_LONG] * 2, window=100)
     assert not any("Средняя длина" in item for item in windows["warnings"])

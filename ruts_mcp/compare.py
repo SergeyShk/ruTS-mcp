@@ -65,6 +65,8 @@ MIN_WINDOW = 100
 WINDOW_RATIO = 1.25
 LOST_SHARE = 0.1
 WORD_FORMS = ("слово", "слова", "слов")
+# Формы после «из»: из 1 слова, из 2 слов
+GENITIVE_WORD_FORMS = ("слова", "слов", "слов")
 FEATURE_FORMS = ("признак", "признака", "признаков")
 
 
@@ -140,7 +142,7 @@ def keyness(
         if not target or not source:
             raise ToolError(f"В {'тексте' if not target else 'эталоне'} нет слов")
         n_words = len(target)
-        title = f"текст-эталон, {len(source)} слов"
+        title = f"текст-эталон, {plural(len(source), WORD_FORMS)}"
     with ruts_errors():
         try:
             found = ruts_keyness(target, source, measure, min_freq, positive, top_n)
@@ -227,7 +229,8 @@ def coverage_warnings(
                 )
                 warnings.append(
                     f"Остатки текстов корпуса {label} короче окна в {plural(size, WORD_FORMS)} "
-                    f"не вошли в сравнение: {lost} из {total} слов; {advice}"
+                    f"не вошли в сравнение: {lost} из {plural(total, GENITIVE_WORD_FORMS)}; "
+                    f"{advice}"
                 )
     if size is None:
         means = {
@@ -236,7 +239,8 @@ def coverage_warnings(
         }
         if max(means.values()) > WINDOW_RATIO * min(means.values()):
             warnings.append(
-                f"Средняя длина текста в A - {means['A']:.0f} слов, в B - {means['B']:.0f}: "
+                f"Средняя длина текста в A - {plural(round(means['A']), WORD_FORMS)}, "
+                f"в B - {means['B']:.0f}: "
                 "признаки, которые зависят от длины текста (лексическое разнообразие, доли "
                 "и частоты слов), различаются и из-за нее; чтобы сравнивать отрывки одной "
                 "длины, сравнивайте окнами (whole_texts=false)"
