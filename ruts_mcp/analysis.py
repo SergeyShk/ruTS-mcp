@@ -82,6 +82,30 @@ def clean(value: Any) -> Any:
     return value
 
 
+def plural(number: int, forms: tuple[str, str, str]) -> str:
+    """
+    Число с существительным, согласованным с ним
+
+    Аргументы:
+        number (int): Неотрицательное целое число
+        forms (tuple[str, str, str]): Формы существительного при 1, 2 и 5
+
+    Вывод:
+        str: Число и существительное через пробел
+
+    Пример использования:
+        >>> [plural(number, ("слово", "слова", "слов")) for number in (1, 3, 11, 61, 112, 114)]
+        ['1 слово', '3 слова', '11 слов', '61 слово', '112 слов', '114 слов']
+    """
+    if number % 10 == 1 and number % 100 != 11:
+        form = forms[0]
+    elif 2 <= number % 10 <= 4 and not 12 <= number % 100 <= 14:
+        form = forms[1]
+    else:
+        form = forms[2]
+    return f"{number} {form}"
+
+
 def stat(
     value: Any,
     description: str,

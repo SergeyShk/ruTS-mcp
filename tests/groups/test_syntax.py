@@ -1,6 +1,6 @@
 import pytest
 import spacy
-from ruts import SyntaxStats
+from ruts import BasicStats, SyntaxStats
 from ruts.constants import SYNTAX_STATS_DESC
 from ruts.exceptions import SourceError
 
@@ -53,12 +53,25 @@ def test_parse_edges():
     assert syntax_group(Analysis(f"\n{text}\n"))[0] == stats
 
 
+def test_parse_blank_lines():
+    """Пустая строка завершает предложение, как в статистиках ruTS по строке"""
+    text = "Глава первая\n\nОн пришел домой поздно вечером. Жена уже спала"
+    doc = parse(load_spacy("ru_core_news_sm"), text)
+    assert [sent.text.strip() for sent in doc.sents] == [
+        "Глава первая",
+        "Он пришел домой поздно вечером.",
+        "Жена уже спала",
+    ]
+    assert BasicStats(text).n_sents == 3
+
+
 def test_syntax_model_cached():
     """Модель загружается один раз на процесс, без сущностей и лемм"""
     nlp = load_spacy("ru_core_news_sm")
     assert load_spacy("ru_core_news_sm") is nlp
     assert "ner" not in nlp.pipe_names
     assert "parser" in nlp.pipe_names
+    assert nlp.pipe_names[0] == "ruts_blank_lines"
 
 
 def test_syntax_undefined():

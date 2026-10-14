@@ -31,7 +31,7 @@
 | `morph` | Части речи, грамматические признаки, формы глагола ([MorphStats](https://sergeyshk.github.io/ruTS/stats/morph_stats/)) | - |
 | `phon` | Классы звуков, сочетания согласных, аллитерация и ассонанс ([PhonStats](https://sergeyshk.github.io/ruTS/stats/phon_stats/)) | - |
 | `cohesion` | Связность: повторы между предложениями, данность, коннекторы ([CohesionStats](https://sergeyshk.github.io/ruTS/stats/cohesion_stats/)) | - |
-| `style` | Тошнота, водность, заспамленность с прочтением по нормам SEO-сервисов, самые частые словоформы, маркеры канцелярита с найденными словами и фразами ([StyleStats](https://sergeyshk.github.io/ruTS/stats/style_stats/)) | - |
+| `style` | Тошнота, водность, заспамленность с прочтением по нормам SEO-сервисов, самые частые словоформы и значимые слова, маркеры канцелярита с найденными словами и фразами ([StyleStats](https://sergeyshk.github.io/ruTS/stats/style_stats/)) | - |
 | `lexical` | Частотность слов, частотные полосы, сюрпризал, лексическая плотность ([LexicalStats](https://sergeyshk.github.io/ruTS/stats/lexical_stats/)) | частотный словарь для частотности и сюрпризала |
 | `verse` | Метр, число стоп, рифмовка, окончания строк; знак ударения в тексте («замо́к») важнее словаря ([VerseStats](https://sergeyshk.github.io/ruTS/stats/verse_stats/)) | словарь ударений |
 | `syntax` | Длины зависимостей, глубина дерева, клаузы, обороты, пассив, расщепленные сказуемые ([SyntaxStats](https://sergeyshk.github.io/ruTS/stats/syntax_stats/)) | модель spaCy |

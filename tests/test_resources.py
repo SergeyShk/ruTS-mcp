@@ -22,8 +22,8 @@ def test_readability_scales():
             assert f" | {label} |" in text
     assert "| [90; ∞) | 5-й класс |" in text
     assert "| (-∞; 30) | выпускник университета |" in text
-    assert "| [7,2; ∞) | 13 |" in text
-    assert "| (-∞; 0,2) | 1 |" in text
+    assert "| [7,2; ∞) | университет и выше |" in text
+    assert "| (-∞; 0,2) | 1-й класс |" in text
 
 
 def test_style_norms():

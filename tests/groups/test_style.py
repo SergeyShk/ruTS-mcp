@@ -18,10 +18,12 @@ def test_style_group(chekhov):
     stats, warnings = style_group(Analysis(chekhov))
     ss = StyleStats(chekhov)
     assert list(STYLE_NOTES) == list(STYLE_STATS_DESC)
-    assert list(stats) == ["n_words", "top_words", *STYLE_STATS_DESC]
+    assert list(stats) == ["n_words", "top_words", "nausea_words", *STYLE_STATS_DESC]
     assert stats["n_words"]["value"] == len(ss.words) == 241
     assert stats["top_words"]["value"] == dict(Counter(ss.words).most_common(ss.top_n))
     assert list(stats["top_words"]["value"].items())[:2] == [("и", 11), ("тонкий", 5)]
+    assert stats["nausea_words"]["value"] == ss.nausea_words()
+    assert list(stats["nausea_words"]["value"].items())[:2] == [("тонкий", 5), ("толстый", 3)]
     metrics = {name: stats[name] for name in STYLE_STATS_DESC}
     assert {name: item["value"] for name, item in metrics.items()} == {
         name: clean(value) for name, value in ss.get_stats().items()
@@ -32,7 +34,7 @@ def test_style_group(chekhov):
     assert {name for name, item in metrics.items() if "interpretation" in item} == set(STYLE_NORMS)
     for name, item in metrics.items():
         assert item["description"].startswith(f"{STYLE_STATS_DESC[name]}: ")
-    assert f"{ss.top_n} самых частых слов" in stats["academic_nausea"]["description"]
+    assert f"{ss.top_n} самых частых значимых слов" in stats["academic_nausea"]["description"]
     assert all("{" not in item["description"] for item in stats.values())
     assert warnings == []
 

@@ -2,9 +2,11 @@ import unicodedata
 
 import pytest
 from fastmcp.exceptions import ToolError
+from ruts.constants import MORPHOLOGY_STATS_DESC
 from ruts.utils import strip_marks
 
 from ruts_mcp.analysis import Analysis, Options
+from ruts_mcp.compare import compare_texts
 from ruts_mcp.groups import GROUPS
 from ruts_mcp.tools import analyze_text
 
@@ -45,7 +47,7 @@ def test_analyze_text_warnings():
 
 
 def test_analyze_text_errors(monkeypatch):
-    with pytest.raises(ToolError, match=r"^The data source has no words$"):
+    with pytest.raises(ToolError, match=r"^В источнике данных отсутствуют слова$"):
         analyze_text("...")
     monkeypatch.setenv("RUTS_MCP_MAX_TEXT_LENGTH", "10")
     with pytest.raises(ToolError, match="лимит: 10"):
@@ -86,3 +88,15 @@ def test_analyze_text_accents(dicts, text):
 def test_analyze_text_no_letters():
     warnings = analyze_text("123 456 7.89 2024", groups=("basic",))["warnings"]
     assert warnings[0].startswith("В тексте нет букв")
+
+
+def test_morph_descriptions():
+    """Описания инструментов называют столько признаков морфологии, сколько их в ruTS"""
+    assert f"{len(MORPHOLOGY_STATS_DESC) - 1} грамматических признаков" in analyze_text.__doc__
+    single = [
+        f"morph_{name}_{next(iter(feature['values']))}"
+        for name, feature in MORPHOLOGY_STATS_DESC.items()
+        if len(feature["values"]) == 1
+    ]
+    assert single == ["morph_polarity_Neg", "morph_style_variant_Short"]
+    assert all(name in compare_texts.__doc__ for name in single)
