@@ -45,7 +45,7 @@ def test_analyze_text_warnings():
 
 
 def test_analyze_text_errors(monkeypatch):
-    with pytest.raises(ToolError, match=r"^The data source has no words$"):
+    with pytest.raises(ToolError, match=r"^В источнике данных отсутствуют слова$"):
         analyze_text("...")
     monkeypatch.setenv("RUTS_MCP_MAX_TEXT_LENGTH", "10")
     with pytest.raises(ToolError, match="лимит: 10"):

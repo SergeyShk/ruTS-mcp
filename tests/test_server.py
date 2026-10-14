@@ -136,7 +136,7 @@ async def test_call_kwic():
     [
         ({"text": ""}, "Текст не задан: передайте текст или путь к файлу"),
         ({}, "Текст не задан: передайте текст или путь к файлу"),
-        ({"text": "..."}, "The data source has no words"),
+        ({"text": "..."}, "В источнике данных отсутствуют слова"),
         ({"text": TEXT, "groups": []}, "at least 1 item"),
         (
             {"text": TEXT, "groups": ["unknown"]},

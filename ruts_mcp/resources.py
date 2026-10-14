@@ -86,8 +86,8 @@ def readability_scales() -> str:
 
     Описание:
         Таблица классов и возраста читателя для формул класса и сводного
-        класса, полосы индекса Флеша и LIX, классы RIX - по данным ruTS
-        (GRADE_AGE_LEVELS, READING_EASE_LEVELS, LIX_LEVELS, RIX_GRADES)
+        класса, полосы индекса Флеша, LIX и RIX - по данным ruTS
+        (GRADE_AGE_LEVELS, READING_EASE_LEVELS, LIX_LEVELS, RIX_LEVELS)
 
     Вывод:
         str: Текст Markdown
@@ -108,7 +108,6 @@ def readability_scales() -> str:
         for index, (first, last, stage, age) in enumerate(GRADE_AGE_LEVELS)
     ]
     grades.append(f"| больше {GRADE_AGE_LEVELS[-1][1]} | {' | '.join(POSTGRADUATE_LEVEL)} |")
-    rix = [(value, f"{grade}") for value, grade in ReadabilityStats.grade_scales["rix"]]
     sections = [
         "# Шкалы удобочитаемости ruTS",
         "## Класс и возраст читателя",
@@ -122,8 +121,8 @@ def readability_scales() -> str:
         f"## {READABILITY_STATS_DESC['lix']}",
         scale_table("Тексты", ReadabilityStats.level_scales["lix"]),
         f"## {READABILITY_STATS_DESC['rix']}",
-        "RIX переводится в число лет обучения по таблице Андерсона и читается по таблице классов:",
-        scale_table("Лет обучения", rix),
+        "Классы по таблице Андерсона; 12-го класса в российской школе нет, он входит в 11-й:",
+        scale_table("Класс", ReadabilityStats.level_scales["rix"]),
     ]
     return "\n\n".join(sections) + "\n"
 

@@ -6,7 +6,10 @@ from ruts_mcp.errors import ruts_errors
 
 
 def test_ruts_errors():
-    with pytest.raises(ToolError, match=r"^The data source has no words$") as info, ruts_errors():
+    with (
+        pytest.raises(ToolError, match=r"^В источнике данных отсутствуют слова$") as info,
+        ruts_errors(),
+    ):
         BasicStats("")
     assert isinstance(info.value.__cause__, SourceError)
 

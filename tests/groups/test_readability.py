@@ -28,7 +28,7 @@ def test_readability_group():
     assert stats["consensus_grade"]["interpretation"] == "1-3-й класс (6-8 лет)"
     # Индекс Флеша 87.17 - 6-й класс, RIX 2.0 - 6-й класс, LIX 28.33 - ниже 30
     assert stats["flesch_reading_easy"]["interpretation"] == "6-й класс"
-    assert stats["rix"]["interpretation"] == "4-6-й класс (9-11 лет)"
+    assert stats["rix"]["interpretation"] == "6-й класс"
     assert stats["lix"]["interpretation"] == "очень простые тексты, детские книги"
     assert "interpretation" not in stats["matskovsky_index"]
     assert "interpretation" not in stats["reading_time"]
