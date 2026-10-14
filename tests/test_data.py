@@ -174,13 +174,13 @@ def test_load_spacy_concurrent(monkeypatch):
     def load(name, exclude):
         loads.append(name)
         time.sleep(0.05)
-        return name
+        return spacy.blank("ru")
 
     monkeypatch.setattr(spacy, "load", load)
     with ThreadPoolExecutor(8) as pool:
         results = list(pool.map(load_spacy, ["model"] * 8))
     _load_spacy.cache_clear()
-    assert results == ["model"] * 8
+    assert all(nlp is results[0] for nlp in results)
     assert loads == ["model"]
 
 
