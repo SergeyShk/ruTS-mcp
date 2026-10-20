@@ -26,6 +26,9 @@ def test_syntax_group(chekhov):
     for name, item in stats.items():
         assert item["description"].startswith(SYNTAX_STATS_DESC[name])
     assert stats["tree_depth"]["description"].endswith("от вершины предложения до слова")
+    assert stats["infinitive_clauses_per_sent"]["description"].endswith(
+        "входит в клаузы, но не в придаточные"
+    )
     assert warnings == []
 
 
