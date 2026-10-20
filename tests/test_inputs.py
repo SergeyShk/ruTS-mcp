@@ -1,3 +1,5 @@
+import subprocess
+import sys
 import threading
 from types import SimpleNamespace
 
@@ -27,6 +29,33 @@ def test_load_ruts_concurrent(monkeypatch):
     assert calls == list(inputs.RUTS_MODULES)
     load_ruts()
     assert len(calls) == len(inputs.RUTS_MODULES)
+
+
+def test_load_ruts_modules(dicts, chekhov):
+    """После load_ruts из ruTS загружаются только компоненты spaCy, под блокировкой модели"""
+    code = (
+        "import sys\n"
+        "from ruts_mcp.compare import compare_texts, keyness\n"
+        "from ruts_mcp.corpus import collocations, dispersion, kwic\n"
+        "from ruts_mcp.groups import GROUPS\n"
+        "from ruts_mcp.inputs import load_ruts\n"
+        "from ruts_mcp.tools import analyze_text\n"
+        "load_ruts()\n"
+        "before = set(sys.modules)\n"
+        "text = sys.stdin.read()\n"
+        "analyze_text(text, groups=tuple(GROUPS))\n"
+        "kwic(text, 'тонкий')\n"
+        "collocations(text)\n"
+        "dispersion(text, words=['тонкий'])\n"
+        "keyness(text)\n"
+        "compare_texts([text] * 2, [text] * 2, window=100)\n"
+        "new = set(sys.modules) - before\n"
+        "print(sorted(name for name in new if name.startswith(('ruts.', 'anyts.'))))\n"
+    )
+    run = subprocess.run(
+        [sys.executable, "-c", code], input=chekhov, capture_output=True, text=True, check=True
+    )
+    assert run.stdout.strip() == "['anyts.components', 'ruts.components']"
 
 
 @pytest.mark.parametrize(

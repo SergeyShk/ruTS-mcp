@@ -61,7 +61,7 @@ wheels = [
 
 [[package]]
 name = "anyts"
-version = "0.2.11"
+version = "0.3.6"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "graphviz" },
@@ -73,9 +73,9 @@ dependencies = [
     { name = "scipy", version = "1.18.1", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.12'" },
     { name = "spacy" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/04/57/8dc048d194029833c91dec01cf376fc162085e5691769806baa4381f00a0/anyts-0.2.11.tar.gz", hash = "sha256:73191aa0a180e9e41abb8292e8ff53f27aae1ed0ab2d6595a1dfa1932b563705", size = 104311, upload-time = "2026-10-14T01:40:00.096Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/9d/ab/0080d6a333988dcc2e61c423d122bf52a3ee33a38efd3d64e9c5e3cf8b65/anyts-0.3.6.tar.gz", hash = "sha256:3ac72eedf1a351c07baf727f34e3efbfd9722771d6c381e1e30dd6477f80f7a9", size = 153053, upload-time = "2026-10-19T23:33:10.646Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/10/50/b1326ef09182ee96a9d0e56d81ced199656235b5a6b9c460c3a286a6bdd5/anyts-0.2.11-py3-none-any.whl", hash = "sha256:0eea062924ddf64670a6383042f9f10bd6c1b7b09a5d4d549831ed59ce000a34", size = 121218, upload-time = "2026-10-14T01:39:58.954Z" },
+    { url = "https://files.pythonhosted.org/packages/e4/58/4fc77d58e0cc93d383eed7d7e27048adf1dbba6ae9022655e5accb1996c5/anyts-0.3.6-py3-none-any.whl", hash = "sha256:f720cafca4da9aae965159c508ee727eb3ad4439099a49875d6a153243df4968", size = 173983, upload-time = "2026-10-19T23:33:09.131Z" },
 ]
 
 [[package]]
@@ -3444,7 +3444,7 @@ wheels = [
 
 [[package]]
 name = "ruts"
-version = "0.17.0"
+version = "0.18.0"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "anyts" },
@@ -3460,14 +3460,14 @@ dependencies = [
     { name = "scipy", version = "1.18.1", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.12'" },
     { name = "spacy" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/f0/98/be2b0220ce8625c381438814c8b342c6c0ead4be827e79d4eed82ec3a07a/ruts-0.17.0.tar.gz", hash = "sha256:feda0517c8b5d3451d3e15890106cf29ee0f9dd7005a87c7f19bf2bb0f50b134", size = 255722, upload-time = "2026-10-14T22:34:10.314Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/1c/30/314dda689d7524ff16457e561ce539907496f34add951dd71d5d4f292ac1/ruts-0.18.0.tar.gz", hash = "sha256:038cdf6d91e3d5b4d2b040fe81668b86b88f8a1aea308411bac66a96756fe324", size = 251906, upload-time = "2026-10-20T02:37:58.903Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/d8/33/2f67188a248b0dea30a7035e7f7e4a37b0305332b4ac66742e68c9262258/ruts-0.17.0-py3-none-any.whl", hash = "sha256:8b89c8ab4cf4b83b888bfa20a316d0119782cce35f92651212948a85ded40fcb", size = 266457, upload-time = "2026-10-14T22:34:08.875Z" },
+    { url = "https://files.pythonhosted.org/packages/e6/88/a7d3c92eb089ca3354371bdba7bb015182a9aa0335a68c97b4608f1303bf/ruts-0.18.0-py3-none-any.whl", hash = "sha256:ba8a0eaebc8268a96463338a54f4d9ec54655d6a294358191a6c0edc0991b772", size = 263753, upload-time = "2026-10-20T02:37:57.387Z" },
 ]
 
 [[package]]
 name = "ruts-mcp"
-version = "0.1.1"
+version = "0.1.2.dev1"
 source = { editable = "." }
 dependencies = [
     { name = "fastmcp" },
@@ -3509,7 +3509,7 @@ test = [
 requires-dist = [
     { name = "fastmcp", specifier = ">=4,<5" },
     { name = "platformdirs", specifier = ">=4" },
-    { name = "ruts", specifier = ">=0.17,<0.18" },
+    { name = "ruts", specifier = ">=0.18,<0.19" },
 ]
 
 [package.metadata.requires-dev]
