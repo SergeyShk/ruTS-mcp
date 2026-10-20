@@ -174,7 +174,7 @@ Shares of vowels, sonorant, voiced and voiceless consonants, heavy consonant clu
 `cohesion` · [CohesionStats](https://sergeyshk.github.io/ruTS/en/stats/cohesion_stats/)
 { .metric-meta }
 
-Cohesion after Coh-Metrix: overlaps of nouns, arguments and content words between sentences, pronouns, givenness, repetition of tense and aspect, connectives by class per 1000 words.
+Cohesion after Coh-Metrix: overlaps of nouns, arguments and content words between sentences, pronouns, givenness, repetition of tense and aspect, connectives by class per 1000 words. Connectives are split by their place in the sentence: intersentential ones open it («Однако», «Поэтому»), the others are intrasentential, including subordinating conjunctions and prepositions at the start of a sentence («Когда он пришел»).
 
 </div>
 
@@ -220,7 +220,7 @@ Lines and stanzas, meter and number of feet, deviations from the meter and skipp
 `syntax` · [SyntaxStats](https://sergeyshk.github.io/ruTS/en/stats/syntax_stats/) · spaCy model
 { .metric-meta }
 
-Syntax by the dependency tree of the spaCy model: dependency length, depth and branching of the tree, verb valency, clauses and subordinate clauses, coordination chains, noun modifiers, chains of genitives, participial and adverbial phrases, passive, infinitives, negations, split predicates («оказать помощь»), the ratio of nouns to verbs. On a long text parsing takes seconds.
+Syntax by the dependency tree of the spaCy model: dependency length, depth and branching of the tree, verb valency, clauses, subordinate and infinitive clauses, coordination chains, noun modifiers, chains of genitives, participial and adverbial phrases, passive, infinitives, negations, split predicates («оказать помощь»), the ratio of nouns to verbs. An infinitive under a verb («хочу спать») is a clause of its own but not a subordinate one, while a modal or phasal combination («может уйти», «начал читать») is one clause. On a long text parsing takes seconds.
 
 </div>
 
