@@ -5,6 +5,7 @@ from ruts.constants import COHESION_STATS_DESC
 from ruts_mcp.analysis import Analysis, clean
 from ruts_mcp.groups.cohesion import (
     COHESION_NOTES,
+    CONNECTOR_NOTES,
     OVERLAP_REASON,
     TEMPORAL_REASON,
     cohesion_group,
@@ -13,7 +14,7 @@ from ruts_mcp.groups.cohesion import (
 
 def test_cohesion_group(chekhov):
     stats, warnings = cohesion_group(Analysis(chekhov))
-    assert set(COHESION_NOTES) <= set(stats)
+    assert set(COHESION_NOTES) | set(CONNECTOR_NOTES) <= set(stats)
     assert {name: item["value"] for name, item in stats.items()} == {
         name: clean(value) for name, value in CohesionStats(chekhov).get_stats().items()
     }
@@ -23,6 +24,10 @@ def test_cohesion_group(chekhov):
     assert stats["noun_overlap_adjacent"]["description"] == (
         "Повтор существительных в соседних предложениях: доля пар соседних предложений "
         "с общим существительным, от 0 до 1"
+    )
+    assert stats["connectors_intra"]["description"] == (
+        "Внутрипредложенческих коннекторов на 1000 слов: связывают части одного предложения - "
+        "все коннекторы, кроме межпредложенческих"
     )
     assert warnings == []
 
