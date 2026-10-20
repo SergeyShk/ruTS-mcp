@@ -12,45 +12,45 @@ pip install ruts-mcp
 
 ## Подключение к клиенту { #clients }
 
-### Claude Code { #claude-code }
+=== "Claude Code"
 
-```bash
-claude mcp add ruts -- uvx ruts-mcp
-```
+    ```bash
+    claude mcp add ruts -- uvx ruts-mcp
+    ```
 
-Так сервер подключается к текущему проекту; чтобы он был доступен во всех проектах, добавьте `--scope user`. Проверить подключение можно командой `/mcp` в сессии Claude Code.
+    Так сервер подключается к текущему проекту; чтобы он был доступен во всех проектах, добавьте `--scope user`. Проверить подключение можно командой `/mcp` в сессии Claude Code.
 
-### Claude Desktop { #claude-desktop }
+=== "Claude Desktop"
 
-Добавьте сервер в файл `claude_desktop_config.json` (Settings - Developer - Edit Config): на macOS он лежит в `~/Library/Application Support/Claude/`, на Windows - в `%APPDATA%\Claude\`.
+    Добавьте сервер в файл `claude_desktop_config.json` (Settings - Developer - Edit Config): на macOS он лежит в `~/Library/Application Support/Claude/`, на Windows - в `%APPDATA%\Claude\`.
 
-```json
-{
-  "mcpServers": {
-    "ruts": {
-      "command": "uvx",
-      "args": ["ruts-mcp"]
+    ```json
+    {
+      "mcpServers": {
+        "ruts": {
+          "command": "uvx",
+          "args": ["ruts-mcp"]
+        }
+      }
     }
-  }
-}
-```
+    ```
 
-После правки перезапустите Claude Desktop. Если сервер не запускается с ошибкой о команде `uvx`, укажите полный путь к ней: его выводит `which uvx` (на Windows - `where uvx`).
+    После правки перезапустите Claude Desktop. Если сервер не запускается с ошибкой о команде `uvx`, укажите полный путь к ней: его выводит `which uvx` (на Windows - `where uvx`).
 
-### Cursor { #cursor }
+=== "Cursor"
 
-Добавьте ту же запись `mcpServers` в `~/.cursor/mcp.json`, чтобы сервер был доступен во всех проектах, или в `.cursor/mcp.json` проекта.
+    Добавьте ту же запись `mcpServers`, что для Claude Desktop, в `~/.cursor/mcp.json`, чтобы сервер был доступен во всех проектах, или в `.cursor/mcp.json` проекта.
 
-### Другие клиенты { #other-clients }
+=== "Другие клиенты"
 
-Любой клиент MCP, который запускает серверы по stdio, подключает ruTS-mcp командой `uvx ruts-mcp`.
+    Любой клиент MCP, который запускает серверы по stdio, подключает ruTS-mcp командой `uvx ruts-mcp`.
 
 ## Словари и модель spaCy { #data }
 
 Большинство групп и инструментов работают сразу. Трем группам и одному инструменту нужны данные, которых нет в пакете:
 
 | Данные | Для чего | Скачивается | На диске |
-| :----- | :------- | :---------: | :------: |
+| :----- | :------- | :---------- | :------- |
 | Частотный словарь Ляшевской и Шарова | группа `lexical`, инструмент `keyness` со словарем | 0,5 МБ | 2 МБ |
 | Словарь ударений Козиева | группа `verse` | 11 МБ | 84 МБ |
 | Модель spaCy `ru_core_news_sm` | группа `syntax` | 15 МБ | 44 МБ |
@@ -78,7 +78,7 @@ uvx ruts-mcp download
 Настройки задаются переменными окружения:
 
 | Переменная | По умолчанию | Описание |
-| :--------- | :----------: | :------- |
+| :--------- | :----------- | :------- |
 | `RUTS_MCP_MAX_TEXT_LENGTH` | `500000` | Наибольшее число символов текста или корпуса, который принимает инструмент |
 | `RUTS_DATA_DIR` | каталог данных пользователя | Каталог словарей и модели spaCy, абсолютный путь |
 

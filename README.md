@@ -26,12 +26,12 @@
 
 **ruTS-mcp** дает LLM-агенту инструменты библиотеки [ruTS](https://github.com/SergeyShk/ruTS), чтобы измерить русский текст, а не оценивать его на глаз. Каждое значение приходит вместе с описанием, прочтением по шкале, если она есть, и предупреждениями, когда значение неустойчиво или не имеет смысла для текста.
 
-* **[`analyze_text`](https://sergeyshk.github.io/ruTS-mcp/tools/#analyze_text)** - статистики текста по группам: базовые, удобочитаемость с классом и возрастом читателя, лексическое разнообразие, морфология, фоностатистики, связность, стиль и канцелярит, лексическая сложность, стих, синтаксис
-* **[`kwic`](https://sergeyshk.github.io/ruTS-mcp/tools/#kwic)** - вхождения слова или словосочетания с контекстом
-* **[`collocations`](https://sergeyshk.github.io/ruTS-mcp/tools/#collocations)** - устойчивые сочетания и сочетаемость слова
-* **[`dispersion`](https://sergeyshk.github.io/ruTS-mcp/tools/#dispersion)** - насколько равномерно слова распределены по тексту
-* **[`keyness`](https://sergeyshk.github.io/ruTS-mcp/tools/#keyness)** - ключевые слова относительно русского языка или другого текста
-* **[`compare_texts`](https://sergeyshk.github.io/ruTS-mcp/tools/#compare_texts)** - чем различаются два корпуса текстов по признакам стиля
+* **[`analyze_text`](https://sergeyshk.github.io/ruTS-mcp/tools/analyze_text/)** - статистики текста по группам: базовые, удобочитаемость с классом и возрастом читателя, лексическое разнообразие, морфология, фоностатистики, связность, стиль и канцелярит, лексическая сложность, стих, синтаксис
+* **[`kwic`](https://sergeyshk.github.io/ruTS-mcp/tools/kwic/)** - вхождения слова или словосочетания с контекстом
+* **[`collocations`](https://sergeyshk.github.io/ruTS-mcp/tools/collocations/)** - устойчивые сочетания и сочетаемость слова
+* **[`dispersion`](https://sergeyshk.github.io/ruTS-mcp/tools/dispersion/)** - насколько равномерно слова распределены по тексту
+* **[`keyness`](https://sergeyshk.github.io/ruTS-mcp/tools/keyness/)** - ключевые слова относительно русского языка или другого текста
+* **[`compare_texts`](https://sergeyshk.github.io/ruTS-mcp/tools/compare_texts/)** - чем различаются два корпуса текстов по признакам стиля
 * **[Ресурсы и промпты](https://sergeyshk.github.io/ruTS-mcp/resources/)** - шкалы удобочитаемости и нормы стиля, готовые разборы: удобочитаемость, канцелярит, стихотворение, SEO-проверка, сравнение двух текстов
 
 ## Установка
