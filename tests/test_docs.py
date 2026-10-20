@@ -23,6 +23,8 @@ EXAMPLE = re.compile(
     r'=== "(?:Результат|Result)"\n\n    ``` json\n(.*?)\n    ```$',
     re.MULTILINE | re.DOTALL,
 )
+TAB = re.compile(r'^=== "(?:Вызов|Call)"$', re.MULTILINE)
+FIELD = re.compile(r"`(\w+)`")
 PARAMETER = re.compile(r"^\| `(\w+)` \| `([\w\[\]]+)` \| (`[^|]+`|-) \|", re.MULTILINE)
 
 
@@ -113,8 +115,10 @@ def test_tool_pages(schemas):
 
 @pytest.mark.parametrize("page", ALL_PAGES, ids=list(map(page_id, ALL_PAGES)))
 def test_examples(page):
-    """Результат примера - ответ сервера на вызов из примера"""
-    examples = EXAMPLE.findall(page.read_text(encoding="utf-8"))
+    """Результат примера - ответ сервера на вызов из примера, таблицы результата - его поля"""
+    text = page.read_text(encoding="utf-8")
+    examples = EXAMPLE.findall(text)
+    assert len(examples) == len(TAB.findall(text)), "вкладка примера не разобрана"
 
     async def responses() -> list[Any]:
         async with Client(mcp) as client:
@@ -123,6 +127,50 @@ def test_examples(page):
                 for call, _ in examples
             ]
 
-    if examples:
-        expected = [json.loads(dedent(result)) for _, result in examples]
-        assert asyncio.run(responses()) == expected
+    if not examples:
+        return
+    expected = [json.loads(dedent(result)) for _, result in examples]
+    assert asyncio.run(responses()) == expected
+    section = next(
+        (part for part in text.split("\n## ") if part.startswith(("Результат", "Result"))), None
+    )
+    if section is not None:
+        check_result_tables(section, expected[0], page.name.startswith("analyze_text"))
+
+
+def check_result_tables(section: str, response: dict[str, Any], stats: bool) -> None:
+    """
+    Таблицы раздела результата описывают поля ответа примера
+
+    Описание:
+        Первая таблица - поля ответа (у analyze_text - поля статистики), остальные - поля
+        элементов списков ответа; каждое поле элемента названо в разделе
+    """
+    tables = [
+        [row.split(" | ")[0] for row in block.splitlines()[2:]]
+        for block in section.split("\n\n")
+        if block.startswith("| ")
+    ]
+    names = [set(FIELD.findall(" ".join(cells))) for cells in tables]
+    if stats:
+        fields = {
+            key
+            for group in response.values()
+            if isinstance(group, dict)
+            for stat in group.values()
+            for key in stat
+        }
+        assert fields <= names[0]
+    else:
+        assert names[0] == set(response)
+    elements = [
+        item
+        for value in response.values()
+        if isinstance(value, list)
+        for item in value[:1]
+        if isinstance(item, dict)
+    ]
+    keys = {key for item in elements for key in item}
+    for extra in names[1:]:
+        assert extra <= keys
+    assert all(f"`{key}`" in section for key in keys)

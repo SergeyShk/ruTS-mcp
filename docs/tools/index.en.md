@@ -27,7 +27,7 @@ Every response has the `warnings` key - the reasons why values may be unstable o
 
 An error reaches the agent as a tool error with a message saying what is wrong with the call. Common to all tools:
 
-- an argument does not pass the schema of the tool: a wrong type, a number out of the allowed range, a value not in the list; the message of such an error is in English;
+- an argument does not pass the schema of the tool: a wrong type, a number out of the allowed range, a value not in the list;
 - no text is given, or it is given together with a path to a file;
 - the path is not absolute, the file cannot be read, is not in UTF-8 or exceeds the limit;
 - the text is longer than the `RUTS_MCP_MAX_TEXT_LENGTH` limit;

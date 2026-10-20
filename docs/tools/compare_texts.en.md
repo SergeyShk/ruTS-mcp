@@ -4,7 +4,7 @@
 compare_texts(a=[], b=[], a_paths=[], b_paths=[], window=null, whole_texts=false, top_n=15)
 ```
 
-Comparison of two corpora by style features - for authorship attribution, comparing genres and translations, human and model texts. The texts are cut into windows of `window` words, about 110 features of ruTS are computed for every window, and the distributions of every feature in the corpora A and B are compared. With `whole_texts` whole texts are compared, without windows.
+Comparison of two corpora by style features - for authorship attribution, comparing genres and translations, human and model texts. The texts are cut into windows of `window` words, about 110 features of ruTS are computed for every window, and the distributions of every feature in the corpora A and B are compared. With `whole_texts` whole texts are compared, without windows. The features and comparison statistics are on the ruTS page [Corpus comparison](https://sergeyshk.github.io/ruTS/en/corpus/compare/).
 
 A text is cut in a row into windows of exactly `window` words; a remainder shorter than a window and a text shorter than a window are left out of the comparison. The response warns about such texts and about a loss of more than 10% of the words of a corpus on remainders, and a smaller window loses less text. When whole texts are compared, the response warns if the mean text length differs noticeably between the corpora: features that depend on the text length differ because of it as well.
 
@@ -114,13 +114,13 @@ Errors - [those common to the tools](index.md#errors) and:
 | `n_windows` | `object` | Number of windows in A and B |
 | `n_texts` | `object` | Number of texts in A and B |
 | `features` | `array[object]` | Features by descending absolute Cliff's delta, with equal deltas by the relative difference of medians, with the fields below |
-| `warnings` | `array[string]` | A corpus is not in Russian, the texts of the corpora differ in length, texts or their remainders are left out of the comparison, a corpus has one text, no difference is significant |
+| `warnings` | `array[string]` | A corpus is not in Russian, the texts of the corpora differ in length, texts or their remainders are left out of the comparison, a corpus has one text, no difference is significant, features with the same Cliff's delta as the last one shown are beyond `top_n` |
 
 | Feature field | Description |
 | :------------ | :---------- |
 | `feature` | Name of the feature |
 | `mean_a`, `mean_b` | Means over the windows of A and B |
 | `median_diff` | Difference of medians A - B |
-| `ci_low`, `ci_high` | 95% bootstrap interval of the difference of medians; the bootstrap resamples whole texts |
+| `ci_low`, `ci_high` | 95% bootstrap interval of the difference of medians; the bootstrap resamples whole texts, and with one text in a corpus the interval is `null` |
 | `cliff_delta` | Cliff's delta from -1 to 1: the share of window pairs where A is greater minus the share where it is smaller; in absolute value from 0.147 - small, from 0.33 - medium, from 0.474 - large effect |
 | `p_holm` | p-value of the Mann-Whitney U test with the Holm correction for the number of features |

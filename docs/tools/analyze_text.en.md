@@ -92,7 +92,7 @@ Errors - [those common to the tools](index.md#errors) and a text without words.
 | `path` | `string` | `null` | Absolute path to a file with the text instead of `text` |
 | `groups` | `array[string]` | `["basic", "readability"]` | [Groups](#groups) of statistics; each is a key of the response |
 | `distributions` | `boolean` | `false` | Add the distributions of words by letters and syllables and of punctuation marks by type (the `basic` group) |
-| `readability_preset` | `string` | `"plainrussian"` | Coefficients of the readability formulas: `plainrussian` is calibrated by school grades and fits any text; `fiction` - Oborneva's coefficients from fiction, gives a grade several years higher; `academic` - the coefficients of Solovyev, Ivanov and Solnyshkina from textbooks for grades 5-11 |
+| `readability_preset` | `string` | `"plainrussian"` | Coefficients of the Flesch-Kincaid test (with `academic` also of the Flesch index), on which the consensus grade depends as well: `plainrussian` is calibrated by school grades and fits any text; `fiction` - Oborneva's coefficients from fiction, gives a grade several years higher; `academic` - the coefficients of Solovyev, Ivanov and Solnyshkina from textbooks for grades 5-11 |
 | `descriptions` | `boolean` | `true` | Add descriptions to the statistics |
 
 ## Groups { #groups }
@@ -130,7 +130,7 @@ Sentences, words, syllables, characters, letters, spaces and punctuation marks; 
 `readability` · [ReadabilityStats](https://sergeyshk.github.io/ruTS/en/stats/readability_stats/) · [`ruts://scales/readability`](../resources.md#resources)
 { .metric-meta }
 
-Consensus grade and the formulas of Flesch-Kincaid, Flesch, Coleman-Liau, SMOG, ARI, LIX, RIX, Solovyev-Ivanov-Solnyshkina, Matskovsky, Dale-Chall and Gunning, reading time. The grade formulas and the consensus grade read as a school grade and reader age, the Flesch index, LIX and RIX as a band of their own scale; the Matskovsky formula and the reading time have no scale. The coefficients of the formulas are set by `readability_preset`. On a text shorter than 30 sentences the formulas are unstable, and the response warns about it.
+Consensus grade and the formulas of Flesch-Kincaid, Flesch, Coleman-Liau, SMOG, ARI, LIX, RIX, Solovyev-Ivanov-Solnyshkina, Matskovsky, Dale-Chall and Gunning, reading time. The grade formulas and the consensus grade read as a school grade and reader age, the Flesch index, LIX and RIX as a band of their own scale; the Matskovsky formula and the reading time have no scale. The coefficients of the Flesch-Kincaid test and the Flesch index are set by `readability_preset`, the other formulas do not depend on it. On a text shorter than 30 sentences the formulas are unstable, and the response warns about it.
 
 </div>
 
@@ -230,7 +230,7 @@ A key for each requested group and `warnings`. A statistic of a group is an obje
 
 | Field | Type | Description |
 | :---- | :--- | :---------- |
-| `value` | `number` / `object` | Value; `null` - the statistic is undefined on this text |
+| `value` | `number` / `string` / `object` | Value; `null` - the statistic is undefined on this text |
 | `share` | `number` / `object` | Share of all words or characters, if there is one |
 | `interpretation` | `string` | Reading by a scale or a norm of ruTS, if there is a scale: the grade and age of the reader, the band of the Flesch index, the Text.ru norm |
 | `count` | `integer` | For the officialese markers of the `style` group: the number of occurrences |

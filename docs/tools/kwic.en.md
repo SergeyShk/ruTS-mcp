@@ -4,7 +4,7 @@
 kwic(keyword, text="", path=null, window=5, by_lemma=false, limit=50)
 ```
 
-All occurrences of a word or a phrase with the context on the left and on the right - a concordance the agent quotes the text by and sees how a word is used. Words are compared ignoring case and the letter ё, with `by_lemma` - by lemmas: «окно» finds «окне» and «окна». A phrase does not run across the end of a sentence.
+All occurrences of a word or a phrase with the context on the left and on the right - a concordance the agent quotes the text by and sees how a word is used. Words are compared ignoring case and the letter ё, with `by_lemma` - by lemmas: «окно» finds «окне» and «окна». A phrase does not run across the end of a sentence. How occurrences are found is described on the ruTS page [KWIC concordance](https://sergeyshk.github.io/ruTS/en/corpus/kwic/).
 
 The lines are limited by the `limit` parameter and by the size of the response - about 40,000 characters of context; if not all occurrences are shown, a warning tells how many there are.
 
@@ -55,4 +55,4 @@ Errors - [those common to the tools](index.md#errors) and a keyword without word
 | :---- | :--- | :---------- |
 | `n_matches` | `integer` | Number of occurrences |
 | `matches` | `array[object]` | Lines in the order of the text: the left context `left`, the occurrence `keyword` as written in the text and the right context `right` |
-| `warnings` | `array[string]` | The text is not in Russian, not all occurrences are shown |
+| `warnings` | `array[string]` | The text is not in Russian, not all occurrences are shown, there are no occurrences of a word form |

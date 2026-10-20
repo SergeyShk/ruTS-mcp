@@ -4,7 +4,7 @@
 collocations(text="", path=null, window=5, measure="logdice", min_freq=2, node=null, lemmatize=true, top_n=20)
 ```
 
-Collocations - pairs of words that occur together more often than by chance: set phrases, terms, the collocates of a word (`node`). A pair is ordered: the right word stands at most `window` words after the left one. With `lemmatize` lemmas are compared, without disambiguation: «точка зрения» and «точки зрения» are one pair.
+Collocations - pairs of words that occur together more often than by chance: set phrases, terms, the collocates of a word (`node`). A pair is ordered: the right word stands at most `window` words after the left one. With `lemmatize` lemmas are compared, without disambiguation: «точка зрения» and «точки зрения» are one pair. The definitions and formulas of the measures are on the ruTS page [Collocations](https://sergeyshk.github.io/ruTS/en/corpus/collocations/).
 
 The pair frequency `freq_pair` is the number of position pairs where the right word stands within the window after the left one. A word repeated within the window gives several pairs, so `freq_pair` can exceed the frequency of a word, and such a pair is a repetition rather than a set phrase.
 
