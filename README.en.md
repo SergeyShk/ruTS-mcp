@@ -26,12 +26,12 @@
 
 **ruTS-mcp** gives an LLM agent the tools of the [ruTS](https://github.com/SergeyShk/ruTS) library to measure a Russian text instead of judging it by eye. Every value comes with a description, a reading by a scale where there is one, and warnings when the value is unstable or meaningless for the text. The server answers in Russian.
 
-* **[`analyze_text`](https://sergeyshk.github.io/ruTS-mcp/en/tools/#analyze_text)** - statistics of a text by groups: basic, readability with the grade and age of the reader, lexical diversity, morphology, phonetics, cohesion, style and officialese, lexical sophistication, verse, syntax
-* **[`kwic`](https://sergeyshk.github.io/ruTS-mcp/en/tools/#kwic)** - occurrences of a word or a phrase with their context
-* **[`collocations`](https://sergeyshk.github.io/ruTS-mcp/en/tools/#collocations)** - set phrases and the collocates of a word
-* **[`dispersion`](https://sergeyshk.github.io/ruTS-mcp/en/tools/#dispersion)** - how evenly words are spread over the text
-* **[`keyness`](https://sergeyshk.github.io/ruTS-mcp/en/tools/#keyness)** - keywords against the Russian language or another text
-* **[`compare_texts`](https://sergeyshk.github.io/ruTS-mcp/en/tools/#compare_texts)** - how two corpora of texts differ by style features
+* **[`analyze_text`](https://sergeyshk.github.io/ruTS-mcp/en/tools/analyze_text/)** - statistics of a text by groups: basic, readability with the grade and age of the reader, lexical diversity, morphology, phonetics, cohesion, style and officialese, lexical sophistication, verse, syntax
+* **[`kwic`](https://sergeyshk.github.io/ruTS-mcp/en/tools/kwic/)** - occurrences of a word or a phrase with their context
+* **[`collocations`](https://sergeyshk.github.io/ruTS-mcp/en/tools/collocations/)** - set phrases and the collocates of a word
+* **[`dispersion`](https://sergeyshk.github.io/ruTS-mcp/en/tools/dispersion/)** - how evenly words are spread over the text
+* **[`keyness`](https://sergeyshk.github.io/ruTS-mcp/en/tools/keyness/)** - keywords against the Russian language or another text
+* **[`compare_texts`](https://sergeyshk.github.io/ruTS-mcp/en/tools/compare_texts/)** - how two corpora of texts differ by style features
 * **[Resources and prompts](https://sergeyshk.github.io/ruTS-mcp/en/resources/)** - readability scales and style norms, ready reviews: readability, officialese, a poem, an SEO check, a comparison of two texts
 
 ## Installation

@@ -12,45 +12,45 @@ Then the client configuration names `ruts-mcp` instead of `uvx ruts-mcp`.
 
 ## Connecting to a client { #clients }
 
-### Claude Code { #claude-code }
+=== "Claude Code"
 
-```bash
-claude mcp add ruts -- uvx ruts-mcp
-```
+    ```bash
+    claude mcp add ruts -- uvx ruts-mcp
+    ```
 
-This connects the server to the current project; add `--scope user` to make it available in all projects. The `/mcp` command in a Claude Code session shows whether it is connected.
+    This connects the server to the current project; add `--scope user` to make it available in all projects. The `/mcp` command in a Claude Code session shows whether it is connected.
 
-### Claude Desktop { #claude-desktop }
+=== "Claude Desktop"
 
-Add the server to `claude_desktop_config.json` (Settings - Developer - Edit Config): on macOS it is in `~/Library/Application Support/Claude/`, on Windows in `%APPDATA%\Claude\`.
+    Add the server to `claude_desktop_config.json` (Settings - Developer - Edit Config): on macOS it is in `~/Library/Application Support/Claude/`, on Windows in `%APPDATA%\Claude\`.
 
-```json
-{
-  "mcpServers": {
-    "ruts": {
-      "command": "uvx",
-      "args": ["ruts-mcp"]
+    ```json
+    {
+      "mcpServers": {
+        "ruts": {
+          "command": "uvx",
+          "args": ["ruts-mcp"]
+        }
+      }
     }
-  }
-}
-```
+    ```
 
-Restart Claude Desktop after the change. If the server fails to start with an error about the `uvx` command, give the full path to it, which `which uvx` prints (`where uvx` on Windows).
+    Restart Claude Desktop after the change. If the server fails to start with an error about the `uvx` command, give the full path to it, which `which uvx` prints (`where uvx` on Windows).
 
-### Cursor { #cursor }
+=== "Cursor"
 
-Add the same `mcpServers` entry to `~/.cursor/mcp.json` to make the server available in all projects, or to `.cursor/mcp.json` of a project.
+    Add the same `mcpServers` entry as for Claude Desktop to `~/.cursor/mcp.json` to make the server available in all projects, or to `.cursor/mcp.json` of a project.
 
-### Other clients { #other-clients }
+=== "Other clients"
 
-Any MCP client that runs servers over stdio connects ruTS-mcp with the `uvx ruts-mcp` command.
+    Any MCP client that runs servers over stdio connects ruTS-mcp with the `uvx ruts-mcp` command.
 
 ## Dictionaries and the spaCy model { #data }
 
 Most groups and tools work right away. Three groups and one tool need data that the package does not contain:
 
 | Data | Used by | Download | On disk |
-| :--- | :------ | :------: | :-----: |
+| :--- | :------ | :------- | :------ |
 | Frequency dictionary of Lyashevskaya and Sharoff | the `lexical` group, `keyness` against the dictionary | 0.5 MB | 2 MB |
 | Stress dictionary of Koziev | the `verse` group | 11 MB | 84 MB |
 | spaCy model `ru_core_news_sm` | the `syntax` group | 15 MB | 44 MB |
@@ -78,7 +78,7 @@ The `RUTS_DATA_DIR` variable sets another directory by an absolute path, for exa
 Settings are environment variables:
 
 | Variable | Default | Description |
-| :------- | :-----: | :---------- |
+| :------- | :------ | :---------- |
 | `RUTS_MCP_MAX_TEXT_LENGTH` | `500000` | Greatest number of characters of a text or a corpus that a tool accepts |
 | `RUTS_DATA_DIR` | user data directory | Directory of the dictionaries and the spaCy model, an absolute path |
 
