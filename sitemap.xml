@@ -36,6 +36,48 @@
         <xhtml:link rel="alternate" hreflang="en" href="https://sergeyshk.github.io/ruTS-mcp/en/tools/"/>
     </url>
     <url>
+        <loc>https://sergeyshk.github.io/ruTS-mcp/tools/analyze_text/</loc>
+        <lastmod>2026-10-20</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="ru" href="https://sergeyshk.github.io/ruTS-mcp/tools/analyze_text/"/>
+        <xhtml:link rel="alternate" hreflang="en" href="https://sergeyshk.github.io/ruTS-mcp/en/tools/analyze_text/"/>
+    </url>
+    <url>
+        <loc>https://sergeyshk.github.io/ruTS-mcp/tools/collocations/</loc>
+        <lastmod>2026-10-20</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="ru" href="https://sergeyshk.github.io/ruTS-mcp/tools/collocations/"/>
+        <xhtml:link rel="alternate" hreflang="en" href="https://sergeyshk.github.io/ruTS-mcp/en/tools/collocations/"/>
+    </url>
+    <url>
+        <loc>https://sergeyshk.github.io/ruTS-mcp/tools/compare_texts/</loc>
+        <lastmod>2026-10-20</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="ru" href="https://sergeyshk.github.io/ruTS-mcp/tools/compare_texts/"/>
+        <xhtml:link rel="alternate" hreflang="en" href="https://sergeyshk.github.io/ruTS-mcp/en/tools/compare_texts/"/>
+    </url>
+    <url>
+        <loc>https://sergeyshk.github.io/ruTS-mcp/tools/dispersion/</loc>
+        <lastmod>2026-10-20</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="ru" href="https://sergeyshk.github.io/ruTS-mcp/tools/dispersion/"/>
+        <xhtml:link rel="alternate" hreflang="en" href="https://sergeyshk.github.io/ruTS-mcp/en/tools/dispersion/"/>
+    </url>
+    <url>
+        <loc>https://sergeyshk.github.io/ruTS-mcp/tools/keyness/</loc>
+        <lastmod>2026-10-20</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="ru" href="https://sergeyshk.github.io/ruTS-mcp/tools/keyness/"/>
+        <xhtml:link rel="alternate" hreflang="en" href="https://sergeyshk.github.io/ruTS-mcp/en/tools/keyness/"/>
+    </url>
+    <url>
+        <loc>https://sergeyshk.github.io/ruTS-mcp/tools/kwic/</loc>
+        <lastmod>2026-10-20</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="ru" href="https://sergeyshk.github.io/ruTS-mcp/tools/kwic/"/>
+        <xhtml:link rel="alternate" hreflang="en" href="https://sergeyshk.github.io/ruTS-mcp/en/tools/kwic/"/>
+    </url>
+    <url>
         <loc>https://sergeyshk.github.io/ruTS-mcp/en/</loc>
         <lastmod>2026-10-20</lastmod>
         <changefreq>daily</changefreq>
@@ -69,5 +111,47 @@
         <changefreq>daily</changefreq>
         <xhtml:link rel="alternate" hreflang="en" href="https://sergeyshk.github.io/ruTS-mcp/en/tools/"/>
         <xhtml:link rel="alternate" hreflang="ru" href="https://sergeyshk.github.io/ruTS-mcp/tools/"/>
+    </url>
+    <url>
+        <loc>https://sergeyshk.github.io/ruTS-mcp/en/tools/analyze_text/</loc>
+        <lastmod>2026-10-20</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="en" href="https://sergeyshk.github.io/ruTS-mcp/en/tools/analyze_text/"/>
+        <xhtml:link rel="alternate" hreflang="ru" href="https://sergeyshk.github.io/ruTS-mcp/tools/analyze_text/"/>
+    </url>
+    <url>
+        <loc>https://sergeyshk.github.io/ruTS-mcp/en/tools/collocations/</loc>
+        <lastmod>2026-10-20</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="en" href="https://sergeyshk.github.io/ruTS-mcp/en/tools/collocations/"/>
+        <xhtml:link rel="alternate" hreflang="ru" href="https://sergeyshk.github.io/ruTS-mcp/tools/collocations/"/>
+    </url>
+    <url>
+        <loc>https://sergeyshk.github.io/ruTS-mcp/en/tools/compare_texts/</loc>
+        <lastmod>2026-10-20</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="en" href="https://sergeyshk.github.io/ruTS-mcp/en/tools/compare_texts/"/>
+        <xhtml:link rel="alternate" hreflang="ru" href="https://sergeyshk.github.io/ruTS-mcp/tools/compare_texts/"/>
+    </url>
+    <url>
+        <loc>https://sergeyshk.github.io/ruTS-mcp/en/tools/dispersion/</loc>
+        <lastmod>2026-10-20</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="en" href="https://sergeyshk.github.io/ruTS-mcp/en/tools/dispersion/"/>
+        <xhtml:link rel="alternate" hreflang="ru" href="https://sergeyshk.github.io/ruTS-mcp/tools/dispersion/"/>
+    </url>
+    <url>
+        <loc>https://sergeyshk.github.io/ruTS-mcp/en/tools/keyness/</loc>
+        <lastmod>2026-10-20</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="en" href="https://sergeyshk.github.io/ruTS-mcp/en/tools/keyness/"/>
+        <xhtml:link rel="alternate" hreflang="ru" href="https://sergeyshk.github.io/ruTS-mcp/tools/keyness/"/>
+    </url>
+    <url>
+        <loc>https://sergeyshk.github.io/ruTS-mcp/en/tools/kwic/</loc>
+        <lastmod>2026-10-20</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="en" href="https://sergeyshk.github.io/ruTS-mcp/en/tools/kwic/"/>
+        <xhtml:link rel="alternate" hreflang="ru" href="https://sergeyshk.github.io/ruTS-mcp/tools/kwic/"/>
     </url>
 </urlset>
