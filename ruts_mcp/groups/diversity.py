@@ -44,6 +44,9 @@ DIVERSITY_STATS = {
     "dugast_k": "Мера Дюга k: логарифм числа уникальных слов на двойной логарифм числа слов",
     "baayen_p": "Мера Баайена: доля слов, встреченных один раз, среди всех слов - "
     "вероятность встретить новое слово",
+    "orlov_z": "Мера Орлова Z: длина текста в словах, при которой закон Ципфа лучше всего "
+    "описывает его словарь; чем выше, тем богаче словарь; на текстах короче примерно 10 тысяч "
+    "слов неустойчива и растет с длиной, сравнивают тексты одной длины",
     "hapax_ratio": "Доля слов, встреченных один раз, среди уникальных слов",
     "alpha2": "Показатель Эверта α₂: единица минус удвоенное отношение слов, встреченных "
     "дважды, к встреченным один раз; не определен без слов, встреченных один раз",
@@ -54,7 +57,15 @@ DIVERSITY_STATS = {
     "zipf_alpha": "Наклон закона Ципфа; у естественных текстов около 1, закон описывает "
     "большие корпуса, на коротких текстах значение неустойчиво",
     "heaps_beta": "Показатель закона Хипса; у отдельного текста от 0,6 до 0,9, нужны сотни слов",
+    "burstiness": "Взрывность слов, встреченных от {burst_freq} раз (Kim и Jo), в среднем "
+    "по словам: -1 - слово идет через равные промежутки, около 0 - в случайных местах, до 1 - "
+    "всплесками; на коротком тексте это в основном служебные слова, значение растет с длиной "
+    "текста",
 }
+UNDEFINED_REASON = (
+    "формула меры не определена на таком распределении слов: слишком мало слов, нет повторов "
+    "или нет слов, встреченных один или два раза"
+)
 
 
 def diversity_group(analysis: Analysis) -> GroupResult:
@@ -68,7 +79,7 @@ def diversity_group(analysis: Analysis) -> GroupResult:
         ruTS или anyTS. По Zenker и Kyle (2021) MATTR, MTLD и HD-D
         устойчивы на текстах от 50-200 слов, поэтому текст короче 200 слов
         получает предупреждение. Меры, которые на тексте не определены (nan
-        или бесконечность), отдаются как None и перечисляются в предупреждении
+        или бесконечность), отдаются как None и перечисляются в предупреждениях
 
     Ссылки:
         https://doi.org/10.1016/j.asw.2020.100505
@@ -88,6 +99,7 @@ def diversity_group(analysis: Analysis) -> GroupResult:
         >>> stats["ttr"]["value"], stats["hdd"]["value"]
         (0.8571, None)
     """
+    from anyts.constants import BURSTINESS_MIN_FREQ
     from ruts import DiversityStats
 
     ds = DiversityStats(analysis.text)
@@ -96,6 +108,7 @@ def diversity_group(analysis: Analysis) -> GroupResult:
         "window": ds.window_len,
         "threshold": str(ds.mtld_threshold).replace(".", ","),
         "sample": ds.hdd_sample_size,
+        "burst_freq": BURSTINESS_MIN_FREQ,
     }
     stats = {
         name: stat(values[name], description.format(**params))
@@ -115,9 +128,10 @@ def diversity_group(analysis: Analysis) -> GroupResult:
             "MTLD-W и мера Мааса на коротких текстах неустойчивы: сравнивайте тексты "
             "по MATTR, MTLD и HD-D"
         )
+    others = {name: item for name, item in stats.items() if name != "burstiness"}
+    warnings += undefined_warnings(others, UNDEFINED_REASON)
     warnings += undefined_warnings(
-        stats,
-        "формула меры не определена на таком распределении слов: слишком мало слов, "
-        "нет повторов или нет слов, встреченных один или два раза",
+        {"burstiness": stats["burstiness"]},
+        f"в тексте нет слов, встреченных от {BURSTINESS_MIN_FREQ} раз",
     )
     return stats, warnings

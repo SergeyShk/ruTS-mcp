@@ -104,7 +104,7 @@ Errors - [those common to the tools](index.md#errors) and a text without words.
 | [`diversity`](#diversity) | Lexical diversity | - |
 | [`morph`](#morph) | Parts of speech, grammatical features, verb forms | - |
 | [`phon`](#phon) | Sound classes, consonant clusters, alliteration and assonance | - |
-| [`cohesion`](#cohesion) | Cohesion: overlaps between sentences, givenness, connectives | - |
+| [`cohesion`](#cohesion) | Cohesion: overlaps between sentences and paragraphs, givenness, connectives | - |
 | [`style`](#style) | SEO metrics with the norms of services and officialese markers | - |
 | [`lexical`](#lexical) | Word frequency, frequency bands, surprisal | frequency dictionary |
 | [`verse`](#verse) | Meter, rhyme schemes, line endings | stress dictionary |
@@ -119,7 +119,7 @@ How to download the data is described in [Dictionaries and the spaCy model](../i
 `basic` · [BasicStats](https://sergeyshk.github.io/ruTS/en/stats/basic_stats/)
 { .metric-meta }
 
-Sentences, words, syllables, characters, letters, spaces and punctuation marks; unique, long (from 6 letters), complex (from 4 syllables), simple, monosyllabic and polysyllabic words. A count of words or characters comes with its share of all words or characters (`share`). With `distributions=true` the group adds the distributions of words by letters and syllables and of punctuation marks by type.
+Sentences, words, syllables, characters, letters, spaces and punctuation marks; unique, long (from 6 letters), complex (from 4 syllables), simple, monosyllabic and polysyllabic words; the entropy of word lengths in letters and syllables. A count of words or characters comes with its share of all words or characters (`share`). With `distributions=true` the group adds the distributions of words by letters and syllables and of punctuation marks by type.
 
 </div>
 
@@ -130,7 +130,7 @@ Sentences, words, syllables, characters, letters, spaces and punctuation marks; 
 `readability` · [ReadabilityStats](https://sergeyshk.github.io/ruTS/en/stats/readability_stats/) · [`ruts://scales/readability`](../resources.md#resources)
 { .metric-meta }
 
-Consensus grade and the formulas of Flesch-Kincaid, Flesch, Coleman-Liau, SMOG, ARI, LIX, RIX, Solovyev-Ivanov-Solnyshkina, Matskovsky, Dale-Chall and Gunning, reading time. The grade formulas and the consensus grade read as a school grade and reader age, the Flesch index, LIX and RIX as a band of their own scale; the Matskovsky formula and the reading time have no scale. The coefficients of the Flesch-Kincaid test and the Flesch index are set by `readability_preset`, the other formulas do not depend on it. On a text shorter than 30 sentences the formulas are unstable, and the response warns about it.
+Consensus grade and the formulas of Flesch-Kincaid, Flesch, Coleman-Liau, SMOG, ARI, LIX, RIX, Solovyev-Ivanov-Solnyshkina, Matskovsky, Tuldava, Dale-Chall and Gunning, reading time. The grade formulas and the consensus grade read as a school grade and reader age, the Flesch index, LIX and RIX as a band of their own scale; the Matskovsky and Tuldava formulas and the reading time have no scale. The coefficients of the Flesch-Kincaid test and the Flesch index are set by `readability_preset`, the other formulas do not depend on it. On a text shorter than 30 sentences the formulas are unstable, and the response warns about it.
 
 </div>
 
@@ -141,7 +141,7 @@ Consensus grade and the formulas of Flesch-Kincaid, Flesch, Coleman-Liau, SMOG, 
 `diversity` · [DiversityStats](https://sergeyshk.github.io/ruTS/en/stats/diversity_stats/)
 { .metric-meta }
 
-TTR and its corrections, MATTR, MSTTR, MTLD, HD-D, the indices of Simpson, Yule and Honoré, entropy, the laws of Zipf and Heaps. On a text shorter than 50 words the measures are unstable, and on a text shorter than 200 words texts are better compared by MATTR, MTLD and HD-D: the response warns about it.
+TTR and its corrections, MATTR, MSTTR, MTLD, HD-D, the indices of Simpson, Yule and Honoré, Orlov's Z, entropy, the laws of Zipf and Heaps, burstiness of frequent words. On a text shorter than 50 words the measures are unstable, and on a text shorter than 200 words texts are better compared by MATTR, MTLD and HD-D: the response warns about it.
 
 </div>
 
@@ -174,7 +174,7 @@ Shares of vowels, sonorant, voiced and voiceless consonants, heavy consonant clu
 `cohesion` · [CohesionStats](https://sergeyshk.github.io/ruTS/en/stats/cohesion_stats/)
 { .metric-meta }
 
-Cohesion after Coh-Metrix: overlaps of nouns, arguments and content words between sentences, pronouns, givenness, repetition of tense and aspect, connectives by class per 1000 words. Connectives are split by their place in the sentence: intersentential ones open it («Однако», «Поэтому»), the others are intrasentential, including subordinating conjunctions and prepositions at the start of a sentence («Когда он пришел»).
+Cohesion after Coh-Metrix and TAACO: overlaps of nouns, arguments and content words between sentences - adjacent ones, all pairs and the next two - and between adjacent paragraphs, pronouns, givenness, repetition of tense and aspect, connectives by class per 1000 words. A paragraph is a line of the text. Connectives are split by their place in the sentence: intersentential ones open it («Однако», «Поэтому»), the others are intrasentential, including subordinating conjunctions and prepositions at the start of a sentence («Когда он пришел»).
 
 </div>
 
@@ -220,7 +220,7 @@ Lines and stanzas, meter and number of feet, deviations from the meter and skipp
 `syntax` · [SyntaxStats](https://sergeyshk.github.io/ruTS/en/stats/syntax_stats/) · spaCy model
 { .metric-meta }
 
-Syntax by the dependency tree of the spaCy model: dependency length, depth and branching of the tree, verb valency, clauses, subordinate and infinitive clauses, coordination chains, noun modifiers, chains of genitives, participial and adverbial phrases, passive, infinitives, negations, split predicates («оказать помощь»), the ratio of nouns to verbs. An infinitive under a verb («хочу спать») is a clause of its own but not a subordinate one, while a modal or phasal combination («может уйти», «начал читать») is one clause. On a long text parsing takes seconds.
+Syntax by the dependency tree of the spaCy model: dependency length, depth and branching of the tree, words before the head of the sentence, verb valency, clauses, subordinate and infinitive clauses, the L2SCA complexity indices (T-units, verb, coordinate and complex nominal phrases), coordination chains, noun modifiers, prepositional chains and chains of genitives, participial and adverbial phrases, passive, infinitives, negations, split predicates («оказать помощь»), the order of subjects and objects, the similarity of adjacent sentences, the ratio of nouns to verbs. An infinitive clause («хочу спать», «пришел, чтобы помочь») is a clause of its own but not a subordinate one, while a modal or phasal combination («может уйти», «начал читать») is one clause. On a long text parsing takes seconds.
 
 </div>
 

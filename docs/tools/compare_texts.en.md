@@ -4,7 +4,7 @@
 compare_texts(a=[], b=[], a_paths=[], b_paths=[], window=null, whole_texts=false, top_n=15)
 ```
 
-Comparison of two corpora by style features - for authorship attribution, comparing genres and translations, human and model texts. The texts are cut into windows of `window` words, about 110 features of ruTS are computed for every window, and the distributions of every feature in the corpora A and B are compared. With `whole_texts` whole texts are compared, without windows. The features and comparison statistics are on the ruTS page [Corpus comparison](https://sergeyshk.github.io/ruTS/en/corpus/compare/).
+Comparison of two corpora by style features - for authorship attribution, comparing genres and translations, human and model texts. The texts are cut into windows of `window` words, about 150 features of ruTS are computed for every window, and the distributions of every feature in the corpora A and B are compared. With `whole_texts` whole texts are compared, without windows. The features and comparison statistics are on the ruTS page [Corpus comparison](https://sergeyshk.github.io/ruTS/en/corpus/compare/).
 
 A text is cut in a row into windows of exactly `window` words; a remainder shorter than a window and a text shorter than a window are left out of the comparison. The response warns about such texts and about a loss of more than 10% of the words of a corpus on remainders, and a smaller window loses less text. When whole texts are compared, the response warns if the mean text length differs noticeably between the corpora: features that depend on the text length differ because of it as well.
 
@@ -78,7 +78,7 @@ Errors - [those common to the tools](index.md#errors) and:
       "warnings": [
         "Средняя длина текста в A - 18 слов, в B - 10: признаки, которые зависят от длины текста (лексическое разнообразие, доли и частоты слов), различаются и из-за нее; чтобы сравнивать отрывки одной длины, сравнивайте окнами (whole_texts=false)",
         "Ни одно различие не значимо после поправки Холма (p_holm < 0.05): окон в A - 2, в B - 2. Нужно больше текстов; дельта Клиффа на таком числе окон - грубая оценка",
-        "Еще 15 признаков с тем же модулем дельты Клиффа 1.0 - за пределами top_n: при равной дельте признаки упорядочены по относительной разности медиан; больше признаков дает top_n"
+        "Еще 18 признаков с тем же модулем дельты Клиффа 1.0 - за пределами top_n: при равной дельте признаки упорядочены по относительной разности медиан; больше признаков дает top_n"
       ]
     }
     ```
@@ -105,6 +105,7 @@ Errors - [those common to the tools](index.md#errors) and:
 | `morph_` | Shares of parts of speech, negations and short forms among words (`morph_pos_NOUN`, `morph_polarity_Neg`) and of the values of the other features within the feature (`morph_case_Gen`, `morph_tense_Past`) |
 | `sents_` | Mean sentence length in words, its standard deviation, coefficient of variation and autocorrelation of adjacent lengths |
 | `punct_` | Marks by type per 1000 words and the share of the letter ё |
+| `cohesion_` | Cohesion statistics: overlaps between sentences, pronouns, givenness, repetition of tense and aspect, connectives per 1000 words |
 
 ## Result { #result }
 

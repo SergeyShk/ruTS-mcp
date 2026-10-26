@@ -31,6 +31,7 @@ def test_readability_group():
     assert stats["rix"]["interpretation"] == "6-й класс"
     assert stats["lix"]["interpretation"] == "очень простые тексты, детские книги"
     assert "interpretation" not in stats["matskovsky_index"]
+    assert "interpretation" not in stats["tuldava"]
     assert "interpretation" not in stats["reading_time"]
 
 

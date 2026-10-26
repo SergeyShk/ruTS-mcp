@@ -1,5 +1,5 @@
 from ruts import BasicStats
-from ruts.constants import COMPLEX_SYL_FACTOR, LONG_WORD_LETTER_FACTOR
+from ruts.constants import BASIC_STATS_DESC, COMPLEX_SYL_FACTOR, LONG_WORD_LETTER_FACTOR
 
 from ruts_mcp.analysis import Analysis, Options, clean
 from ruts_mcp.groups.basic import BASIC_DISTRIBUTIONS, BASIC_STATS, basic_group
@@ -13,14 +13,16 @@ def test_basic_group():
     stats, warnings = basic_group(Analysis(TEXT))
     assert warnings == []
     assert list(stats) == list(BASIC_STATS)
+    assert set(BASIC_STATS) == set(BASIC_STATS_DESC)
     for name, item in stats.items():
-        assert item["value"] == expected[name]
+        assert item["value"] == clean(expected[name])
         assert item.get("share") == clean(expected.get("p" + name[1:]))
     assert stats["n_unique_words"] == {
         "value": 12,
         "share": 0.8571,
         "description": "Уникальные слова без учета регистра; доля от всех слов",
     }
+    assert list(stats["letters_entropy"]) == ["value", "description"]
 
 
 def test_basic_thresholds():

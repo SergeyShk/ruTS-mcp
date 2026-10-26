@@ -130,7 +130,7 @@ def test_compare_texts_ties(chekhov):
     ]
     assert relative == sorted(relative, reverse=True)
     assert result["warnings"][-1].startswith(
-        "Еще 61 признак с тем же модулем дельты Клиффа 1.0 - за пределами top_n"
+        "Еще 70 признаков с тем же модулем дельты Клиффа 1.0 - за пределами top_n"
     )
     everything = compare_texts([chekhov], [PUSHKIN * 12], window=100, top_n=200)
     assert not any(item.startswith("Еще ") for item in everything["warnings"])
