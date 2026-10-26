@@ -19,7 +19,7 @@ from ruts_mcp.groups.syntax import (
 def test_syntax_group(chekhov):
     stats, warnings = syntax_group(Analysis(chekhov))
     nlp = spacy.load("ru_core_news_sm")
-    assert set(SYNTAX_NOTES) <= set(SYNTAX_STATS_DESC)
+    assert set(SYNTAX_NOTES) | set(SYNTAX_REASONS) <= set(SYNTAX_STATS_DESC)
     assert {name: item["value"] for name, item in stats.items()} == {
         name: clean(value) for name, value in SyntaxStats(nlp(chekhov.strip())).get_stats().items()
     }
@@ -29,6 +29,8 @@ def test_syntax_group(chekhov):
     assert stats["infinitive_clauses_per_sent"]["description"].endswith(
         "входит в клаузы, но не в придаточные"
     )
+    description = stats["complex_nominals_per_clause"]["description"]
+    assert "клаузы - без однородных сказуемых с общим подлежащим" in description
     assert warnings == []
 
 
@@ -88,6 +90,9 @@ def test_syntax_undefined():
             "mean_converb_clause_len",
             "p_agentless_passive",
         )
+    ] + [
+        "Не определены на этом тексте: pos_edit_distance, syntax_similarity - схожесть "
+        "считается по парам соседних предложений, а в тексте одно предложение"
     ]
     _, warnings = syntax_group(Analysis("Дождь."))
     assert warnings[0] == (

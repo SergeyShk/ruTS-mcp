@@ -1,3 +1,4 @@
+from anyts.constants import BURSTINESS_MIN_FREQ
 from ruts import DiversityStats
 from ruts.constants import DIVERSITY_STATS_DESC
 
@@ -25,6 +26,7 @@ def test_diversity_parameters(chekhov):
     assert f"отрезкам из {ds.window_len} слов" in stats["msttr"]["description"]
     assert "падает до 0,72 (MTLD)" in stats["mtld"]["description"]
     assert f"выборки из {ds.hdd_sample_size} слов" in stats["hdd"]["description"]
+    assert f"встреченных от {BURSTINESS_MIN_FREQ} раз" in stats["burstiness"]["description"]
     assert all("{" not in item["description"] for item in stats.values())
 
 
@@ -34,6 +36,10 @@ def test_diversity_short_text():
     assert warnings[0].startswith("Слов в тексте: 7, меньше 50: меры лексического разнообразия")
     assert warnings[1].startswith("Не определены на этом тексте: sttr, dttr, mtld, mamtld, ")
     assert warnings[1].endswith("нет слов, встреченных один или два раза")
+    assert warnings[2] == (
+        "Не определены на этом тексте: burstiness - в тексте нет слов, встреченных "
+        f"от {BURSTINESS_MIN_FREQ} раз"
+    )
 
 
 def test_diversity_medium_text(chekhov):
@@ -48,6 +54,6 @@ def test_diversity_repeats():
     """На тексте из одних повторов не определены меры, которым нужны гапаксы или разные слова"""
     stats, warnings = diversity_group(Analysis(" ".join(["слово"] * 300) + "."))
     undefined = [name for name, item in stats.items() if item["value"] is None]
-    assert undefined == ["sttr", "michea_m", "alpha2", "evenness", "zipf_alpha"]
+    assert undefined == ["sttr", "michea_m", "orlov_z", "alpha2", "evenness", "zipf_alpha"]
     (warning,) = warnings
     assert warning.startswith(f"Не определены на этом тексте: {', '.join(undefined)} - ")

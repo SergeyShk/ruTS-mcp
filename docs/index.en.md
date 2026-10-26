@@ -106,6 +106,7 @@ Asked "what reader is this text written for?", the agent calls `analyze_text` wi
         "rix": {"value": 15.0, "interpretation": "университет и выше"},
         "sis_grade": {"value": 15.3, "interpretation": "4-6-й курс вуза (20-22 года)"},
         "matskovsky_index": {"value": 20.73},
+        "tuldava": {"value": 4.914},
         "dale_chall_index": {"value": 27.88, "interpretation": "аспирантура (старше 22 лет)"},
         "gunning_fog_index": {"value": 24.85, "interpretation": "аспирантура (старше 22 лет)"},
         "reading_time": {"value": 0.1278}
