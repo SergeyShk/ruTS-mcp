@@ -248,7 +248,4 @@ def _load_spacy(name: str) -> "Language":
     import spacy
 
     # Синтаксису не нужны сущности и леммы spaCy, а без них разбор быстрее
-    nlp = spacy.load(name, exclude=["ner", "lemmatizer"])
-    # Пустая строка завершает предложение, как в статистиках ruTS по строке
-    nlp.add_pipe("ruts_blank_lines", first=True)
-    return nlp
+    return spacy.load(name, exclude=["ner", "lemmatizer"])
