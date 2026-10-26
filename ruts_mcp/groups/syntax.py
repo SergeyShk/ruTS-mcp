@@ -140,9 +140,11 @@ def text_chunks(text: str, size: int = CHUNK_SIZE) -> Iterator[tuple[str, list[i
         while end - begin > size:
             window = text[begin : begin + size]
             cut = window.rfind("\n") + 1 or window.rfind(" ") + 1 or size
-            pieces.append((begin, begin + cut, start))
+            inside = start is not None and start < begin + cut
+            pieces.append((begin, begin + cut, start if inside else None))
             begin += cut
-            start = None
+            if inside:
+                start = None
         pieces.append((begin, end, start))
     chunk_begin, chunk_end = 0, 0
     offsets: list[int] = []

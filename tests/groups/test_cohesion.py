@@ -81,8 +81,10 @@ def test_cohesion_group(chekhov):
                 TEMPORAL_REASON: 3,
             },
         ),
+        # Номер главы без знаменательных слов присоединяется к следующей строке: абзац один
+        ("I\nКот спит. Пес лает.", {FEW_SENTS_REASON: 3, ONE_PARAGRAPH_REASON: 3}),
     ],
-    ids=["one-sentence", "no-nouns", "imperatives", "lines", "numbers"],
+    ids=["one-sentence", "no-nouns", "imperatives", "lines", "numbers", "heading-line"],
 )
 def test_cohesion_reasons(text, expected):
     """Каждое предупреждение называет причину своих метрик"""
