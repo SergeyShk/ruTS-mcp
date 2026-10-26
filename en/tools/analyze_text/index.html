@@ -1341,7 +1341,7 @@
 </tr>
 <tr>
 <td style="text-align: left;"><a href="#cohesion"><code>cohesion</code></a></td>
-<td style="text-align: left;">Cohesion: overlaps between sentences, givenness, connectives</td>
+<td style="text-align: left;">Cohesion: overlaps between sentences and paragraphs, givenness, connectives</td>
 <td style="text-align: left;">-</td>
 </tr>
 <tr>
@@ -1370,17 +1370,17 @@
 <div class="metric-card">
 <h3 id="basic">Basic statistics<a class="headerlink" href="#basic" title="Permanent link">&para;</a></h3>
 <p class="metric-meta"><code>basic</code> · <a href="https://sergeyshk.github.io/ruTS/en/stats/basic_stats/">BasicStats</a></p>
-<p>Sentences, words, syllables, characters, letters, spaces and punctuation marks; unique, long (from 6 letters), complex (from 4 syllables), simple, monosyllabic and polysyllabic words. A count of words or characters comes with its share of all words or characters (<code>share</code>). With <code>distributions=true</code> the group adds the distributions of words by letters and syllables and of punctuation marks by type.</p>
+<p>Sentences, words, syllables, characters, letters, spaces and punctuation marks; unique, long (from 6 letters), complex (from 4 syllables), simple, monosyllabic and polysyllabic words; the entropy of word lengths in letters and syllables. A count of words or characters comes with its share of all words or characters (<code>share</code>). With <code>distributions=true</code> the group adds the distributions of words by letters and syllables and of punctuation marks by type.</p>
 </div>
 <div class="metric-card">
 <h3 id="readability">Readability<a class="headerlink" href="#readability" title="Permanent link">&para;</a></h3>
 <p class="metric-meta"><code>readability</code> · <a href="https://sergeyshk.github.io/ruTS/en/stats/readability_stats/">ReadabilityStats</a> · <a href="../../resources/#resources"><code>ruts://scales/readability</code></a></p>
-<p>Consensus grade and the formulas of Flesch-Kincaid, Flesch, Coleman-Liau, SMOG, ARI, LIX, RIX, Solovyev-Ivanov-Solnyshkina, Matskovsky, Dale-Chall and Gunning, reading time. The grade formulas and the consensus grade read as a school grade and reader age, the Flesch index, LIX and RIX as a band of their own scale; the Matskovsky formula and the reading time have no scale. The coefficients of the Flesch-Kincaid test and the Flesch index are set by <code>readability_preset</code>, the other formulas do not depend on it. On a text shorter than 30 sentences the formulas are unstable, and the response warns about it.</p>
+<p>Consensus grade and the formulas of Flesch-Kincaid, Flesch, Coleman-Liau, SMOG, ARI, LIX, RIX, Solovyev-Ivanov-Solnyshkina, Matskovsky, Tuldava, Dale-Chall and Gunning, reading time. The grade formulas and the consensus grade read as a school grade and reader age, the Flesch index, LIX and RIX as a band of their own scale; the Matskovsky and Tuldava formulas and the reading time have no scale. The coefficients of the Flesch-Kincaid test and the Flesch index are set by <code>readability_preset</code>, the other formulas do not depend on it. On a text shorter than 30 sentences the formulas are unstable, and the response warns about it.</p>
 </div>
 <div class="metric-card">
 <h3 id="diversity">Lexical diversity<a class="headerlink" href="#diversity" title="Permanent link">&para;</a></h3>
 <p class="metric-meta"><code>diversity</code> · <a href="https://sergeyshk.github.io/ruTS/en/stats/diversity_stats/">DiversityStats</a></p>
-<p>TTR and its corrections, MATTR, MSTTR, MTLD, HD-D, the indices of Simpson, Yule and Honoré, entropy, the laws of Zipf and Heaps. On a text shorter than 50 words the measures are unstable, and on a text shorter than 200 words texts are better compared by MATTR, MTLD and HD-D: the response warns about it.</p>
+<p>TTR and its corrections, MATTR, MSTTR, MTLD, HD-D, the indices of Simpson, Yule and Honoré, Orlov's Z, entropy, the laws of Zipf and Heaps, burstiness of frequent words. On a text shorter than 50 words the measures are unstable, and on a text shorter than 200 words texts are better compared by MATTR, MTLD and HD-D: the response warns about it.</p>
 </div>
 <div class="metric-card">
 <h3 id="morph">Morphology<a class="headerlink" href="#morph" title="Permanent link">&para;</a></h3>
@@ -1395,7 +1395,7 @@
 <div class="metric-card">
 <h3 id="cohesion">Cohesion<a class="headerlink" href="#cohesion" title="Permanent link">&para;</a></h3>
 <p class="metric-meta"><code>cohesion</code> · <a href="https://sergeyshk.github.io/ruTS/en/stats/cohesion_stats/">CohesionStats</a></p>
-<p>Cohesion after Coh-Metrix: overlaps of nouns, arguments and content words between sentences, pronouns, givenness, repetition of tense and aspect, connectives by class per 1000 words. Connectives are split by their place in the sentence: intersentential ones open it («Однако», «Поэтому»), the others are intrasentential, including subordinating conjunctions and prepositions at the start of a sentence («Когда он пришел»).</p>
+<p>Cohesion after Coh-Metrix and TAACO: overlaps of nouns, arguments and content words between sentences - adjacent ones, all pairs and the next two - and between adjacent paragraphs, pronouns, givenness, repetition of tense and aspect, connectives by class per 1000 words. A paragraph is a line of the text. Connectives are split by their place in the sentence: intersentential ones open it («Однако», «Поэтому»), the others are intrasentential, including subordinating conjunctions and prepositions at the start of a sentence («Когда он пришел»).</p>
 </div>
 <div class="metric-card">
 <h3 id="style">Style<a class="headerlink" href="#style" title="Permanent link">&para;</a></h3>
@@ -1416,7 +1416,7 @@
 <div class="metric-card">
 <h3 id="syntax">Syntax<a class="headerlink" href="#syntax" title="Permanent link">&para;</a></h3>
 <p class="metric-meta"><code>syntax</code> · <a href="https://sergeyshk.github.io/ruTS/en/stats/syntax_stats/">SyntaxStats</a> · spaCy model</p>
-<p>Syntax by the dependency tree of the spaCy model: dependency length, depth and branching of the tree, verb valency, clauses, subordinate and infinitive clauses, coordination chains, noun modifiers, chains of genitives, participial and adverbial phrases, passive, infinitives, negations, split predicates («оказать помощь»), the ratio of nouns to verbs. An infinitive under a verb («хочу спать») is a clause of its own but not a subordinate one, while a modal or phasal combination («может уйти», «начал читать») is one clause. On a long text parsing takes seconds.</p>
+<p>Syntax by the dependency tree of the spaCy model: dependency length, depth and branching of the tree, words before the head of the sentence, verb valency, clauses, subordinate and infinitive clauses, the L2SCA complexity indices (T-units, verb, coordinate and complex nominal phrases), coordination chains, noun modifiers, prepositional chains and chains of genitives, participial and adverbial phrases, passive, infinitives, negations, split predicates («оказать помощь»), the order of subjects and objects, the similarity of adjacent sentences, the ratio of nouns to verbs. An infinitive clause («хочу спать», «пришел, чтобы помочь») is a clause of its own but not a subordinate one, while a modal or phasal combination («может уйти», «начал читать») is one clause. On a long text parsing takes seconds.</p>
 </div>
 <h2 id="result">Result<a class="headerlink" href="#result" title="Permanent link">&para;</a></h2>
 <p>A key for each requested group and <code>warnings</code>. A statistic of a group is an object with the fields:</p>
