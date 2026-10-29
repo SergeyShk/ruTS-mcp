@@ -35,7 +35,7 @@ jobs:
           ls -l dist
       - name: Publish distribution (test)
         if: github.event_name == 'push'
-        run: uv publish --index testpypi --trusted-publishing always
+        run: uv publish --publish-url https://test.pypi.org/legacy/ --trusted-publishing always
       - name: Publish distribution
         if: github.event_name == 'release'
         run: uv publish --trusted-publishing always

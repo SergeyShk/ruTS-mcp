@@ -69,7 +69,7 @@ publish: build ## Publish a release to PyPI
 	uv publish
 
 publish-test: build ## Publish a release to TestPyPI
-	uv publish --index testpypi
+	uv publish --publish-url https://test.pypi.org/legacy/
 
 docs-build: deps ## Build the documentation
 	rm -fr site/
