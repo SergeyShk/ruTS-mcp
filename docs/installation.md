@@ -103,3 +103,14 @@ claude mcp add ruts -e RUTS_MCP_MAX_TEXT_LENGTH=1000000 -- uvx ruts-mcp
 ```
 
 Версии сервера и ruTS выводит `uvx ruts-mcp --version`.
+
+## Скилл { #skill }
+
+Скилл `ruts` подсказывает агенту, какой инструмент и какие группы вызвать под задачу и как читать ответ, и содержит те же разборы, что [промпты](resources.md#prompts) сервера. Промпт вызывает пользователь, а скилл агент подключает сам, когда задача касается русского текста. Если сервер не подключен, скилл подскажет, как его подключить.
+
+В Claude Code скилл ставится копированием каталога `skills/ruts` репозитория в `~/.claude/skills/` - для всех проектов - или в `.claude/skills/` проекта:
+
+```bash
+git clone --depth 1 https://github.com/SergeyShk/ruTS-mcp
+cp -r ruTS-mcp/skills/ruts ~/.claude/skills/
+```

@@ -53,3 +53,5 @@ uvx ruts-mcp download
 ## Лицензия
 
 [MIT](https://github.com/SergeyShk/ruTS-mcp/blob/master/LICENSE.txt). Словари, которые скачивает `ruts-mcp download`, распространяются на условиях их авторов: [частотный словарь](http://dict.ruslang.ru/freq.php) Ляшевской и Шарова, [словарь ударений](https://github.com/Koziev/NLP_Datasets) Козиева (CC0), [модель spaCy](https://github.com/explosion/spacy-models) (MIT).
+
+<!-- mcp-name: io.github.SergeyShk/ruts-mcp -->
