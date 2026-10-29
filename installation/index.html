@@ -554,7 +554,7 @@
   <a href="#skill" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Скилл
+        Плагин и скилл
       
     </span>
   </a>
@@ -959,7 +959,7 @@
   <a href="#skill" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Скилл
+        Плагин и скилл
       
     </span>
   </a>
@@ -1119,13 +1119,14 @@
 <span class="p">}</span>
 </code></pre></div>
 <p>Версии сервера и ruTS выводит <code>uvx ruts-mcp --version</code>.</p>
-<h2 id="skill">Скилл<a class="headerlink" href="#skill" title="Permanent link">&para;</a></h2>
-<p>Скилл <code>ruts</code> подсказывает агенту, какой инструмент и какие группы вызвать под задачу и как читать ответ, и содержит те же разборы, что <a href="../resources/#prompts">промпты</a> сервера. Промпт вызывает пользователь, а скилл агент подключает сам, когда задача касается русского текста. Если сервер не подключен, скилл подскажет, как его подключить.</p>
-<p>В Claude Code скилл ставится копированием каталога <code>skills/ruts</code> репозитория в <code>~/.claude/skills/</code> - для всех проектов - или в <code>.claude/skills/</code> проекта:</p>
-<div class="highlight"><pre><span></span><code>git<span class="w"> </span>clone<span class="w"> </span>--depth<span class="w"> </span><span class="m">1</span><span class="w"> </span>https://github.com/SergeyShk/ruTS-mcp
-mkdir<span class="w"> </span>-p<span class="w"> </span>~/.claude/skills
-cp<span class="w"> </span>-r<span class="w"> </span>ruTS-mcp/skills/ruts<span class="w"> </span>~/.claude/skills/
+<h2 id="skill">Плагин и скилл<a class="headerlink" href="#skill" title="Permanent link">&para;</a></h2>
+<p>Скилл <code>ruts</code> подсказывает агенту, какой инструмент и какие группы вызвать под задачу и как читать ответ, и содержит те же разборы, что <a href="../resources/#prompts">промпты</a> сервера. Промпт вызывает пользователь, а скилл агент подключает сам, когда задача касается русского текста.</p>
+<p>В Claude Code скилл и сервер ставит плагин <code>ruts</code>:</p>
+<div class="highlight"><pre><span></span><code>/plugin marketplace add SergeyShk/ruTS-mcp
+/plugin install ruts@ruts-mcp
 </code></pre></div>
+<p>Плагин запускает сервер сам, нужен только uv, поэтому подключать сервер командой <code>claude mcp add</code> не нужно: иначе у агента будет две копии инструментов. Версия сервера в плагине закреплена и обновляется вместе с плагином командой <code>claude plugin update ruts@ruts-mcp</code> в терминале. Сервер из плагина работает в Claude Code и в Cowork на компьютере пользователя; в чате claude.ai и Claude Desktop плагин дает только скилл, а сервер в Claude Desktop подключается <a href="#clients">вручную</a>.</p>
+<p>Скилл без сервера лежит в каталоге <a href="https://github.com/SergeyShk/ruTS-mcp/tree/stable/plugins/ruts/skills/ruts"><code>plugins/ruts/skills/ruts</code></a> репозитория: его можно скопировать в каталог скиллов другого агента.</p>
 
 
 
