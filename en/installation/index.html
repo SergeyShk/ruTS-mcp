@@ -550,6 +550,17 @@
   
 </li>
       
+        <li class="md-nav__item">
+  <a href="#skill" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Skill
+      
+    </span>
+  </a>
+  
+</li>
+      
     </ul>
   
 </nav>
@@ -944,6 +955,17 @@
   
 </li>
       
+        <li class="md-nav__item">
+  <a href="#skill" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Skill
+      
+    </span>
+  </a>
+  
+</li>
+      
     </ul>
   
 </nav>
@@ -1097,6 +1119,13 @@
 <span class="p">}</span>
 </code></pre></div>
 <p><code>uvx ruts-mcp --version</code> prints the versions of the server and ruTS.</p>
+<h2 id="skill">Skill<a class="headerlink" href="#skill" title="Permanent link">&para;</a></h2>
+<p>The <code>ruts</code> skill tells the agent which tool and groups to call for a task and how to read the result, and contains the same reviews as the server <a href="../resources/#prompts">prompts</a>. A prompt is invoked by the user, while the agent loads the skill on its own when a task concerns a Russian text. If the server is not connected, the skill explains how to connect it.</p>
+<p>In Claude Code the skill is installed by copying the <code>skills/ruts</code> directory of the repository to <code>~/.claude/skills/</code> - for all projects - or to <code>.claude/skills/</code> of a project:</p>
+<div class="highlight"><pre><span></span><code>git<span class="w"> </span>clone<span class="w"> </span>--depth<span class="w"> </span><span class="m">1</span><span class="w"> </span>https://github.com/SergeyShk/ruTS-mcp
+mkdir<span class="w"> </span>-p<span class="w"> </span>~/.claude/skills
+cp<span class="w"> </span>-r<span class="w"> </span>ruTS-mcp/skills/ruts<span class="w"> </span>~/.claude/skills/
+</code></pre></div>
 
 
 

@@ -550,6 +550,17 @@
   
 </li>
       
+        <li class="md-nav__item">
+  <a href="#skill" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Скилл
+      
+    </span>
+  </a>
+  
+</li>
+      
     </ul>
   
 </nav>
@@ -944,6 +955,17 @@
   
 </li>
       
+        <li class="md-nav__item">
+  <a href="#skill" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Скилл
+      
+    </span>
+  </a>
+  
+</li>
+      
     </ul>
   
 </nav>
@@ -1097,6 +1119,13 @@
 <span class="p">}</span>
 </code></pre></div>
 <p>Версии сервера и ruTS выводит <code>uvx ruts-mcp --version</code>.</p>
+<h2 id="skill">Скилл<a class="headerlink" href="#skill" title="Permanent link">&para;</a></h2>
+<p>Скилл <code>ruts</code> подсказывает агенту, какой инструмент и какие группы вызвать под задачу и как читать ответ, и содержит те же разборы, что <a href="../resources/#prompts">промпты</a> сервера. Промпт вызывает пользователь, а скилл агент подключает сам, когда задача касается русского текста. Если сервер не подключен, скилл подскажет, как его подключить.</p>
+<p>В Claude Code скилл ставится копированием каталога <code>skills/ruts</code> репозитория в <code>~/.claude/skills/</code> - для всех проектов - или в <code>.claude/skills/</code> проекта:</p>
+<div class="highlight"><pre><span></span><code>git<span class="w"> </span>clone<span class="w"> </span>--depth<span class="w"> </span><span class="m">1</span><span class="w"> </span>https://github.com/SergeyShk/ruTS-mcp
+mkdir<span class="w"> </span>-p<span class="w"> </span>~/.claude/skills
+cp<span class="w"> </span>-r<span class="w"> </span>ruTS-mcp/skills/ruts<span class="w"> </span>~/.claude/skills/
+</code></pre></div>
 
 
 
