@@ -112,5 +112,6 @@ claude mcp add ruts -e RUTS_MCP_MAX_TEXT_LENGTH=1000000 -- uvx ruts-mcp
 
 ```bash
 git clone --depth 1 https://github.com/SergeyShk/ruTS-mcp
+mkdir -p ~/.claude/skills
 cp -r ruTS-mcp/skills/ruts ~/.claude/skills/
 ```

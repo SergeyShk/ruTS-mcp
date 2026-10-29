@@ -11,7 +11,7 @@ description: Точные статистики русского текста ч�
 
 Инструменты сервера - `analyze_text`, `kwic`, `collocations`, `dispersion`, `keyness`, `compare_texts` (в Claude Code - `mcp__ruts__analyze_text` и так далее). Если их нет, не подменяй измерения оценкой на глаз: предложи пользователю подключить сервер. Нужен [uv](https://docs.astral.sh/uv/getting-started/installation/), который сам скачает пакет и Python.
 
-- Claude Code: `claude mcp add ruts -- uvx ruts-mcp` (с `--scope user` - для всех проектов), затем начать новую сессию.
+- Claude Code: `claude mcp add ruts -- uvx ruts-mcp` - для текущего проекта, `claude mcp add --scope user ruts -- uvx ruts-mcp` - для всех проектов; затем начать новую сессию.
 - Claude Desktop, Cursor и другие клиенты: запись `"ruts": {"command": "uvx", "args": ["ruts-mcp"]}` в `mcpServers` конфигурации клиента.
 
 Группам `lexical`, `verse`, `syntax` и `keyness` без эталона нужны словари и модель spaCy, их скачивает команда `uvx ruts-mcp download`. Если предупреждение в ответе говорит, что словарь или модель не скачаны, предложи эту команду. Что уже скачано, показывает ресурс `ruts://data`. Подробнее - в [документации](https://sergeyshk.github.io/ruTS-mcp/installation/).

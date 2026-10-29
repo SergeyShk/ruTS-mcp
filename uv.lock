@@ -3560,6 +3560,7 @@ dev = [
     { name = "pymdown-extensions" },
     { name = "pytest" },
     { name = "pytest-cov" },
+    { name = "pyyaml" },
     { name = "ru-core-news-sm" },
     { name = "ruff" },
 ]
@@ -3577,6 +3578,7 @@ lint = [
 test = [
     { name = "pytest" },
     { name = "pytest-cov" },
+    { name = "pyyaml" },
     { name = "ru-core-news-sm" },
 ]
 
@@ -3597,6 +3599,7 @@ dev = [
     { name = "pymdown-extensions", specifier = ">=10.0" },
     { name = "pytest", specifier = ">=8.3" },
     { name = "pytest-cov", specifier = ">=6.0" },
+    { name = "pyyaml", specifier = ">=6" },
     { name = "ru-core-news-sm", url = "https://github.com/explosion/spacy-models/releases/download/ru_core_news_sm-3.8.0/ru_core_news_sm-3.8.0-py3-none-any.whl" },
     { name = "ruff", specifier = ">=0.9" },
 ]
@@ -3614,6 +3617,7 @@ lint = [
 test = [
     { name = "pytest", specifier = ">=8.3" },
     { name = "pytest-cov", specifier = ">=6.0" },
+    { name = "pyyaml", specifier = ">=6" },
     { name = "ru-core-news-sm", url = "https://github.com/explosion/spacy-models/releases/download/ru_core_news_sm-3.8.0/ru_core_news_sm-3.8.0-py3-none-any.whl" },
 ]
 

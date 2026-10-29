@@ -1,9 +1,9 @@
 """Скилл ruts: метаданные и полнота относительно сервера"""
 
-import re
 from pathlib import Path
 
 import pytest
+import yaml
 from fastmcp import Client
 
 from ruts_mcp.groups import GROUPS
@@ -17,11 +17,11 @@ pytestmark = pytest.mark.anyio
 
 
 def test_frontmatter():
-    match = re.match(r"---\nname: (\S+)\ndescription: (.+)\n---\n", TEXT)
-    assert match
-    name, description = match.groups()
-    assert name == SKILL.parent.name
-    assert len(description) <= 1024
+    empty, header, _ = TEXT.split("---\n", 2)
+    meta = yaml.safe_load(header)
+    assert not empty
+    assert meta["name"] == SKILL.parent.name
+    assert 0 < len(meta["description"]) <= 1024
 
 
 async def test_server_coverage():

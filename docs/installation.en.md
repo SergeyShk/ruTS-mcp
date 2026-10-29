@@ -112,5 +112,6 @@ In Claude Code the skill is installed by copying the `skills/ruts` directory of 
 
 ```bash
 git clone --depth 1 https://github.com/SergeyShk/ruTS-mcp
+mkdir -p ~/.claude/skills
 cp -r ruTS-mcp/skills/ruts ~/.claude/skills/
 ```
