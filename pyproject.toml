@@ -68,7 +68,7 @@ test = [
     "pytest>=8.3",
     "pytest-cov>=6.0",
     "pyyaml>=6",
-    "ru-core-news-sm",
+    "ru-core-news-sm @ https://github.com/explosion/spacy-models/releases/download/ru_core_news_sm-3.8.0/ru_core_news_sm-3.8.0-py3-none-any.whl",
 ]
 lint = ["mypy>=1.14", "pre-commit>=4.0", "ruff>=0.9"]
 docs = [
@@ -82,9 +82,6 @@ dev = [
     { include-group = "lint" },
     { include-group = "docs" },
 ]
-
-[tool.uv.sources]
-ru-core-news-sm = { url = "https://github.com/explosion/spacy-models/releases/download/ru_core_news_sm-3.8.0/ru_core_news_sm-3.8.0-py3-none-any.whl" }
 
 [tool.ruff]
 target-version = "py311"
