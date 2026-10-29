@@ -104,14 +104,17 @@ In Claude Desktop and Cursor - with the `env` field of the server entry:
 
 `uvx ruts-mcp --version` prints the versions of the server and ruTS.
 
-## Skill { #skill }
+## Plugin and skill { #skill }
 
-The `ruts` skill tells the agent which tool and groups to call for a task and how to read the result, and contains the same reviews as the server [prompts](resources.md#prompts). A prompt is invoked by the user, while the agent loads the skill on its own when a task concerns a Russian text. If the server is not connected, the skill explains how to connect it.
+The `ruts` skill tells the agent which tool and groups to call for a task and how to read the result, and contains the same reviews as the server [prompts](resources.md#prompts). A prompt is invoked by the user, while the agent loads the skill on its own when a task concerns a Russian text.
 
-In Claude Code the skill is installed by copying the `skills/ruts` directory of the repository to `~/.claude/skills/` - for all projects - or to `.claude/skills/` of a project:
+In Claude Code the `ruts` plugin installs the skill and the server:
 
-```bash
-git clone --depth 1 https://github.com/SergeyShk/ruTS-mcp
-mkdir -p ~/.claude/skills
-cp -r ruTS-mcp/skills/ruts ~/.claude/skills/
 ```
+/plugin marketplace add SergeyShk/ruTS-mcp
+/plugin install ruts@ruts-mcp
+```
+
+The plugin starts the server itself and needs only uv, so there is no need to connect the server with `claude mcp add`: otherwise the agent gets two copies of the tools. The server version in the plugin is pinned and is updated together with the plugin by `/plugin update ruts@ruts-mcp`.
+
+The skill without the server is in the [`plugins/ruts/skills/ruts`](https://github.com/SergeyShk/ruTS-mcp/tree/master/plugins/ruts/skills/ruts) directory of the repository: it can be copied to the skills directory of another agent.

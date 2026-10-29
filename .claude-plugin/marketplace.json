@@ -1,0 +1,15 @@
+{
+  "name": "ruts-mcp",
+  "owner": {
+    "name": "Sergey Shkarin",
+    "url": "https://github.com/SergeyShk"
+  },
+  "description": "Plugins for measuring Russian texts with ruTS",
+  "plugins": [
+    {
+      "name": "ruts",
+      "source": "./plugins/ruts",
+      "category": "productivity"
+    }
+  ]
+}

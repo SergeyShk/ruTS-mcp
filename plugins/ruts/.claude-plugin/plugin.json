@@ -1,0 +1,17 @@
+{
+  "name": "ruts",
+  "displayName": "ruTS",
+  "version": "0.1.4",
+  "description": "Statistics of Russian texts: the ruTS-mcp server and a skill that picks its tools for the task and reads the results",
+  "author": {
+    "name": "Sergey Shkarin",
+    "url": "https://github.com/SergeyShk"
+  },
+  "homepage": "https://sergeyshk.github.io/ruTS-mcp/",
+  "repository": "https://github.com/SergeyShk/ruTS-mcp",
+  "license": "MIT",
+  "keywords": ["russian", "nlp", "readability", "text-analysis", "linguistics", "mcp"],
+  "icon": "./icon.png",
+  "documentationUrl": "https://sergeyshk.github.io/ruTS-mcp/",
+  "supportUrl": "https://github.com/SergeyShk/ruTS-mcp/issues"
+}

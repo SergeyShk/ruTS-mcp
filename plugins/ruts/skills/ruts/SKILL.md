@@ -9,9 +9,10 @@ description: Точные статистики русского текста ч�
 
 ## Подключение
 
-Инструменты сервера - `analyze_text`, `kwic`, `collocations`, `dispersion`, `keyness`, `compare_texts` (в Claude Code - `mcp__ruts__analyze_text` и так далее). Если их нет, не подменяй измерения оценкой на глаз: предложи пользователю подключить сервер. Нужен [uv](https://docs.astral.sh/uv/getting-started/installation/), который сам скачает пакет и Python.
+Инструменты сервера - `analyze_text`, `kwic`, `collocations`, `dispersion`, `keyness`, `compare_texts` (в Claude Code - `mcp__ruts__analyze_text` и так далее, из плагина `ruts` - `mcp__plugin_ruts_ruts__analyze_text`). Если их нет, не подменяй измерения оценкой на глаз: предложи пользователю подключить сервер. Нужен [uv](https://docs.astral.sh/uv/getting-started/installation/), который сам скачает пакет и Python.
 
-- Claude Code: `claude mcp add ruts -- uvx ruts-mcp` - для текущего проекта, `claude mcp add --scope user ruts -- uvx ruts-mcp` - для всех проектов; затем начать новую сессию.
+- Плагин `ruts` подключает сервер сам. Если инструментов нет и при нем, скорее всего, не установлен uv.
+- Claude Code без плагина: `claude mcp add ruts -- uvx ruts-mcp` - для текущего проекта, `claude mcp add --scope user ruts -- uvx ruts-mcp` - для всех проектов; затем начать новую сессию.
 - Claude Desktop, Cursor и другие клиенты: запись `"ruts": {"command": "uvx", "args": ["ruts-mcp"]}` в `mcpServers` конфигурации клиента.
 
 Группам `lexical`, `verse`, `syntax` и `keyness` без эталона нужны словари и модель spaCy, их скачивает команда `uvx ruts-mcp download`. Если предупреждение в ответе говорит, что словарь или модель не скачаны, предложи эту команду. Что уже скачано, показывает ресурс `ruts://data`. Подробнее - в [документации](https://sergeyshk.github.io/ruTS-mcp/installation/).
@@ -49,7 +50,7 @@ description: Точные статистики русского текста ч�
 
 ## Разборы
 
-Те же разборы есть промптами сервера, их вызывает пользователь (в Claude Code - `/mcp__ruts__readability_review`, `/mcp__ruts__officialese_review`, `/mcp__ruts__verse_review`, `/mcp__ruts__seo_review`, `/mcp__ruts__compare_review`).
+Те же разборы есть промптами сервера `readability_review`, `officialese_review`, `verse_review`, `seo_review` и `compare_review`, их вызывает пользователь (в Claude Code - из меню `/`, например `/mcp__ruts__readability_review`).
 
 ### Удобочитаемость
 

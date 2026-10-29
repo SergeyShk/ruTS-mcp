@@ -20,6 +20,7 @@
   <a href="https://github.com/SergeyShk/ruTS-mcp/actions/workflows/ci.yml"><img src="https://github.com/SergeyShk/ruTS-mcp/actions/workflows/ci.yml/badge.svg" alt="Сборка"></a>
   <a href="https://github.com/astral-sh/ruff"><img src="https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/astral-sh/ruff/main/assets/badge/v2.json" alt="Ruff"></a>
   <a href="https://github.com/SergeyShk/ruTS-mcp/blob/master/LICENSE.txt"><img src="https://img.shields.io/badge/license-MIT-green.svg" alt="Лицензия"></a>
+  <a href="https://glama.ai/mcp/servers/SergeyShk/ruTS-mcp"><img src="https://glama.ai/mcp/servers/SergeyShk/ruTS-mcp/badges/score.svg" alt="Оценка Glama"></a>
 </p>
 
 ---
@@ -46,6 +47,13 @@ claude mcp add ruts -- uvx ruts-mcp
 
 ```bash
 uvx ruts-mcp download
+```
+
+Сервер вместе со [скиллом](https://sergeyshk.github.io/ruTS-mcp/installation/#skill), который подсказывает агенту, как им пользоваться, ставит плагин Claude Code:
+
+```
+/plugin marketplace add SergeyShk/ruTS-mcp
+/plugin install ruts@ruts-mcp
 ```
 
 Подключение к Claude Desktop, Cursor и другим клиентам и настройки - в [документации](https://sergeyshk.github.io/ruTS-mcp/installation/).

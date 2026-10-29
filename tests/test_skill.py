@@ -10,7 +10,7 @@ from ruts_mcp.groups import GROUPS
 from ruts_mcp.server import mcp
 
 ROOT = Path(__file__).parents[1]
-SKILL = ROOT / "skills" / "ruts" / "SKILL.md"
+SKILL = ROOT / "plugins" / "ruts" / "skills" / "ruts" / "SKILL.md"
 TEXT = SKILL.read_text(encoding="utf-8")
 
 pytestmark = pytest.mark.anyio
@@ -29,7 +29,7 @@ async def test_server_coverage():
     async with Client(mcp) as client:
         names = [tool.name for tool in await client.list_tools()]
         names += [str(resource.uri) for resource in await client.list_resources()]
-        names += [f"/mcp__ruts__{prompt.name}" for prompt in await client.list_prompts()]
+        names += [prompt.name for prompt in await client.list_prompts()]
     names += list(GROUPS)
     assert [name for name in names if f"`{name}`" not in TEXT] == []
 
