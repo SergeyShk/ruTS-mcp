@@ -39,3 +39,23 @@ jobs:
       - name: Publish distribution
         if: github.event_name == 'release'
         run: uv publish --trusted-publishing always
+      - name: Wait for PyPI
+        if: github.event_name == 'release'
+        timeout-minutes: 10
+        run: |
+          until curl -sfo /dev/null "https://pypi.org/pypi/ruts-mcp/$GITHUB_REF_NAME/json"; do
+            sleep 15
+          done
+      - name: Publish to MCP Registry
+        if: github.event_name == 'release'
+        env:
+          PUBLISHER_URL: https://github.com/modelcontextprotocol/registry/releases/download/v1.8.6/mcp-publisher_linux_amd64.tar.gz
+          PUBLISHER_SHA256: 1fbe93fc0783c2394d8012c8d6e50a59e98cb2cc2d216264cc69f405d0e21340
+        run: |
+          curl -fsSL -o mcp-publisher.tar.gz "$PUBLISHER_URL"
+          echo "$PUBLISHER_SHA256  mcp-publisher.tar.gz" | sha256sum -c -
+          tar xzf mcp-publisher.tar.gz mcp-publisher
+          jq --arg v "$GITHUB_REF_NAME" '.version = $v | .packages[0].version = $v' server.json > server.tmp
+          mv server.tmp server.json
+          ./mcp-publisher login github-oidc
+          ./mcp-publisher publish
