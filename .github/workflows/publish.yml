@@ -59,3 +59,18 @@ jobs:
           mv server.tmp server.json
           ./mcp-publisher login github-oidc
           ./mcp-publisher publish
+
+  stable:
+    if: github.event_name == 'release'
+    needs: publish
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+      # Плагин в маркетплейсе раздается из stable: он сдвигается только на релиз
+      - name: Move stable to the release
+        run: git push origin "HEAD:refs/heads/stable"
