@@ -17,9 +17,16 @@ def load(path: Path) -> Any:
 
 
 def test_marketplace():
+    """Плагин берется из ветки stable, которую publish.yml сдвигает на каждый релиз"""
     (entry,) = load(ROOT / ".claude-plugin" / "marketplace.json")["plugins"]
-    assert (ROOT / entry["source"]).resolve() == PLUGIN
-    assert entry["name"] == load(PLUGIN / ".claude-plugin" / "plugin.json")["name"]
+    manifest = load(PLUGIN / ".claude-plugin" / "plugin.json")
+    source = entry["source"]
+    assert source["source"] == "git-subdir"
+    assert source["url"] == PROJECT["urls"]["Repository"] + ".git"
+    assert (ROOT / source["path"]).resolve() == PLUGIN
+    assert source["ref"] == "stable"
+    for field in ("name", "displayName", "description"):
+        assert entry[field] == manifest[field]
 
 
 def test_manifest():

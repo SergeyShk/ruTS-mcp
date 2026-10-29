@@ -8,7 +8,14 @@
   "plugins": [
     {
       "name": "ruts",
-      "source": "./plugins/ruts",
+      "displayName": "ruTS",
+      "description": "Statistics of Russian texts: the ruTS-mcp server and a skill that picks its tools for the task and reads the results",
+      "source": {
+        "source": "git-subdir",
+        "url": "https://github.com/SergeyShk/ruTS-mcp.git",
+        "path": "plugins/ruts",
+        "ref": "stable"
+      },
       "category": "productivity"
     }
   ]

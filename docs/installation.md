@@ -115,6 +115,6 @@ claude mcp add ruts -e RUTS_MCP_MAX_TEXT_LENGTH=1000000 -- uvx ruts-mcp
 /plugin install ruts@ruts-mcp
 ```
 
-Плагин запускает сервер сам, нужен только uv, поэтому подключать сервер командой `claude mcp add` не нужно: иначе у агента будет две копии инструментов. Версия сервера в плагине закреплена и обновляется вместе с плагином командой `/plugin update ruts@ruts-mcp`.
+Плагин запускает сервер сам, нужен только uv, поэтому подключать сервер командой `claude mcp add` не нужно: иначе у агента будет две копии инструментов. Версия сервера в плагине закреплена и обновляется вместе с плагином командой `claude plugin update ruts@ruts-mcp` в терминале. Сервер из плагина работает в Claude Code и в Cowork на компьютере пользователя; в чате claude.ai и Claude Desktop плагин дает только скилл, а сервер в Claude Desktop подключается [вручную](#clients).
 
 Скилл без сервера лежит в каталоге [`plugins/ruts/skills/ruts`](https://github.com/SergeyShk/ruTS-mcp/tree/master/plugins/ruts/skills/ruts) репозитория: его можно скопировать в каталог скиллов другого агента.
