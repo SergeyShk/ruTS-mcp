@@ -19,7 +19,7 @@ def test_style_group(chekhov):
     ss = StyleStats(chekhov)
     assert list(STYLE_NOTES) == list(STYLE_STATS_DESC)
     assert list(stats) == ["n_words", "top_words", "nausea_words", *STYLE_STATS_DESC]
-    assert stats["n_words"]["value"] == len(ss.words) == 241
+    assert stats["n_words"]["value"] == len(ss.words) == 240
     assert stats["top_words"]["value"] == dict(Counter(ss.words).most_common(ss.top_n))
     assert list(stats["top_words"]["value"].items())[:2] == [("и", 11), ("тонкий", 5)]
     assert stats["nausea_words"]["value"] == ss.nausea_words()

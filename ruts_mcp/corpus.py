@@ -1,3 +1,5 @@
+from collections import Counter
+from collections.abc import Sequence
 from math import log2
 from typing import Annotated, Any, Literal
 
@@ -47,7 +49,7 @@ def text_words(text: str, lemmatize: bool) -> tuple[str, ...]:
 
     Аргументы:
         text (str): Текст
-        lemmatize (bool): Заменить слова леммами pymorphy3
+        lemmatize (bool): Заменить слова леммами ruMorph в контексте предложения
 
     Вывод:
         tuple[str]: Слова по порядку
@@ -63,24 +65,48 @@ def text_words(text: str, lemmatize: bool) -> tuple[str, ...]:
     return tuple(normalize_yo(word) for word in words)
 
 
-def one_word(word: str, lemmatize: bool) -> str:
+def one_word(word: str, lemmatize: bool, words: Sequence[str] = ()) -> str:
     """
     Слово запроса в том виде, в каком сравниваются слова текста (text_words)
 
+    Описание:
+        У слова запроса нет контекста. Если сама словоформа - лемма одного из ее
+        разборов и есть в словах текста words, берется она («село», а не «сесть»),
+        иначе - самая частая в тексте из лемм разборов («стали» в тексте «нож
+        из стали» - сталь), а без них - лемма первого разбора
+
     Аргументы:
         word (str): Слово, переданное инструменту
-        lemmatize (bool): Заменить слово леммой pymorphy3
+        lemmatize (bool): Заменить слово леммой ruMorph
+        words (list[str]): Слова текста (text_words)
 
     Вывод:
         str: Слово в нижнем регистре или его лемма
 
     Исключения:
         ToolError: Если в строке не одно слово
+
+    Пример использования:
+        >>> one_word("стали", lemmatize=True), one_word("стали", True, ["нож", "из", "сталь"])
+        ('стать', 'сталь')
     """
-    words = text_words(word, lemmatize)
-    if len(words) != 1:
+    from ruts.utils import normalize_yo, parse_all
+
+    found = text_words(word, lemmatize)
+    if len(found) != 1:
         raise ToolError(f"Нужно одно слово, получено {word!r}")
-    return words[0]
+    if not lemmatize or not words:
+        return found[0]
+    counts = Counter(words)
+    (form,) = text_words(word, lemmatize=False)
+    known = [
+        lemma
+        for analysis in parse_all(form)
+        if counts[lemma := normalize_yo(analysis.lemma.lower())]
+    ]
+    if form in known:
+        return form
+    return max(known, key=counts.__getitem__) if known else found[0]
 
 
 def kwic(
@@ -99,7 +125,7 @@ def kwic(
 ) -> dict[str, Any]:
     """Найти все вхождения слова или словосочетания в тексте с контекстом (конкорданс KWIC).
 
-    Используйте, чтобы увидеть, как слово употребляется в тексте, и цитировать точно. Слова сравниваются без учета регистра и буквы ё, с by_lemma - по леммам pymorphy3; словосочетание не переходит через конец предложения.
+    Используйте, чтобы увидеть, как слово употребляется в тексте, и цитировать точно. Слова сравниваются без учета регистра и буквы ё, с by_lemma - по леммам ruMorph в контексте предложения (слово запроса - по любой лемме своих разборов); словосочетание не переходит через конец предложения.
 
     В результате "n_matches" - число вхождений, "matches" - строки по порядку в тексте: контекст слева "left", вхождение "keyword", как оно записано в тексте, и контекст справа "right". Строки ограничены параметром limit и общим объемом ответа около 40 тысяч символов. Ключ "warnings" - предупреждения: текст не на русском языке, показаны не все вхождения.
     """
@@ -165,7 +191,7 @@ def collocations(
 ) -> dict[str, Any]:
     """Найти коллокации текста - пары слов, которые встречаются вместе чаще, чем случайно.
 
-    Используйте для устойчивых сочетаний, терминологии и сочетаемости слова (параметр node). Пара упорядочена: правое слово стоит не дальше window слов после левого. Леммы pymorphy3 берутся без снятия омонимии.
+    Используйте для устойчивых сочетаний, терминологии и сочетаемости слова (параметр node). Пара упорядочена: правое слово стоит не дальше window слов после левого. Леммы ruMorph берутся в контексте предложения.
 
     В результате "n_words" - число слов текста, "measure" - мера и как ее читать, "collocations" - пары по убыванию меры: левое слово "left", правое "right", их частоты "freq_left" и "freq_right", частота пары "freq_pair" и значение меры "score". freq_pair - число пар позиций, где правое слово стоит в окне после левого: слово, повторенное в окне, дает несколько пар, поэтому freq_pair бывает больше частоты слова, и такая пара - повтор, а не устойчивое сочетание. Ключ "warnings" - предупреждения: текст не на русском языке, слова node нет в тексте, пар с такой частотой нет.
     """
@@ -176,7 +202,7 @@ def collocations(
     warnings = language_warnings(text)
     with ruts_errors():
         words = text_words(text, lemmatize)
-        node_word = None if node is None else one_word(node, lemmatize)
+        node_word = None if node is None else one_word(node, lemmatize, words)
         found = ruts_collocations(words, window, measure, min_freq, node_word, top_n)
     if node is not None and node_word not in words:
         shown = node_word if node_word == node.strip().lower() else f"{node} ({node_word})"
@@ -250,7 +276,7 @@ def dispersion(
         table = ruts_dispersion(sequence, parts)
         if words:
             by_word = {item.word: item for item in table}
-            targets = dict.fromkeys(one_word(word, lemmatize) for word in words)
+            targets = dict.fromkeys(one_word(word, lemmatize, sequence) for word in words)
             found = [
                 by_word.get(target) or ruts_dispersion(sequence, parts, word=target)[0]
                 for target in targets

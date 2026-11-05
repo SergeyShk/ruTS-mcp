@@ -108,7 +108,7 @@ def test_kwic_errors():
 def test_collocations(chekhov):
     result = collocations(chekhov, top_n=5)
     expected = ruts_collocations(text_words(chekhov, lemmatize=True), top_n=5)
-    assert result["n_words"] == 241
+    assert result["n_words"] == 240
     assert [
         (pair["left"], pair["right"], pair["freq_pair"], pair["score"])
         for pair in result["collocations"]
@@ -191,13 +191,25 @@ def test_dispersion_frequent(chekhov):
 
 def test_dispersion_top(chekhov):
     result = dispersion(chekhov, top_n=3)
-    assert [item["word"] for item in result["words"]] == ["и", "он", "ты"]
+    # «его» в тексте - притяжательные («его жена»), а не формы «он»
+    assert [item["word"] for item in result["words"]] == ["и", "ты", "тонкий"]
     assert set(DISPERSION_FIELDS) == set(DISPERSION_STATS_DESC)
 
 
 def test_dispersion_errors():
     with pytest.raises(ToolError):
         dispersion("Кот спит", parts=5)
+
+
+def test_query_lemma_in_text():
+    """Слово запроса без контекста - та из его лемм, что встречается в тексте"""
+    text = "Нож из стали крепкий. Нож из стали острый."
+    assert collocations(text, node="стали", min_freq=1)["warnings"] == []
+    found = dispersion(text, words=["стали"], parts=2)["words"][0]
+    assert (found["word"], found["freq"]) == ("сталь", 2)
+    # Словоформа запроса - сама лемма и есть в тексте: она важнее более частой леммы
+    village = "Село стояло у реки. Дед сел на лавку, бабка села рядом, внуки сели у печи."
+    assert dispersion(village, words=["село"], parts=2)["words"][0]["word"] == "село"
 
 
 def test_one_word():

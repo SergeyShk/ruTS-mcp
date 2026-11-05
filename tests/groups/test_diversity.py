@@ -45,7 +45,7 @@ def test_diversity_short_text():
 def test_diversity_medium_text(chekhov):
     text = " ".join(chekhov.split()[:120])
     stats, warnings = diversity_group(Analysis(text))
-    assert warnings[0].startswith("Слов в тексте: 114, меньше 200. По Zenker и Kyle (2021)")
+    assert warnings[0].startswith("Слов в тексте: 113, меньше 200. По Zenker и Kyle (2021)")
     assert warnings[0].endswith("сравнивайте тексты по MATTR, MTLD и HD-D")
     assert all(stats[name]["value"] is not None for name in ("mattr", "mtld", "hdd"))
 

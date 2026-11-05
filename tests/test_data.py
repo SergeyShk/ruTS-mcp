@@ -7,6 +7,7 @@ from pathlib import Path
 
 import anyts.datasets
 import pytest
+import ruts
 import spacy
 from ruts.exceptions import DownloadError
 
@@ -176,7 +177,7 @@ def test_load_spacy_concurrent(monkeypatch):
         time.sleep(0.05)
         return spacy.blank("ru")
 
-    monkeypatch.setattr(spacy, "load", load)
+    monkeypatch.setattr(ruts, "load_pipeline", load)
     with ThreadPoolExecutor(8) as pool:
         results = list(pool.map(load_spacy, ["model"] * 8))
     _load_spacy.cache_clear()

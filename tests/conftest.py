@@ -35,7 +35,7 @@ STRESS_ROWS = (
 
 @pytest.fixture(scope="session")
 def chekhov():
-    """Начало рассказа Чехова «Толстый и тонкий»: 241 слово, 37 предложений"""
+    """Начало рассказа Чехова «Толстый и тонкий»: 240 слов, 41 предложение"""
     return (Path(__file__).parent / "data" / "chekhov.txt").read_text(encoding="utf-8")
 
 
