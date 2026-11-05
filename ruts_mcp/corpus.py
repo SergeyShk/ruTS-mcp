@@ -70,9 +70,10 @@ def one_word(word: str, lemmatize: bool, words: Sequence[str] = ()) -> str:
     Слово запроса в том виде, в каком сравниваются слова текста (text_words)
 
     Описание:
-        У слова запроса нет контекста, поэтому из лемм его разборов берется самая
-        частая в словах текста words («стали» в тексте «нож из стали» - сталь),
-        а без нее - лемма первого разбора
+        У слова запроса нет контекста. Если сама словоформа - лемма одного из ее
+        разборов и есть в словах текста words, берется она («село», а не «сесть»),
+        иначе - самая частая в тексте из лемм разборов («стали» в тексте «нож
+        из стали» - сталь), а без них - лемма первого разбора
 
     Аргументы:
         word (str): Слово, переданное инструменту
@@ -103,6 +104,8 @@ def one_word(word: str, lemmatize: bool, words: Sequence[str] = ()) -> str:
         for analysis in parse_all(form)
         if counts[lemma := normalize_yo(analysis.lemma.lower())]
     ]
+    if form in known:
+        return form
     return max(known, key=counts.__getitem__) if known else found[0]
 
 

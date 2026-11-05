@@ -207,6 +207,9 @@ def test_query_lemma_in_text():
     assert collocations(text, node="стали", min_freq=1)["warnings"] == []
     found = dispersion(text, words=["стали"], parts=2)["words"][0]
     assert (found["word"], found["freq"]) == ("сталь", 2)
+    # Словоформа запроса - сама лемма и есть в тексте: она важнее более частой леммы
+    village = "Село стояло у реки. Дед сел на лавку, бабка села рядом, внуки сели у печи."
+    assert dispersion(village, words=["село"], parts=2)["words"][0]["word"] == "село"
 
 
 def test_one_word():
