@@ -130,7 +130,7 @@ def test_compare_texts_ties(chekhov):
     ]
     assert relative == sorted(relative, reverse=True)
     assert result["warnings"][-1].startswith(
-        "Еще 70 признаков с тем же модулем дельты Клиффа 1.0 - за пределами top_n"
+        "Еще 82 признака с тем же модулем дельты Клиффа 1.0 - за пределами top_n"
     )
     everything = compare_texts([chekhov], [PUSHKIN * 12], window=100, top_n=200)
     assert not any(item.startswith("Еще ") for item in everything["warnings"])
@@ -169,7 +169,7 @@ def test_compare_texts_min_window(chekhov):
         f"Остатки текстов корпуса {label} короче окна в 100 слов не вошли в сравнение: "
         f"{lost} из {total}; окно меньше 100 слов не задается, тексты целиком "
         "сравнивает whole_texts=true"
-        for label, lost, total in (("A", 41, "241 слова"), ("B", 28, "228 слов"))
+        for label, lost, total in (("A", 40, "240 слов"), ("B", 28, "228 слов"))
     ]
     significance = next(item for item in warnings if item.startswith("Ни одно различие"))
     assert "Нужно больше текста; дельта Клиффа" in significance
@@ -218,7 +218,7 @@ def test_compare_texts_text_lengths():
     """Тексты корпусов разной длины: признаки, зависящие от длины, различаются и из-за нее"""
     whole = compare_texts([CHEKHOV_LONG] * 2, [PUSHKIN] * 2, whole_texts=True)
     warning = next(item for item in whole["warnings"] if "Средняя длина" in item)
-    assert warning.startswith("Средняя длина текста в A - 964 слова, в B - 19: ")
+    assert warning.startswith("Средняя длина текста в A - 960 слов, в B - 19: ")
     assert warning.endswith("сравнивайте окнами (whole_texts=false)")
     windows = compare_texts([PUSHKIN * 7] * 3, [CHEKHOV_LONG] * 2, window=100)
     assert not any("Средняя длина" in item for item in windows["warnings"])
@@ -309,10 +309,11 @@ def test_keyness_unreachable_entries(pronouns):
 
 
 def test_keyness_reachable_entries(pronouns):
-    """Статья остается, если к ней приводится другая форма: «род» - «родиться», но «рода» - «род»"""
+    """Статья остается, если к ней приводится другая форма: «род» - «родиться», но «рода» - «род»;
+    «его» и «ее» - леммы притяжательных, а «во» не дает ни одна форма"""
     words = [item["word"] for item in keyness("Кот спал.", positive=False, min_freq=1)["keywords"]]
-    assert {"род", "черт", "черта", "она"} <= set(words)
-    assert not {"его", "во", "ее"} & set(words)
+    assert {"род", "черт", "черта", "она", "его", "ее"} <= set(words)
+    assert "во" not in words
 
 
 def test_keyness_yo_pronoun(pronouns):

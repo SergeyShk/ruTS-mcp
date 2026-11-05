@@ -152,7 +152,7 @@ TTR and its corrections, MATTR, MSTTR, MTLD, HD-D, the indices of Simpson, Yule 
 `morph` · [MorphStats](https://sergeyshk.github.io/ruTS/en/stats/morph_stats/)
 { .metric-meta }
 
-Parts of speech and grammatical features by pymorphy3 without disambiguation and the shares of verb forms: moods, infinitive, participles, converbs, perfective aspect, passive and reflexive forms. The value of a feature is the number of words with each of its values, labeled as in ruTS, and `share` gives their shares of all words.
+Parts of speech and grammatical features by ruMorph in the context of the sentence and the shares of verb forms: moods, infinitive, participles, converbs, perfective aspect, passive and reflexive forms. The value of a feature is the number of words with each of its values, labeled as in ruTS, and `share` gives their shares of all words.
 
 </div>
 
@@ -220,7 +220,7 @@ Lines and stanzas, meter and number of feet, deviations from the meter and skipp
 `syntax` · [SyntaxStats](https://sergeyshk.github.io/ruTS/en/stats/syntax_stats/) · spaCy model
 { .metric-meta }
 
-Syntax by the dependency tree of the spaCy model: dependency length, depth and branching of the tree, words before the head of the sentence, verb valency, clauses, subordinate and infinitive clauses, the L2SCA complexity indices (T-units, verb, coordinate and complex nominal phrases), coordination chains, noun modifiers, prepositional chains and chains of genitives, participial and adverbial phrases, passive, infinitives, negations, split predicates («оказать помощь»), the order of subjects and objects, the similarity of adjacent sentences, the ratio of nouns to verbs. An infinitive clause («хочу спать», «пришел, чтобы помочь») is a clause of its own but not a subordinate one, while a modal or phasal combination («может уйти», «начал читать») is one clause. On a long text parsing takes seconds.
+Syntax by the dependency tree of the spaCy model: dependency length, depth and branching of the tree, words before the head of the sentence, verb valency, clauses, subordinate and infinitive clauses, the L2SCA complexity indices (T-units, verb, coordinate and complex nominal phrases), coordination chains, noun modifiers, prepositional chains, chains of genitives and nominal chains («рост цен на нефть»), participial and adverbial phrases, passive, infinitives, negations, split predicates («оказать помощь»), the order of subjects and objects, the similarity of adjacent sentences, the ratio of nouns to verbs. An infinitive clause («хочу спать», «пришел, чтобы помочь») is a clause of its own but not a subordinate one, while a modal or phasal combination («может уйти», «начал читать») is one clause. On a long text parsing takes seconds.
 
 </div>
 

@@ -244,8 +244,8 @@ def load_spacy(name: str) -> "Language":
 
 @lru_cache(maxsize=2)
 def _load_spacy(name: str) -> "Language":
-    """Загрузка модели spaCy"""
-    import spacy
+    """Загрузка рекомендуемого конвейера ruTS на модели spaCy"""
+    from ruts import load_pipeline
 
-    # Синтаксису не нужны сущности и леммы spaCy, а без них разбор быстрее
-    return spacy.load(name, exclude=["ner", "lemmatizer"])
+    # Синтаксису не нужны сущности, а без них разбор быстрее
+    return load_pipeline(name, exclude=["ner"])

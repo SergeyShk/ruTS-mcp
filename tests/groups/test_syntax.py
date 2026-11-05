@@ -1,6 +1,6 @@
 import pytest
 import spacy
-from ruts import BasicStats, SyntaxStats
+from ruts import BasicStats, SyntaxStats, load_pipeline
 from ruts.constants import SYNTAX_STATS_DESC
 from ruts.exceptions import SourceError
 from ruts.utils import iter_text_sents, set_sent_starts
@@ -19,7 +19,7 @@ from ruts_mcp.groups.syntax import (
 
 def test_syntax_group(chekhov):
     stats, warnings = syntax_group(Analysis(chekhov))
-    nlp = spacy.load("ru_core_news_sm")
+    nlp = load_pipeline(exclude=["ner"])
     text = chekhov.strip()
     doc = set_sent_starts(nlp.make_doc(text), [start for start, _, _ in iter_text_sents(text)])
     assert set(SYNTAX_NOTES) | set(SYNTAX_REASONS) <= set(SYNTAX_STATS_DESC)
@@ -38,10 +38,10 @@ def test_syntax_group(chekhov):
 
 
 def test_parse_sentences(chekhov):
-    """Предложения разбора - предложения razdel, как у групп по строке, а не модели"""
+    """Предложения разбора - предложения anySeg, как у групп по строке"""
     nlp = load_spacy("ru_core_news_sm")
-    assert SyntaxStats(parse(nlp, chekhov)).n_sents == BasicStats(chekhov).n_sents == 37
-    assert SyntaxStats(nlp(chekhov.strip())).n_sents != 37
+    assert SyntaxStats(parse(nlp, chekhov)).n_sents == BasicStats(chekhov).n_sents == 41
+    assert SyntaxStats(nlp(chekhov.strip())).n_sents == 41
 
 
 def test_syntax_no_words(monkeypatch):

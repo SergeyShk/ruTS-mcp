@@ -6,7 +6,7 @@ dispersion(text="", path=null, words=null, parts=10, lemmatize=true, top_n=20)
 
 Dispersion - how evenly a word is spread over the text: it tells a word that runs through the whole text from a word concentrated in one place, although their frequency does not. The text is split into `parts` parts of about equal size, and the measures of Gries and other dispersion measures are computed for every word. The definitions and formulas of the measures are on the ruTS page [Word dispersion](https://sergeyshk.github.io/ruTS/en/corpus/dispersion/).
 
-A word with a frequency below `parts` cannot fall into all the parts, and its measures show concentration even with the most even spread: the response warns about such words. A word absent from the text has frequency 0 and `null` measures.
+A word with a frequency below `parts` cannot fall into all the parts, and its measures show concentration even with the most even spread: the response warns about such words. A word absent from the text has frequency 0 and `null` measures. With `lemmatize` a word of `words` takes that of its lemmas which occurs in the text («стали» in «нож из стали» is сталь).
 
 Errors - [those common to the tools](index.md#errors), a text without words, more parts than words and a word in `words` that is not one word.
 
