@@ -1385,7 +1385,7 @@
 <div class="metric-card">
 <h3 id="morph">Morphology<a class="headerlink" href="#morph" title="Permanent link">&para;</a></h3>
 <p class="metric-meta"><code>morph</code> · <a href="https://sergeyshk.github.io/ruTS/en/stats/morph_stats/">MorphStats</a></p>
-<p>Parts of speech and grammatical features by pymorphy3 without disambiguation and the shares of verb forms: moods, infinitive, participles, converbs, perfective aspect, passive and reflexive forms. The value of a feature is the number of words with each of its values, labeled as in ruTS, and <code>share</code> gives their shares of all words.</p>
+<p>Parts of speech and grammatical features by ruMorph in the context of the sentence and the shares of verb forms: moods, infinitive, participles, converbs, perfective aspect, passive and reflexive forms. The value of a feature is the number of words with each of its values, labeled as in ruTS, and <code>share</code> gives their shares of all words.</p>
 </div>
 <div class="metric-card">
 <h3 id="phon">Phonostatistics<a class="headerlink" href="#phon" title="Permanent link">&para;</a></h3>
@@ -1416,7 +1416,7 @@
 <div class="metric-card">
 <h3 id="syntax">Syntax<a class="headerlink" href="#syntax" title="Permanent link">&para;</a></h3>
 <p class="metric-meta"><code>syntax</code> · <a href="https://sergeyshk.github.io/ruTS/en/stats/syntax_stats/">SyntaxStats</a> · spaCy model</p>
-<p>Syntax by the dependency tree of the spaCy model: dependency length, depth and branching of the tree, words before the head of the sentence, verb valency, clauses, subordinate and infinitive clauses, the L2SCA complexity indices (T-units, verb, coordinate and complex nominal phrases), coordination chains, noun modifiers, prepositional chains and chains of genitives, participial and adverbial phrases, passive, infinitives, negations, split predicates («оказать помощь»), the order of subjects and objects, the similarity of adjacent sentences, the ratio of nouns to verbs. An infinitive clause («хочу спать», «пришел, чтобы помочь») is a clause of its own but not a subordinate one, while a modal or phasal combination («может уйти», «начал читать») is one clause. On a long text parsing takes seconds.</p>
+<p>Syntax by the dependency tree of the spaCy model: dependency length, depth and branching of the tree, words before the head of the sentence, verb valency, clauses, subordinate and infinitive clauses, the L2SCA complexity indices (T-units, verb, coordinate and complex nominal phrases), coordination chains, noun modifiers, prepositional chains, chains of genitives and nominal chains («рост цен на нефть»), participial and adverbial phrases, passive, infinitives, negations, split predicates («оказать помощь»), the order of subjects and objects, the similarity of adjacent sentences, the ratio of nouns to verbs. An infinitive clause («хочу спать», «пришел, чтобы помочь») is a clause of its own but not a subordinate one, while a modal or phasal combination («может уйти», «начал читать») is one clause. On a long text parsing takes seconds.</p>
 </div>
 <h2 id="result">Result<a class="headerlink" href="#result" title="Permanent link">&para;</a></h2>
 <p>A key for each requested group and <code>warnings</code>. A statistic of a group is an object with the fields:</p>
