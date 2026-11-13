@@ -1,7 +1,7 @@
 {
   "name": "ruts",
   "displayName": "ruTS",
-  "version": "0.1.4",
+  "version": "0.1.5",
   "description": "Statistics of Russian texts: the ruTS-mcp server and a skill that picks its tools for the task and reads the results",
   "author": {
     "name": "Sergey Shkarin",

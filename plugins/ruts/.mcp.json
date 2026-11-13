@@ -2,7 +2,7 @@
   "mcpServers": {
     "ruts": {
       "command": "uvx",
-      "args": ["ruts-mcp==0.1.4"]
+      "args": ["ruts-mcp==0.1.5"]
     }
   }
 }
