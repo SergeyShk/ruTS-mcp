@@ -38,7 +38,8 @@ def readability_group(analysis: Analysis) -> GroupResult:
     Метрики удобочитаемости текста с переводом в класс школы и возраст читателя
 
     Описание:
-        Метрики ReadabilityStats из ruTS с пресетом коэффициентов из настроек;
+        Метрики ReadabilityStats из ruTS с пресетом коэффициентов из настроек,
+        числа словами не считаются;
         сводный класс идет первым. Прочтение метрики дает ruTS (describe):
         формулы класса - ступень обучения и возраст, индекс Флеша, LIX и RIX -
         полоса своей шкалы; у формул Мацковского и Тулдавы и времени чтения
@@ -62,7 +63,7 @@ def readability_group(analysis: Analysis) -> GroupResult:
     """
     from ruts import ReadabilityStats
 
-    rs = ReadabilityStats(analysis.basic, preset=analysis.options.preset)
+    rs = ReadabilityStats(analysis.text, preset=analysis.options.preset)
     values = rs.get_stats()
     params = {
         "smog_syllables": rs.smog_complex_syl_factor,
@@ -74,9 +75,9 @@ def readability_group(analysis: Analysis) -> GroupResult:
         for name, description in READABILITY_STATS.items()
     }
     warnings = []
-    if analysis.basic.n_sents < MIN_SENTS:
+    if rs.bs.n_sents < MIN_SENTS:
         warnings.append(
-            f"Предложений в тексте: {analysis.basic.n_sents}, меньше {MIN_SENTS}. Формулы "
+            f"Предложений в тексте: {rs.bs.n_sents}, меньше {MIN_SENTS}. Формулы "
             "удобочитаемости опираются на среднюю длину предложения, исходный SMOG - "
             "на выборку из 30 предложений: на коротком тексте значения неустойчивы, "
             "включая сводный класс, это грубая оценка"

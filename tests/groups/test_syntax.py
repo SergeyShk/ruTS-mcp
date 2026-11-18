@@ -3,7 +3,6 @@ import spacy
 from ruts import BasicStats, SyntaxStats, load_pipeline
 from ruts.constants import SYNTAX_STATS_DESC
 from ruts.exceptions import SourceError
-from ruts.utils import iter_text_sents, set_sent_starts
 
 from ruts_mcp.analysis import Analysis, clean
 from ruts_mcp.data import load_spacy
@@ -20,11 +19,10 @@ from ruts_mcp.groups.syntax import (
 def test_syntax_group(chekhov):
     stats, warnings = syntax_group(Analysis(chekhov))
     nlp = load_pipeline(exclude=["ner"])
-    text = chekhov.strip()
-    doc = set_sent_starts(nlp.make_doc(text), [start for start, _, _ in iter_text_sents(text)])
+    doc = nlp(chekhov.strip())
     assert set(SYNTAX_NOTES) | set(SYNTAX_REASONS) <= set(SYNTAX_STATS_DESC)
     assert {name: item["value"] for name, item in stats.items()} == {
-        name: clean(value) for name, value in SyntaxStats(nlp(doc)).get_stats().items()
+        name: clean(value) for name, value in SyntaxStats(doc).get_stats().items()
     }
     for name, item in stats.items():
         assert item["description"].startswith(SYNTAX_STATS_DESC[name])
@@ -135,20 +133,19 @@ def test_syntax_new_metric(monkeypatch):
 @pytest.mark.parametrize(
     ("text", "size", "expected"),
     [
-        ("Кот спит.\nПес лает.\n", 12, [("Кот спит.\n", [0]), ("Пес лает.\n", [0])]),
-        ("Кот спит.\nПес лает.\n", 100, [("Кот спит.\nПес лает.\n", [0, 10])]),
-        ("Кот спит! Пес лает", 12, [("Кот спит! ", [0]), ("Пес лает", [0])]),
-        ("  Кот спит.", 100, [("  Кот спит.", [2])]),
+        ("Кот спит.\nПес лает.\n", 12, ["Кот спит.\n", "Пес лает.\n"]),
+        ("Кот спит.\nПес лает.\n", 100, ["Кот спит.\nПес лает.\n"]),
+        ("Кот спит! Пес лает", 12, ["Кот спит! ", "Пес лает"]),
+        ("  Кот спит.", 100, ["  Кот спит."]),
         (
             "Кот спит\nпес лает. Дождь.",
             12,
-            [("Кот спит\n", [0]), ("пес лает. ", []), ("Дождь.", [0])],
+            ["Кот спит\n", "пес лает. ", "Дождь."],
         ),
-        ("кот кот кот кот", 8, [("кот кот ", [0]), ("кот кот", [])]),
-        # Начало предложения - в куске, где оно стоит, а не в куске из пробелов перед ним
-        ("\n\nкот кот кот кот", 8, [("\n\n", []), ("кот кот ", [0]), ("кот кот", [])]),
-        ("котопес", 3, [("кот", [0]), ("опе", []), ("с", [])]),
-        ("", 10, [("", [])]),
+        ("кот кот кот кот", 8, ["кот кот ", "кот кот"]),
+        ("\n\nкот кот кот кот", 8, ["\n\n", "кот кот ", "кот кот"]),
+        ("котопес", 3, ["кот", "опе", "с"]),
+        ("", 10, [""]),
     ],
 )
 def test_text_chunks(text, size, expected):
@@ -158,7 +155,7 @@ def test_text_chunks(text, size, expected):
 
 def test_text_chunks_long(chekhov):
     text = (chekhov + "\n") * 40
-    chunks = [chunk for chunk, _ in text_chunks(text)]
+    chunks = list(text_chunks(text))
     assert "".join(chunks) == text
     assert len(chunks) == 4
     assert all(len(chunk) <= CHUNK_SIZE for chunk in chunks)

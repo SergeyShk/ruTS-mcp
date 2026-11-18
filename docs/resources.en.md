@@ -7,7 +7,7 @@ Resources are reference data that a client can attach to a conversation. All of 
 | URI | Contents |
 | :-- | :------- |
 | `ruts://scales/readability` | School grade and reader age for the grade formulas, the bands of the Flesch index and LIX, the grades of RIX |
-| `ruts://scales/style` | Norms of SEO services for nausea, water content, spam score and naturalness by Zipf's law |
+| `ruts://scales/style` | Norms of SEO services for nausea and water content |
 | `ruts://data` | The data directory and which dictionaries and spaCy model are downloaded |
 
 In Claude Code a resource is attached by a mention, for example `@ruts:ruts://scales/readability`.

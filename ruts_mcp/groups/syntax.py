@@ -111,56 +111,47 @@ SYNTAX_REASONS = {
 OTHER_REASON = "значение не определено на таком тексте"
 
 
-def text_chunks(text: str, size: int = CHUNK_SIZE) -> Iterator[tuple[str, list[int]]]:
+def text_chunks(text: str, size: int = CHUNK_SIZE) -> Iterator[str]:
     """
-    Куски текста не длиннее size символов с началами их предложений для разбора spaCy
+    Куски текста не длиннее size символов для разбора spaCy
 
     Описание:
         Кусок собирается из целых предложений anySeg (iter_text_sents) с пробелами
         после них - тех же предложений, что у групп ruTS по строке; предложение
-        длиннее size режется по концу строки, пробелу или длине, и его продолжение
-        начинает кусок без начала предложения. Куски вместе дают исходный текст,
-        пустой текст - один пустой кусок
+        длиннее size режется по концу строки, пробелу или длине. Куски вместе дают
+        исходный текст, пустой текст - один пустой кусок
 
     Аргументы:
         text (str): Текст
         size (int): Наибольшая длина куска в символах
 
     Вывод:
-        Iterator[tuple[str, list[int]]]: Куски по порядку и позиции начал предложений в них
+        Iterator[str]: Куски по порядку
 
     Пример использования:
         >>> list(text_chunks("Кот спит. Пес лает. Дождь.", size=12))
-        [('Кот спит. ', [0]), ('Пес лает. ', [0]), ('Дождь.', [0])]
+        ['Кот спит. ', 'Пес лает. ', 'Дождь.']
         >>> list(text_chunks("Кот спит. Пес лает.", size=100))
-        [('Кот спит. Пес лает.', [0, 10])]
+        ['Кот спит. Пес лает.']
     """
     from ruts.utils import iter_text_sents
 
     starts = [start for start, _, sent in iter_text_sents(text) if sent.strip()]
-    bounds = [0, *starts[1:], len(text)]
-    firsts: list[int | None] = [*starts] or [None]
-    pieces: list[tuple[int, int, int | None]] = []
-    for (begin, end), start in zip(pairwise(bounds), firsts, strict=True):
+    pieces: list[tuple[int, int]] = []
+    for begin, end in pairwise([0, *starts[1:], len(text)]):
         while end - begin > size:
             window = text[begin : begin + size]
             cut = window.rfind("\n") + 1 or window.rfind(" ") + 1 or size
-            inside = start is not None and start < begin + cut
-            pieces.append((begin, begin + cut, start if inside else None))
+            pieces.append((begin, begin + cut))
             begin += cut
-            if inside:
-                start = None
-        pieces.append((begin, end, start))
+        pieces.append((begin, end))
     chunk_begin, chunk_end = 0, 0
-    offsets: list[int] = []
-    for begin, end, start in pieces:
+    for begin, end in pieces:
         if chunk_end > chunk_begin and end - chunk_begin > size:
-            yield text[chunk_begin:chunk_end], offsets
-            chunk_begin, offsets = begin, []
+            yield text[chunk_begin:chunk_end]
+            chunk_begin = begin
         chunk_end = end
-        if start is not None:
-            offsets.append(start - chunk_begin)
-    yield text[chunk_begin:chunk_end], offsets
+    yield text[chunk_begin:chunk_end]
 
 
 def parse(nlp: "Language", text: str) -> "Doc":
@@ -169,31 +160,24 @@ def parse(nlp: "Language", text: str) -> "Doc":
 
     Описание:
         Куски text_chunks разбираются по одному, чтобы память не росла с длиной
-        текста. Предложения разбора - предложения anySeg (set_sent_starts), как
-        у групп ruTS по строке; пустая строка завершает предложение. Пробелы
-        и переводы строк по краям куска отбрасываются: за ними spaCy иначе
+        текста. Куски режутся по границам предложений anySeg, поэтому предложения
+        разбора (anyseg_sentencizer конвейера) - те же, что у групп ruTS по строке.
+        Пробелы и переводы строк по краям куска отбрасываются: за ними spaCy иначе
         разбирает последнее предложение. Тензоры кусков статистикам не нужны
         и тоже отбрасываются
 
     Аргументы:
-        nlp (Language): Модель spaCy
+        nlp (Language): Конвейер ruTS (load_pipeline)
         text (str): Текст
 
     Вывод:
         Doc: Разобранный текст
     """
     import numpy
-    from ruts.utils import set_sent_starts
     from spacy.tokens import Doc
 
-    def unparsed() -> Iterator["Doc"]:
-        for chunk, starts in text_chunks(text):
-            shift = len(chunk) - len(chunk.lstrip())
-            doc = nlp.make_doc(chunk.strip())
-            yield set_sent_starts(doc, [start - shift for start in starts])
-
     docs = []
-    for doc in nlp.pipe(unparsed(), batch_size=1):
+    for doc in nlp.pipe((chunk.strip() for chunk in text_chunks(text)), batch_size=1):
         doc.tensor = numpy.zeros((0,), dtype="float32")
         docs.append(doc)
     return Doc.from_docs(docs)
