@@ -1,5 +1,5 @@
 from collections import Counter
-from collections.abc import Sequence
+from collections.abc import Collection, Sequence
 from math import log2
 from typing import Annotated, Any, Literal
 
@@ -63,6 +63,42 @@ def text_words(text: str, lemmatize: bool) -> tuple[str, ...]:
 
     words = WordsExtractor(use_lexemes=lemmatize, lowercase=True).extract(text)
     return tuple(normalize_yo(word) for word in words)
+
+
+def dictionary_words(text: str, entries: Collection[str]) -> tuple[str, ...]:
+    """
+    Слова текста для сравнения с частотным словарем
+
+    Описание:
+        Леммы ruMorph в контексте предложения в нижнем регистре. Сокращение
+        (первый разбор словоформы с Abbr=Yes) остается словоформой, если у него
+        есть своя статья (млн) или ruMorph его не раскрывает (ссср), а иначе
+        отбрасывается (тов. - товарищ), как у keyness ruTS по словоформам
+
+    Аргументы:
+        text (str): Текст
+        entries (Collection[str]): Статьи частотного словаря
+
+    Вывод:
+        tuple[str]: Слова по порядку
+
+    Пример использования:
+        >>> dictionary_words("Тов. Иванов получил 5 млн руб. в СССР", {"млн"})
+        ('иванов', 'получить', '5', 'млн', 'в', 'ссср')
+    """
+    from ruts import WordsExtractor
+    from ruts.utils import normalize_yo, parse_word
+
+    forms = WordsExtractor(lowercase=True).extract(text)
+    lemmas = WordsExtractor(lowercase=True, use_lexemes=True).extract(text)
+    words = []
+    for form, lemma in zip(forms, lemmas, strict=True):
+        analysis = parse_word(form)
+        if analysis.feats.get("Abbr") != "Yes":
+            words.append(lemma)
+        elif normalize_yo(form) in entries or normalize_yo(analysis.lemma) == normalize_yo(form):
+            words.append(form)
+    return tuple(words)
 
 
 def one_word(word: str, lemmatize: bool, words: Sequence[str] = ()) -> str:
