@@ -3,7 +3,6 @@ import spacy
 from ruts import BasicStats, SyntaxStats, load_pipeline
 from ruts.constants import SYNTAX_STATS_DESC
 from ruts.exceptions import SourceError
-from ruts.utils import iter_text_sents, set_sent_starts
 
 from ruts_mcp.analysis import Analysis, clean
 from ruts_mcp.data import load_spacy
@@ -11,6 +10,7 @@ from ruts_mcp.groups.syntax import (
     CHUNK_SIZE,
     SYNTAX_NOTES,
     SYNTAX_REASONS,
+    mark_sent_starts,
     parse,
     syntax_group,
     text_chunks,
@@ -20,11 +20,10 @@ from ruts_mcp.groups.syntax import (
 def test_syntax_group(chekhov):
     stats, warnings = syntax_group(Analysis(chekhov))
     nlp = load_pipeline(exclude=["ner"])
-    text = chekhov.strip()
-    doc = set_sent_starts(nlp.make_doc(text), [start for start, _, _ in iter_text_sents(text)])
+    doc = nlp(chekhov.strip())
     assert set(SYNTAX_NOTES) | set(SYNTAX_REASONS) <= set(SYNTAX_STATS_DESC)
     assert {name: item["value"] for name, item in stats.items()} == {
-        name: clean(value) for name, value in SyntaxStats(nlp(doc)).get_stats().items()
+        name: clean(value) for name, value in SyntaxStats(doc).get_stats().items()
     }
     for name, item in stats.items():
         assert item["description"].startswith(SYNTAX_STATS_DESC[name])
@@ -42,6 +41,16 @@ def test_parse_sentences(chekhov):
     nlp = load_spacy("ru_core_news_sm")
     assert SyntaxStats(parse(nlp, chekhov)).n_sents == BasicStats(chekhov).n_sents == 41
     assert SyntaxStats(nlp(chekhov.strip())).n_sents == 41
+
+
+def test_mark_sent_starts():
+    """Конвейер оставляет начала предложений всего текста, а не делит кусок заново"""
+    nlp = load_spacy("ru_core_news_sm")
+    text = "Кот спит\nПес лает"
+    assert len(list(nlp(text).sents)) == 2
+    doc = nlp(mark_sent_starts(nlp.make_doc(text), [0]))
+    assert [sent.text for sent in doc.sents] == [text]
+    assert len(mark_sent_starts(nlp.make_doc(""), [])) == 0
 
 
 def test_syntax_no_words(monkeypatch):

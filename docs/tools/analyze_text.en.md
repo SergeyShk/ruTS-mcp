@@ -58,8 +58,8 @@ Errors - [those common to the tools](index.md#errors) and a text without words.
         "classic_nausea": {"value": 1.414, "interpretation": "норма Advego"},
         "academic_nausea": {"value": 43.48, "interpretation": "выше нормы Advego"},
         "water": {"value": 0.0, "interpretation": "естественная водность по Text.ru"},
-        "spam": {"value": 4.348, "interpretation": "естественный текст по Text.ru"},
-        "zipf_naturalness": {"value": 100.0, "interpretation": "норма pr-cy и megaindex"},
+        "spam": {"value": 4.348},
+        "zipf_naturalness": {"value": 100.0},
         "verbal_nouns": {
           "value": 57.14,
           "count": 8,
@@ -79,7 +79,7 @@ Errors - [those common to the tools](index.md#errors) and a text without words.
         "cliches": {"value": 4.348, "count": 1, "found": {"в кратчайшие сроки": 1}}
       },
       "warnings": [
-        "Слов в тексте: 23, меньше 200. Нормы сервисов рассчитаны на тексты сайтов в несколько сотен слов: на коротком тексте тошнота, заспамленность и естественность по Ципфу неинформативны, их прочтение по нормам - грубая оценка"
+        "Слов в тексте: 23, меньше 200. Нормы сервисов рассчитаны на тексты сайтов в несколько сотен слов: на коротком тексте тошнота, заспамленность и естественность по Ципфу неинформативны, прочтение тошноты и водности по нормам - грубая оценка"
       ]
     }
     ```
@@ -185,7 +185,7 @@ Cohesion after Coh-Metrix and TAACO: overlaps of nouns, arguments and content wo
 `style` · [StyleStats](https://sergeyshk.github.io/ruTS/en/stats/style_stats/) · [`ruts://scales/style`](../resources.md#resources)
 { .metric-meta }
 
-SEO metrics by word forms - classic and academic nausea, water content, spam score and naturalness by Zipf's law read by the norms of Advego, Text.ru, pr-cy and megaindex - and the lexical markers of officialese: verbal nouns, compound prepositions, parenthetical words, clichés. The norms are meant for website texts of a few hundred words and do not apply to fiction; on a text shorter than 200 or longer than 1000 words the response warns about it.
+SEO metrics by word forms - classic and academic nausea and water content read by the norms of Advego and Text.ru, spam score and naturalness by Zipf's law without norms - and the lexical markers of officialese: verbal nouns, compound prepositions, parenthetical words, clichés. The norms are meant for website texts of a few hundred words and do not apply to fiction; on a text shorter than 200 or longer than 1000 words the response warns about it.
 
 Beyond the metrics of ruTS the group gives the number of words `n_words`, the most frequent word forms `top_words` and the most frequent content words `nausea_words`, by which the academic nausea is computed. The officialese markers come with the number of occurrences `count` and the words and phrases found `found`. The syntactic markers of officialese are in the [`syntax`](#syntax) group: to check a text for officialese, take both groups.
 

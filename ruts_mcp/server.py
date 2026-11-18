@@ -47,8 +47,7 @@ mcp.resource(
 mcp.resource(
     "ruts://scales/style",
     title="Нормы стиля",
-    description="Нормы SEO-сервисов для тошноты, водности, заспамленности и естественности "
-    "по Ципфу",
+    description="Нормы SEO-сервисов для тошноты и водности",
     mime_type="text/markdown",
 )(style_norms)
 mcp.resource(

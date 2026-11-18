@@ -36,8 +36,7 @@ def test_style_norms():
     assert "| (7; ∞) | выше нормы Advego |" in text
     assert "| (5; 7] | у верхней границы нормы Advego |" in text
     assert "| [5; 15] | норма Advego |" in text
-    assert "| [30; 60] | SEO-оптимизированный текст по Text.ru |" in text
-    assert "| [50; ∞) | норма pr-cy и megaindex |" in text
+    assert "| [15; 30] | избыточная водность по Text.ru |" in text
 
 
 def test_data_status(data_dir):

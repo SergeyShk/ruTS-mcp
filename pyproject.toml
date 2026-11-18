@@ -1,6 +1,6 @@
 [project]
 name = "ruts-mcp"
-version = "0.1.5"
+version = "0.1.6.dev1"
 description = "MCP server for ruTS: statistics of Russian texts as tools for LLM agents"
 readme = "README.md"
 requires-python = ">=3.11"
@@ -42,7 +42,7 @@ classifiers = [
 dependencies = [
     "fastmcp>=4,<5",
     "platformdirs>=4",
-    "ruts>=0.20,<0.21",
+    "ruts>=0.21,<0.22",
 ]
 
 [project.scripts]

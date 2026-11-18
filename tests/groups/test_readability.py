@@ -1,7 +1,7 @@
 from ruts import BasicStats, ReadabilityStats
 from ruts.constants import READABILITY_STATS_DESC
 
-from ruts_mcp.analysis import Analysis, Options, clean
+from ruts_mcp.analysis import NO_WORDS_WARNING, Analysis, Options, clean
 from ruts_mcp.groups.basic import basic_group
 from ruts_mcp.groups.readability import READABILITY_STATS, readability_group
 
@@ -42,20 +42,21 @@ def test_readability_preset():
     assert fiction != ReadabilityStats(RIDDLE).flesch_kincaid_grade
 
 
-def test_readability_shares_basic(monkeypatch):
-    """Группы basic и readability считают базовые статистики один раз"""
-    calls = []
-    init = BasicStats.__init__
+def test_readability_numbers():
+    """Числа не входят в слова формул, как у ReadabilityStats ruTS, а группа basic их считает"""
+    text = "В 2026 году 5-й класс прочитал 1 250 000 страниц. Это много."
+    analysis = Analysis(text)
+    stats, _ = readability_group(analysis)
+    grade = stats["flesch_kincaid_grade"]["value"]
+    assert grade == clean(ReadabilityStats(text).flesch_kincaid_grade)
+    assert grade != clean(ReadabilityStats(BasicStats(text)).flesch_kincaid_grade)
+    assert basic_group(analysis)[0]["n_words"]["value"] == BasicStats(text).n_words
 
-    def counting_init(self, *args, **kwargs):
-        calls.append(args)
-        init(self, *args, **kwargs)
 
-    monkeypatch.setattr(BasicStats, "__init__", counting_init)
-    analysis = Analysis(RIDDLE)
-    basic_group(analysis)
-    readability_group(analysis)
-    assert calls == [(RIDDLE,)]
+def test_readability_numbers_only():
+    """Числа - не слова для формул: группа пуста, вызов не падает"""
+    expected = ({}, [NO_WORDS_WARNING.format(group="readability")])
+    assert readability_group(Analysis("123 456 7.89 2024")) == expected
 
 
 def test_readability_warnings(chekhov):

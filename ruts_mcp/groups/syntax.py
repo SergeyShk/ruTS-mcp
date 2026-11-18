@@ -1,8 +1,9 @@
 import re
+from bisect import bisect_left
 from collections import defaultdict
 from collections.abc import Iterator
 from itertools import pairwise
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, cast
 
 from ..analysis import Analysis, GroupResult, stat, undefined_warnings
 from ..data import SPACY_MODEL_TITLE, missing_warning, spacy_model
@@ -10,6 +11,7 @@ from ..data import SPACY_MODEL_TITLE, missing_warning, spacy_model
 if TYPE_CHECKING:
     from spacy.language import Language
     from spacy.tokens import Doc
+    from thinc.types import Ints2d
 
 CHUNK_SIZE = 20_000
 WORD_CHAR = re.compile(r"\w")
@@ -163,34 +165,66 @@ def text_chunks(text: str, size: int = CHUNK_SIZE) -> Iterator[tuple[str, list[i
     yield text[chunk_begin:chunk_end], offsets
 
 
+def mark_sent_starts(doc: "Doc", starts: list[int]) -> "Doc":
+    """
+    Начала предложений куска на его токенах до разбора
+
+    Описание:
+        Первый непробельный токен с позиции начала или после нее начинает
+        предложение, остальные токены - нет, и anyseg_sentencizer конвейера
+        заданные границы не трогает. На отдельном куске anySeg не видит строк
+        соседнего куска и делил бы строфу на его границе иначе, чем весь текст
+
+    Аргументы:
+        doc (Doc): Кусок, токенизированный конвейером (make_doc)
+        starts (list[int]): Позиции начал предложений в куске
+
+    Вывод:
+        Doc: Тот же кусок
+    """
+    import numpy
+    from spacy.attrs import SENT_START
+
+    words = [token.i for token in doc if not token.is_space]
+    begins = [doc[i].idx for i in words]
+    flags = numpy.full(len(doc), -1, dtype="int64")
+    flags[:1] = 1
+    for start in starts:
+        position = bisect_left(begins, start)
+        # Пробелы перед первым словом остаются в предложении перед ними
+        if 0 < position < len(words):
+            flags[words[position]] = 1
+    doc.from_array([SENT_START], cast("Ints2d", flags.astype("uint64").reshape(-1, 1)))
+    return doc
+
+
 def parse(nlp: "Language", text: str) -> "Doc":
     """
     Разбор текста моделью spaCy по кускам
 
     Описание:
         Куски text_chunks разбираются по одному, чтобы память не росла с длиной
-        текста. Предложения разбора - предложения anySeg (set_sent_starts), как
-        у групп ruTS по строке; пустая строка завершает предложение. Пробелы
-        и переводы строк по краям куска отбрасываются: за ними spaCy иначе
-        разбирает последнее предложение. Тензоры кусков статистикам не нужны
-        и тоже отбрасываются
+        текста. Предложения разбора - предложения anySeg всего текста
+        (mark_sent_starts), как у групп ruTS по строке. Пробелы и переводы строк
+        по краям куска отбрасываются: за ними spaCy иначе разбирает последнее
+        предложение. Тензоры кусков статистикам не нужны и тоже отбрасываются
 
     Аргументы:
-        nlp (Language): Модель spaCy
+        nlp (Language): Конвейер ruTS (load_pipeline)
         text (str): Текст
 
     Вывод:
         Doc: Разобранный текст
     """
     import numpy
-    from ruts.utils import set_sent_starts
     from spacy.tokens import Doc
 
     def unparsed() -> Iterator["Doc"]:
         for chunk, starts in text_chunks(text):
             shift = len(chunk) - len(chunk.lstrip())
-            doc = nlp.make_doc(chunk.strip())
-            yield set_sent_starts(doc, [start - shift for start in starts])
+            yield mark_sent_starts(
+                nlp.make_doc(chunk.strip()), [start - shift for start in starts]
+            )
 
     docs = []
     for doc in nlp.pipe(unparsed(), batch_size=1):

@@ -5,7 +5,7 @@ from fastmcp.exceptions import ToolError
 from ruts.constants import MORPHOLOGY_STATS_DESC
 from ruts.utils import strip_marks
 
-from ruts_mcp.analysis import Analysis, Options
+from ruts_mcp.analysis import NO_WORDS_WARNING, Analysis, Options
 from ruts_mcp.compare import compare_texts
 from ruts_mcp.groups import GROUPS
 from ruts_mcp.tools import analyze_text
@@ -86,8 +86,9 @@ def test_analyze_text_accents(dicts, text):
 
 
 def test_analyze_text_no_letters():
-    warnings = analyze_text("123 456 7.89 2024", groups=("basic",))["warnings"]
+    warnings = analyze_text("123 456 7.89 2024", groups=("basic", "readability"))["warnings"]
     assert warnings[0].startswith("В тексте нет букв")
+    assert NO_WORDS_WARNING.format(group="readability") in warnings
 
 
 def test_morph_descriptions():
