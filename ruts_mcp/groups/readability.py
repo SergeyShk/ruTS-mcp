@@ -1,4 +1,4 @@
-from ..analysis import Analysis, GroupResult, stat
+from ..analysis import NO_WORDS_WARNING, Analysis, GroupResult, stat
 
 MIN_SENTS = 30
 
@@ -38,9 +38,9 @@ def readability_group(analysis: Analysis) -> GroupResult:
     Метрики удобочитаемости текста с переводом в класс школы и возраст читателя
 
     Описание:
-        Метрики ReadabilityStats из ruTS с пресетом коэффициентов из настроек,
-        числа словами не считаются;
-        сводный класс идет первым. Прочтение метрики дает ruTS (describe):
+        Метрики ReadabilityStats из ruTS с пресетом коэффициентов из настроек;
+        числа словами не считаются, и у текста из одних чисел группа пуста.
+        Сводный класс идет первым. Прочтение метрики дает ruTS (describe):
         формулы класса - ступень обучения и возраст, индекс Флеша, LIX и RIX -
         полоса своей шкалы; у формул Мацковского и Тулдавы и времени чтения
         шкалы нет. Текст короче 30 предложений получает предупреждение:
@@ -53,17 +53,18 @@ def readability_group(analysis: Analysis) -> GroupResult:
         tuple[dict[str, Any], list[str]]: Имя метрики ruTS - ее значение, прочтение
             и описание; предупреждения
 
-    Исключения:
-        SourceError: Если в тексте нет слов
-
     Пример использования:
         >>> stats, warnings = readability_group(Analysis("Мама мыла раму."))
         >>> stats["consensus_grade"]["interpretation"]
         '1-3-й класс (6-8 лет)'
     """
     from ruts import ReadabilityStats
+    from ruts.exceptions import SourceError
 
-    rs = ReadabilityStats(analysis.text, preset=analysis.options.preset)
+    try:
+        rs = ReadabilityStats(analysis.text, preset=analysis.options.preset)
+    except SourceError:
+        return {}, [NO_WORDS_WARNING.format(group="readability")]
     values = rs.get_stats()
     params = {
         "smog_syllables": rs.smog_complex_syl_factor,

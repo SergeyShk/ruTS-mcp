@@ -1,8 +1,9 @@
 import re
+from bisect import bisect_left
 from collections import defaultdict
 from collections.abc import Iterator
 from itertools import pairwise
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, cast
 
 from ..analysis import Analysis, GroupResult, stat, undefined_warnings
 from ..data import SPACY_MODEL_TITLE, missing_warning, spacy_model
@@ -10,6 +11,7 @@ from ..data import SPACY_MODEL_TITLE, missing_warning, spacy_model
 if TYPE_CHECKING:
     from spacy.language import Language
     from spacy.tokens import Doc
+    from thinc.types import Ints2d
 
 CHUNK_SIZE = 20_000
 WORD_CHAR = re.compile(r"\w")
@@ -111,47 +113,89 @@ SYNTAX_REASONS = {
 OTHER_REASON = "значение не определено на таком тексте"
 
 
-def text_chunks(text: str, size: int = CHUNK_SIZE) -> Iterator[str]:
+def text_chunks(text: str, size: int = CHUNK_SIZE) -> Iterator[tuple[str, list[int]]]:
     """
-    Куски текста не длиннее size символов для разбора spaCy
+    Куски текста не длиннее size символов с началами их предложений для разбора spaCy
 
     Описание:
         Кусок собирается из целых предложений anySeg (iter_text_sents) с пробелами
         после них - тех же предложений, что у групп ruTS по строке; предложение
-        длиннее size режется по концу строки, пробелу или длине. Куски вместе дают
-        исходный текст, пустой текст - один пустой кусок
+        длиннее size режется по концу строки, пробелу или длине, и его продолжение
+        начинает кусок без начала предложения. Куски вместе дают исходный текст,
+        пустой текст - один пустой кусок
 
     Аргументы:
         text (str): Текст
         size (int): Наибольшая длина куска в символах
 
     Вывод:
-        Iterator[str]: Куски по порядку
+        Iterator[tuple[str, list[int]]]: Куски по порядку и позиции начал предложений в них
 
     Пример использования:
         >>> list(text_chunks("Кот спит. Пес лает. Дождь.", size=12))
-        ['Кот спит. ', 'Пес лает. ', 'Дождь.']
+        [('Кот спит. ', [0]), ('Пес лает. ', [0]), ('Дождь.', [0])]
         >>> list(text_chunks("Кот спит. Пес лает.", size=100))
-        ['Кот спит. Пес лает.']
+        [('Кот спит. Пес лает.', [0, 10])]
     """
     from ruts.utils import iter_text_sents
 
     starts = [start for start, _, sent in iter_text_sents(text) if sent.strip()]
-    pieces: list[tuple[int, int]] = []
-    for begin, end in pairwise([0, *starts[1:], len(text)]):
+    bounds = [0, *starts[1:], len(text)]
+    firsts: list[int | None] = [*starts] or [None]
+    pieces: list[tuple[int, int, int | None]] = []
+    for (begin, end), start in zip(pairwise(bounds), firsts, strict=True):
         while end - begin > size:
             window = text[begin : begin + size]
             cut = window.rfind("\n") + 1 or window.rfind(" ") + 1 or size
-            pieces.append((begin, begin + cut))
+            inside = start is not None and start < begin + cut
+            pieces.append((begin, begin + cut, start if inside else None))
             begin += cut
-        pieces.append((begin, end))
+            if inside:
+                start = None
+        pieces.append((begin, end, start))
     chunk_begin, chunk_end = 0, 0
-    for begin, end in pieces:
+    offsets: list[int] = []
+    for begin, end, start in pieces:
         if chunk_end > chunk_begin and end - chunk_begin > size:
-            yield text[chunk_begin:chunk_end]
-            chunk_begin = begin
+            yield text[chunk_begin:chunk_end], offsets
+            chunk_begin, offsets = begin, []
         chunk_end = end
-    yield text[chunk_begin:chunk_end]
+        if start is not None:
+            offsets.append(start - chunk_begin)
+    yield text[chunk_begin:chunk_end], offsets
+
+
+def mark_sent_starts(doc: "Doc", starts: list[int]) -> "Doc":
+    """
+    Начала предложений куска на его токенах до разбора
+
+    Описание:
+        Первый непробельный токен с позиции начала или после нее начинает
+        предложение, остальные токены - нет, и anyseg_sentencizer конвейера
+        заданные границы не трогает. На отдельном куске anySeg не видит строк
+        соседнего куска и делил бы строфу на его границе иначе, чем весь текст
+
+    Аргументы:
+        doc (Doc): Кусок, токенизированный конвейером (make_doc)
+        starts (list[int]): Позиции начал предложений в куске
+
+    Вывод:
+        Doc: Тот же кусок
+    """
+    import numpy
+    from spacy.attrs import SENT_START
+
+    words = [token.i for token in doc if not token.is_space]
+    begins = [doc[i].idx for i in words]
+    flags = numpy.full(len(doc), -1, dtype="int64")
+    flags[:1] = 1
+    for start in starts:
+        position = bisect_left(begins, start)
+        # Пробелы перед первым словом остаются в предложении перед ними
+        if 0 < position < len(words):
+            flags[words[position]] = 1
+    doc.from_array([SENT_START], cast("Ints2d", flags.astype("uint64").reshape(-1, 1)))
+    return doc
 
 
 def parse(nlp: "Language", text: str) -> "Doc":
@@ -160,11 +204,10 @@ def parse(nlp: "Language", text: str) -> "Doc":
 
     Описание:
         Куски text_chunks разбираются по одному, чтобы память не росла с длиной
-        текста. Куски режутся по границам предложений anySeg, поэтому предложения
-        разбора (anyseg_sentencizer конвейера) - те же, что у групп ruTS по строке.
-        Пробелы и переводы строк по краям куска отбрасываются: за ними spaCy иначе
-        разбирает последнее предложение. Тензоры кусков статистикам не нужны
-        и тоже отбрасываются
+        текста. Предложения разбора - предложения anySeg всего текста
+        (mark_sent_starts), как у групп ruTS по строке. Пробелы и переводы строк
+        по краям куска отбрасываются: за ними spaCy иначе разбирает последнее
+        предложение. Тензоры кусков статистикам не нужны и тоже отбрасываются
 
     Аргументы:
         nlp (Language): Конвейер ruTS (load_pipeline)
@@ -176,8 +219,15 @@ def parse(nlp: "Language", text: str) -> "Doc":
     import numpy
     from spacy.tokens import Doc
 
+    def unparsed() -> Iterator["Doc"]:
+        for chunk, starts in text_chunks(text):
+            shift = len(chunk) - len(chunk.lstrip())
+            yield mark_sent_starts(
+                nlp.make_doc(chunk.strip()), [start - shift for start in starts]
+            )
+
     docs = []
-    for doc in nlp.pipe((chunk.strip() for chunk in text_chunks(text)), batch_size=1):
+    for doc in nlp.pipe(unparsed(), batch_size=1):
         doc.tensor = numpy.zeros((0,), dtype="float32")
         docs.append(doc)
     return Doc.from_docs(docs)

@@ -1,7 +1,7 @@
 from ruts import BasicStats, ReadabilityStats
 from ruts.constants import READABILITY_STATS_DESC
 
-from ruts_mcp.analysis import Analysis, Options, clean
+from ruts_mcp.analysis import NO_WORDS_WARNING, Analysis, Options, clean
 from ruts_mcp.groups.basic import basic_group
 from ruts_mcp.groups.readability import READABILITY_STATS, readability_group
 
@@ -51,6 +51,12 @@ def test_readability_numbers():
     assert grade == clean(ReadabilityStats(text).flesch_kincaid_grade)
     assert grade != clean(ReadabilityStats(BasicStats(text)).flesch_kincaid_grade)
     assert basic_group(analysis)[0]["n_words"]["value"] == BasicStats(text).n_words
+
+
+def test_readability_numbers_only():
+    """Числа - не слова для формул: группа пуста, вызов не падает"""
+    expected = ({}, [NO_WORDS_WARNING.format(group="readability")])
+    assert readability_group(Analysis("123 456 7.89 2024")) == expected
 
 
 def test_readability_warnings(chekhov):
