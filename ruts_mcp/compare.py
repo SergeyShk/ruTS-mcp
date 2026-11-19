@@ -5,7 +5,7 @@ from fastmcp.exceptions import ToolError
 from pydantic import Field
 
 from .analysis import clean, plural
-from .corpus import text_words
+from .corpus import dictionary_words, text_words
 from .data import (
     FREQ_DICT_TITLE,
     damaged_warning,
@@ -106,13 +106,12 @@ def keyness(
 ) -> dict[str, Any]:
     """Найти ключевые слова текста - слова, которые в нем значимо чаще (или реже), чем в эталоне.
 
-    Используйте, чтобы понять, чем лексика текста отличается от обычного языка (эталон по умолчанию - частотный словарь, его нужно скачать командой ruts-mcp download) или от другого текста (reference или reference_path). Слова сравниваются в нижнем регистре и с е вместо ё, леммы - ruMorph в контексте предложения. Со словарем числа и слова с латиницей отбрасываются, а слово вне словаря получает его наименьшую частоту (freq_reference около 37): имена, термины и опечатки попадают в ключевые слова. Статьи словаря, которые лемматизатор не дает (во, со), в слова, которые чаще в эталоне, не попадают: в тексте эти формы относятся к леммам в и с.
+    Используйте, чтобы понять, чем лексика текста отличается от обычного языка (эталон по умолчанию - частотный словарь, его нужно скачать командой ruts-mcp download) или от другого текста (reference или reference_path). Слова сравниваются в нижнем регистре и с е вместо ё, леммы - ruMorph в контексте предложения. Со словарем числа, слова с латиницей и сокращения без своей статьи, которые ruMorph раскрывает в другое слово (тов., г.), отбрасываются, а слово вне словаря получает его наименьшую частоту (freq_reference около 37): имена, термины и опечатки попадают в ключевые слова. Статьи словаря, которые лемматизатор не дает (во, со), в слова, которые чаще в эталоне, не попадают: в тексте эти формы относятся к леммам в и с.
 
     В результате "n_words" - число слов текста, которые сравниваются с эталоном, "reference" - эталон, "measure" - мера сортировки и как ее читать, "keywords" - слова по убыванию меры: частота в тексте "freq_target" и в эталоне "freq_reference", они же на миллион слов "ipm_target" и "ipm_reference", логарифм правдоподобия "g2" (значимость, со знаком минус - слово чаще в эталоне) с p-значением "p_value", Log Ratio "log_ratio" (размер эффекта; при нулевой частоте в эталоне - оценка с поправкой 0,5, бывает меньше 0) и значение меры "score". p_value не поправлено на число проверенных слов: надежнее p < 0,0001 (g2 от 15,13). Ключ "warnings" - предупреждения: текст не на русском языке, ключевых слов нет.
     """
     load_ruts()
     from anyts.constants import G2_CRITICAL_VALUES
-    from ruts import WordsExtractor
     from ruts.corpus import keyness as ruts_keyness
     from ruts.datasets.freq2011 import CORPUS_SIZE
     from ruts.exceptions import DatasetNotFoundError
@@ -122,8 +121,18 @@ def keyness(
     warnings = language_warnings(text)
     source: Any
     if reference is None and reference_path is None:
+        source = freq_dict()
+        if freq_dict_damaged(source):
+            raise ToolError(damaged_warning(FREQ_DICT_TITLE, "ключевые слова не посчитаны"))
+        try:
+            entries = source.entries
+        except DatasetNotFoundError:
+            raise ToolError(
+                missing_warning(FREQ_DICT_TITLE, "ключевые слова не посчитаны")
+                + "; эталоном может быть и другой текст (reference)"
+            ) from None
         # Леммы в контексте: у ruts.keyness со словарем контекста нет («его» - он или его)
-        target: tuple[str, ...] = WordsExtractor(lowercase=True, use_lexemes=True).extract(text)
+        target: tuple[str, ...] = dictionary_words(text, entries)
         n_words = sum(1 for word in target if DICTIONARY_WORD.fullmatch(word))
         if not n_words:
             raise ToolError(
@@ -131,9 +140,6 @@ def keyness(
                 "нет: числа и латиница отбрасываются; эталоном может быть другой текст "
                 "(reference)"
             )
-        source = freq_dict()
-        if freq_dict_damaged(source):
-            raise ToolError(damaged_warning(FREQ_DICT_TITLE, "ключевые слова не посчитаны"))
         title = f"частотный словарь Ляшевской и Шарова (НКРЯ, {CORPUS_SIZE // 1_000_000} млн слов)"
     else:
         reference = read_source(reference or "", reference_path, "Эталон")
@@ -145,15 +151,7 @@ def keyness(
         n_words = len(target)
         title = f"текст-эталон, {plural(len(source), WORD_FORMS)}"
     with ruts_errors():
-        try:
-            found = ruts_keyness(
-                target, source, measure, min_freq, positive, top_n, lemmatize=False
-            )
-        except DatasetNotFoundError:
-            raise ToolError(
-                missing_warning(FREQ_DICT_TITLE, "ключевые слова не посчитаны")
-                + "; эталоном может быть и другой текст (reference)"
-            ) from None
+        found = ruts_keyness(target, source, measure, min_freq, positive, top_n, lemmatize=False)
         rare = (
             not found
             and min_freq > 1

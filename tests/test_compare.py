@@ -279,6 +279,10 @@ def pronouns(data_dir):
     rows = (
         ("в", "pr", 30000.0),
         ("во", "pr", 600.0),
+        ("со", "pr", 900.0),
+        ("значит", "conj", 700.0),
+        ("трудно", "adv", 250.0),
+        ("товарищ", "s", 300.0),
         ("его", "apro", 2000.0),
         ("ее", "apro", 1500.0),
         ("она", "spro", 9000.0),
@@ -310,10 +314,21 @@ def test_keyness_unreachable_entries(pronouns):
 
 def test_keyness_reachable_entries(pronouns):
     """Статья остается, если к ней приводится другая форма: «род» - «родиться», но «рода» - «род»;
-    «его» и «ее» - леммы притяжательных, а «во» не дает ни одна форма"""
+    «его» и «ее» - леммы притяжательных, «значит» и «трудно» - леммы не первого разбора,
+    а «во» и «со» не дает ни одна форма"""
     words = [item["word"] for item in keyness("Кот спал.", positive=False, min_freq=1)["keywords"]]
-    assert {"род", "черт", "черта", "она", "его", "ее"} <= set(words)
-    assert "во" not in words
+    assert {"род", "черт", "черта", "она", "его", "ее", "значит", "трудно"} <= set(words)
+    assert not {"во", "со"} & set(words)
+
+
+def test_keyness_abbreviations(pronouns):
+    """Сокращение без своей статьи, которое ruMorph раскрывает (тов. - товарищ), отбрасывается,
+    а нераскрытое (СССР) - слово вне словаря"""
+    result = keyness("Тов. Петров и тов. Сидоров видели кота в СССР.", min_freq=1)
+    words = [item["word"] for item in result["keywords"]]
+    assert "товарищ" not in words
+    assert "ссср" in words
+    assert result["n_words"] == 7
 
 
 def test_keyness_yo_pronoun(pronouns):
